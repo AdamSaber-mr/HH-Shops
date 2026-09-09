@@ -16,21 +16,35 @@ import { afbeelding } from '../../lib/images.ts';
  * Het raster is asymmetrisch, want vier gelijke vierkanten naast elkaar is
  * precies het patroon dat elke sjabloonwebsite gebruikt.
  *
+ * Over de hoogte, want daar ging het eerder mis.
+ *
+ * De hoogte wordt bepaald door de TEGELKOLOM en niet door de buitenste
+ * container. Die kolom heeft vanaf md een vaste hoogte met twee rijen die de
+ * ruimte eerlijk delen, zodat de foto's zich naar het kader voegen.
+ *
+ * Zet die hoogte NIET op de container eromheen. Dat had ik eerst gedaan, en dan
+ * dwingt hij de foto's tot niets: die groeien door tot hun eigen formaat en
+ * lopen over de secties eronder heen. De minmax(0,1fr) is daarbij het stuk dat
+ * telt, want zonder die nul mag een rij alsnog groter worden dan zijn deel.
+ *
+ * Zo kan het tekstvlak bovendien nooit klemzitten: heeft dat meer ruimte nodig,
+ * dan groeit de hero gewoon mee in plaats van te overlappen.
+ *
  * Zoeken staat vooraan en niet de knop. Dit is een winkel met ruim 90
  * artikelen: wie hier komt zoekt meestal iets specifieks.
  */
 
 const tegels = [
-	{ naam: 'Huishoudelijke artikelen', bestand: 'huishoudelijke-artikelen', span: 'sm:col-span-2' },
-	{ naam: 'Kinder artikelen', bestand: 'kinder-artikelen', span: 'sm:col-span-1' },
-	{ naam: 'Cosmetica artikelen', bestand: 'cosmetica-artikelen', span: 'sm:col-span-1' },
-	{ naam: 'Tassen', bestand: 'tassen', span: 'sm:col-span-2' },
+	{ naam: 'Huishoudelijke artikelen', bestand: 'huishoudelijke-artikelen', span: 'md:col-span-2' },
+	{ naam: 'Kinder artikelen', bestand: 'kinder-artikelen', span: 'md:col-span-1' },
+	{ naam: 'Cosmetica artikelen', bestand: 'cosmetica-artikelen', span: 'md:col-span-1' },
+	{ naam: 'Tassen', bestand: 'tassen', span: 'md:col-span-2' },
 ];
 ---
 
 <section class="border-b border-border bg-surface">
 	<div class="mx-auto max-w-[1400px] px-4 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-10">
-		<div class="grid gap-3 md:h-[320px] md:grid-cols-[1.05fr_1fr]">
+		<div class="grid gap-3 md:grid-cols-[1.05fr_1fr]">
 			<!-- Tekstvlak, zelf een tegel in het mozaiek -->
 			<div
 				class="flex flex-col justify-center rounded-media bg-accent px-6 py-7 text-white sm:px-8 sm:py-8 lg:px-10"
@@ -70,16 +84,16 @@ const tegels = [
 			</div>
 
 			<!-- Beeldtegels -->
-			<ul class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+			<ul class="grid grid-cols-2 gap-3 md:h-[336px] md:grid-cols-3 md:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
 				{
 					tegels.map((t) => (
-						<li class={`${t.span} lift zoom overflow-hidden rounded-media`}>
-							<a href={`/categorie/${t.bestand}`} class="group relative block h-full min-h-28 md:min-h-0">
+						<li class={`${t.span} lift zoom min-h-0 overflow-hidden rounded-media`}>
+							<a href={`/categorie/${t.bestand}`} class="group relative block aspect-4/3 size-full md:aspect-auto">
 								<Image
 									src={afbeelding(`~/assets/site/categorieen/${t.bestand}.png`)}
 									alt={`Categorie ${t.naam}`}
 									widths={[320, 480, 640]}
-									sizes="(min-width: 1024px) 320px, (min-width: 640px) 30vw, 45vw"
+									sizes="(min-width: 1024px) 320px, (min-width: 768px) 25vw, 45vw"
 									quality={74}
 									loading="eager"
 									class="size-full object-cover"
