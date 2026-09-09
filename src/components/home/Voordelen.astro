@@ -1,0 +1,25 @@
+---
+import { voordelen } from '../../content/homepage.ts';
+---
+
+<section aria-labelledby="voordelen-titel" class="bg-surface">
+	<div class="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 sm:py-16">
+		<div class="text-center">
+			<p class="text-sm font-medium text-accent">{voordelen.bovenkop}</p>
+			<h2 id="voordelen-titel" class="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+				{voordelen.titel}
+			</h2>
+			<p class="mt-2 text-text-muted">{voordelen.tekst}</p>
+		</div>
+
+		<ul class="mt-10 grid gap-4 sm:grid-cols-3">
+			{voordelen.items.map((v) => (
+				<li class="rounded-card border border-border bg-canvas p-6">
+					<p class="text-2xl font-semibold text-accent tabular-nums">{v.nummer}</p>
+					<h3 class="mt-3 font-medium">{v.titel}</h3>
+					<p class="mt-1 text-sm leading-relaxed text-text-muted">{v.tekst}</p>
+				</li>
+			))}
+		</ul>
+	</div>
+</section>

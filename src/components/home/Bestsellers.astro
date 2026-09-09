@@ -1,0 +1,46 @@
+---
+import { Image } from 'astro:assets';
+import { bestsellers } from '../../content/homepage.ts';
+import { afbeelding } from '../../lib/images.ts';
+import { formatEuro } from '../../lib/price.ts';
+---
+
+<section aria-labelledby="bestsellers-titel">
+	<div class="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 sm:py-16">
+		<div class="text-center">
+			<h2 id="bestsellers-titel" class="text-2xl font-semibold tracking-tight sm:text-3xl">
+				{bestsellers.titel}
+			</h2>
+			<p class="mt-2 text-text-muted">{bestsellers.tekst}</p>
+		</div>
+
+		<ul class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+			{bestsellers.producten.map((p) => (
+				<li class="group relative flex flex-col rounded-card border border-border bg-surface transition-colors hover:bg-surface-hover focus-within:bg-surface-hover">
+					<div class="aspect-square overflow-hidden rounded-t-card bg-canvas">
+						<Image
+							src={afbeelding(p.afbeelding)}
+							alt={p.alt}
+							widths={[240, 320]}
+							sizes="(min-width: 1024px) 220px, (min-width: 640px) 30vw, 45vw"
+							quality={75}
+							class="size-full object-cover"
+						/>
+					</div>
+					<div class="flex flex-1 flex-col gap-2 p-3">
+						<h3 class="text-sm leading-snug font-medium">
+							<a href={p.href} class="after:absolute after:inset-0">{p.naam}</a>
+						</h3>
+						<p class="mt-auto pt-1 font-semibold text-accent">{formatEuro(p.prijsCents)}</p>
+					</div>
+				</li>
+			))}
+		</ul>
+
+		<div class="mt-10 text-center">
+			<a href={bestsellers.knop.href} class="inline-flex min-h-12 items-center rounded-control bg-accent px-6 font-medium text-white hover:bg-accent-hover">
+				{bestsellers.knop.label}
+			</a>
+		</div>
+	</div>
+</section>

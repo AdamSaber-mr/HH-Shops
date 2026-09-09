@@ -1,55 +1,28 @@
 ---
-import ProductCard from '../components/ProductCard.astro';
+import Assortiment from '../components/home/Assortiment.astro';
+import Bestsellers from '../components/home/Bestsellers.astro';
+import Hero from '../components/home/Hero.astro';
+import InstagramStrook from '../components/home/InstagramStrook.astro';
+import Over from '../components/home/Over.astro';
+import Reviews from '../components/home/Reviews.astro';
+import Voordelen from '../components/home/Voordelen.astro';
 import Layout from '../layouts/Layout.astro';
-import { defaultVariant, listActiveProducts, optionSummary } from '../lib/catalog.ts';
 
 /*
- * De startpagina.
+ * De startpagina, nagemaakt van hh-shops.nl.
  *
- * In fase 1 is dit het bewijs dat alles samenwerkt: serverside renderen, de
- * databaseverbinding, de tokens, Geist en de afbeeldingen. In fase 3 wordt dit
- * de echte startpagina met uitgelichte producten en categorieen.
+ * De secties staan in dezelfde volgorde als op het origineel. De teksten en
+ * afbeeldingen komen uit src/content/homepage.ts, zodat ze later stuk voor stuk
+ * door gegevens uit de database vervangen kunnen worden.
  */
-
-const items = await listActiveProducts();
 ---
 
-<Layout description="Huishoudelijke artikelen, kinderartikelen, cosmetica, tassen en schoeisel.">
-	<div class="mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
-		<h1 class="text-2xl font-semibold tracking-tight">Ons assortiment</h1>
-		<p class="mt-1 text-sm text-text-muted">
-			{items.length === 1 ? '1 product' : `${items.length} producten`}
-		</p>
-
-		{items.length === 0 ? (
-				<div class="mt-8 rounded-card border border-border bg-surface p-8 text-center">
-					<p class="font-medium">Er staat nog niets in de winkel</p>
-					<p class="mt-1 text-sm text-text-muted">
-						Zodra het assortiment is overgezet, staan de producten hier.
-					</p>
-				</div>
-			) : (
-				<div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-					{items.map((product) => {
-						const variant = defaultVariant(product.variants);
-						const image = product.images[0];
-						if (!variant || !image) return null;
-						return (
-							<ProductCard
-								slug={product.slug}
-								name={product.name}
-								image={image}
-								priceCents={variant.priceCents}
-								compareAtPriceCents={variant.compareAtPriceCents}
-								stockQuantity={variant.stockQuantity}
-								optionSummary={optionSummary(
-									product.optionNames,
-									product.variants.length,
-								)}
-							/>
-						);
-					})}
-				</div>
-			)}
-	</div>
+<Layout description="Ontdek HH Shops: de webwinkel voor al uw huishoudelijke artikelen. Snel besteld, betrouwbaar geleverd en altijd scherp geprijsd.">
+	<Hero />
+	<Bestsellers />
+	<Assortiment />
+	<Over />
+	<Voordelen />
+	<Reviews />
+	<InstagramStrook />
 </Layout>

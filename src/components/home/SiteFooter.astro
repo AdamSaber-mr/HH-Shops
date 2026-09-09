@@ -1,0 +1,57 @@
+---
+import { footer } from '../../content/homepage.ts';
+---
+
+<footer class="border-t border-border bg-surface">
+	<div class="mx-auto max-w-[1200px] px-4 py-12 sm:px-6">
+		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+			<div>
+				<p class="text-lg font-semibold text-accent">HH Shops</p>
+				<p class="mt-2 text-sm leading-relaxed text-text-muted">{footer.tagline}</p>
+				<a href={footer.knop.href} class="mt-4 inline-flex min-h-11 items-center rounded-control bg-accent px-4 text-sm font-medium text-white hover:bg-accent-hover">
+					{footer.knop.label}
+				</a>
+			</div>
+
+			{footer.kolommen.map((kolom) => (
+				<nav aria-label={kolom.titel}>
+					<h2 class="text-sm font-semibold">{kolom.titel}</h2>
+					<ul class="mt-3 space-y-2">
+						{kolom.links.map((l) => (
+							<li>
+								<a href={l.href} class="rounded-control text-sm text-text-muted hover:text-text hover:underline">
+									{l.label}
+								</a>
+							</li>
+						))}
+					</ul>
+				</nav>
+			))}
+
+			<div>
+				<h2 class="text-sm font-semibold">{footer.contact.titel}</h2>
+				<address class="mt-3 space-y-1 text-sm text-text-muted not-italic">
+					{footer.contact.regels.map((r) => <p>{r}</p>)}
+					<p>
+						<a href={`mailto:${footer.contact.email}`} class="rounded-control hover:text-text hover:underline">
+							{footer.contact.email}
+						</a>
+					</p>
+				</address>
+			</div>
+		</div>
+
+		<div class="mt-10 flex flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+			<p class="text-sm text-text-muted">{footer.copyright}</p>
+			<nav aria-label="Onderaan">
+				<ul class="flex flex-wrap gap-4">
+					{footer.onderLinks.map((l) => (
+						<li>
+							<a href={l.href} class="rounded-control text-sm text-text-muted hover:text-text hover:underline">{l.label}</a>
+						</li>
+					))}
+				</ul>
+			</nav>
+		</div>
+	</div>
+</footer>

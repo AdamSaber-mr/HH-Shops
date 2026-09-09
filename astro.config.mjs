@@ -74,6 +74,8 @@ export default defineConfig({
 					'check',
 					'caret-right',
 					'caret-down',
+					'star',
+					'star-half',
 					'minus',
 					'plus',
 					'truck',

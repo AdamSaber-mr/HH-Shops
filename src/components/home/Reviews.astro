@@ -1,0 +1,29 @@
+---
+import { Icon } from 'astro-icon/components';
+import { reviews } from '../../content/homepage.ts';
+---
+
+<section aria-labelledby="reviews-titel">
+	<div class="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 sm:py-16">
+		<div class="text-center">
+			<h2 id="reviews-titel" class="text-2xl font-semibold tracking-tight sm:text-3xl">
+				{reviews.titel}
+			</h2>
+			<p class="mx-auto mt-2 max-w-2xl text-text-muted">{reviews.tekst}</p>
+		</div>
+
+		<ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			{reviews.items.map((r) => (
+				<li class="flex flex-col rounded-card border border-border bg-surface p-5">
+					<div class="flex gap-0.5 text-accent" role="img" aria-label={`${reviews.sterren} van de 5 sterren`}>
+						{Array.from({ length: reviews.sterren }).map(() => (
+							<Icon name="ph:star" class="size-4" />
+						))}
+					</div>
+					<blockquote class="mt-3 flex-1 text-sm leading-relaxed">{r.tekst}</blockquote>
+					<p class="mt-4 text-sm font-medium text-text-muted">{r.naam}</p>
+				</li>
+			))}
+		</ul>
+	</div>
+</section>

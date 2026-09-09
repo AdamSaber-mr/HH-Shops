@@ -1,0 +1,43 @@
+---
+import { Icon } from 'astro-icon/components';
+import { hero } from '../../content/homepage.ts';
+---
+
+<section class="border-b border-border bg-surface">
+	<div class="mx-auto max-w-[1200px] px-4 py-16 text-center sm:px-6 sm:py-24">
+		<h1 class="mx-auto max-w-4xl text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-5xl">
+			{hero.titel}
+		</h1>
+		<p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-text-muted sm:text-lg">
+			{hero.tekst}
+		</p>
+
+		<div class="mt-8 flex flex-col items-center gap-4">
+			<a
+				href={hero.knop.href}
+				class="inline-flex min-h-12 items-center rounded-control bg-accent px-6 font-medium text-white hover:bg-accent-hover"
+			>
+				{hero.knop.label}
+			</a>
+
+			<search class="w-full max-w-md">
+				<form class="flex gap-2" action="/winkel">
+				<label for="zoeken" class="sr-only">Producten zoeken</label>
+				<div class="relative flex-1">
+					<Icon name="ph:magnifying-glass" class="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-text-muted" />
+					<input
+						id="zoeken"
+						name="q"
+						type="search"
+						placeholder={hero.zoekPlaceholder}
+						class="min-h-11 w-full rounded-control border border-border-strong bg-surface pr-3 pl-10 text-sm placeholder:text-text-muted"
+					/>
+				</div>
+				<button type="submit" class="min-h-11 rounded-control border border-border-strong px-4 text-sm font-medium hover:bg-surface-hover">
+					Zoeken
+				</button>
+			</form>
+			</search>
+		</div>
+	</div>
+</section>

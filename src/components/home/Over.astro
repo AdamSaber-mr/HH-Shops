@@ -1,0 +1,13 @@
+---
+import { over } from '../../content/homepage.ts';
+---
+
+<section aria-labelledby="over-titel">
+	<div class="mx-auto max-w-3xl px-4 py-12 text-center sm:px-6 sm:py-16">
+		<h2 id="over-titel" class="text-2xl font-semibold tracking-tight sm:text-3xl">{over.titel}</h2>
+		<p class="mt-4 leading-relaxed text-text-muted">{over.tekst}</p>
+		<a href={over.knop.href} class="mt-8 inline-flex min-h-12 items-center rounded-control border border-border-strong bg-surface px-6 font-medium hover:bg-surface-hover">
+			{over.knop.label}
+		</a>
+	</div>
+</section>
