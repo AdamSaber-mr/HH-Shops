@@ -1,0 +1,7 @@
+# Wat niet mee hoeft in een deploy. data/ alleen al is 31 MB.
+data/
+docs/
+.agents/
+.claude/
+.vscode/
+PLAN-VAN-AANPAK.md

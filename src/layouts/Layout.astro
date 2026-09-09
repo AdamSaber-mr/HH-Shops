@@ -1,23 +1,68 @@
+---
+// Het font wordt hier geimporteerd en niet in global.css, zodat Vite de
+// asset-URL's van de woff2-bestanden herschrijft.
+import '@fontsource-variable/geist';
+import '../styles/global.css';
+
+interface Props {
+	/** Zonder titel wordt het alleen "HH Shops". */
+	title?: string;
+	description?: string;
+	/** Aan op previews en op alles wat niet in Google hoort. */
+	noindex?: boolean;
+}
+
+const {
+	title,
+	description = 'HH Shops verkoopt huishoudelijke artikelen, kinderartikelen, cosmetica, tassen en schoeisel. Snel geleverd in Nederland.',
+	noindex = false,
+} = Astro.props;
+
+const pageTitle = title ? `${title} | HH Shops` : 'HH Shops';
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="nl">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{pageTitle}</title>
+		<meta name="description" content={description} />
+		{noindex && <meta name="robots" content="noindex, nofollow" />}
+		<meta name="theme-color" content="#fafaf9" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="icon" href="/favicon.ico" sizes="32x32" />
+		<slot name="head" />
 	</head>
-	<body>
-		<slot />
+	<body class="min-h-dvh bg-canvas text-text">
+		<a
+			href="#inhoud"
+			class="sr-only rounded-control border border-border-strong bg-surface px-4 py-2 font-medium text-accent focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50"
+		>
+			Naar de inhoud
+		</a>
+
+		<header class="border-b border-border bg-surface">
+			<div class="mx-auto flex max-w-[1400px] items-center gap-6 px-4 py-4 sm:px-6">
+				<a
+					href="/"
+					class="rounded-control text-xl font-semibold tracking-tight text-accent"
+				>
+					HH Shops
+				</a>
+			</div>
+		</header>
+
+		<main id="inhoud">
+			<slot />
+		</main>
+
+		<footer class="mt-16 border-t border-border bg-surface">
+			<div
+				class="mx-auto max-w-[1400px] px-4 py-8 text-sm text-text-muted sm:px-6"
+			>
+				<p>HH Shops</p>
+			</div>
+		</footer>
 	</body>
 </html>
-
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>

@@ -1,11 +1,16 @@
 ---
-import Welcome from '../components/Welcome.astro';
+// Tijdelijk. In stap 5 haalt deze pagina het testproduct uit de database en
+// toont hem als productkaart. Voor nu bewijst hij dat de layout, de tokens en
+// Geist geladen zijn.
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="Fundament">
+	<div class="mx-auto max-w-[1400px] px-4 py-12 sm:px-6">
+		<h1 class="text-3xl font-semibold tracking-tight">Fundament staat</h1>
+		<p class="mt-2 max-w-prose text-text-muted">
+			Deze pagina is tijdelijk. Zodra het datamodel er is, komt hier het
+			testproduct uit de database te staan.
+		</p>
+	</div>
 </Layout>

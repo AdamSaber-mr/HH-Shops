@@ -1,0 +1,147 @@
+/*
+  Ontwerpfundament van HH Shops.
+
+  `source("../")` beperkt de klassendetectie tot `src/`. Zonder dat scant
+  Tailwind ook `data/wc-snapshot/`, en daar staat 31 MB WooCommerce-HTML in met
+  echte class-attributen erin. Die map gaat mee in git, dus .gitignore helpt hier
+  niet.
+*/
+@import "tailwindcss" source("../");
+
+@theme {
+	/*
+	  De standaardpaletten en -afrondingen van Tailwind gaan eruit. Daarna
+	  bestaan `bg-red-500` en `rounded-lg` niet meer, en is er geen manier om
+	  per ongeluk een losse kleur de site in te schrijven. Dat is precies wat
+	  het fase 1-document bedoelt met "zodat niemand later losse kleurcodes gaat
+	  strooien", alleen dan afgedwongen in plaats van afgesproken.
+
+	  `transparent`, `current`, `rounded-full` en `rounded-none` blijven bestaan:
+	  dat zijn vaste utilities en geen themawaarden.
+	*/
+	--color-*: initial;
+	--radius-*: initial;
+
+	--color-white: #ffffff;
+	--color-black: #000000;
+
+	/* Vlakken */
+	--color-canvas: #fafaf9; /* paginaachtergrond */
+	--color-surface: #ffffff; /* kaarten en panelen */
+	--color-surface-hover: #f5f5f4; /* rij of kaart onder de muis */
+
+	/*
+	  Twee randtokens, met opzet.
+
+	  WCAG 2.1 SC 1.4.11 eist 3:1 voor de zichtbare begrenzing van iets dat je
+	  kunt bedienen. Voor een scheidingslijn of kaartrand geldt die eis niet, en
+	  daar is een zachte lijn juist beter: de shop is dicht gevuld en wordt
+	  anders onrustig.
+
+	  `border` is decoratief. `border-strong` is verplicht op alles wat de
+	  gebruiker aanraakt: invoervelden, selects, checkboxes, knoppen met alleen
+	  een omtrek. Twijfel je, neem dan border-strong.
+	*/
+	--color-border: #e7e5e4; /* decoratief, 1,20:1 op canvas */
+	--color-border-strong: #8c8681; /* bedienbaar, 3,44:1 op canvas */
+
+	/*
+	  Tekst.
+
+	  `text-muted` is #6b6560 en niet het #78716c uit het document. Dat laatste
+	  haalt 4,59:1 op canvas, maar zakt naar 4,40:1 zodra het op een hover-rij
+	  staat, en valt dan onder AA. #6b6560 haalt 5,50 op canvas en 5,27 op de
+	  hover-rij.
+
+	  `text-disabled` staat bewust onder AA. Uitgeschakelde onderdelen zijn
+	  uitgezonderd in SC 1.4.3. Gebruik hem nergens anders voor.
+	*/
+	--color-text: #1c1917; /* 16,7:1 */
+	--color-text-muted: #6b6560; /* 5,5:1 */
+	--color-text-disabled: #a8a29e; /* bewust onder AA */
+
+	/* Accent. Bosgroen, de enige accentkleur van de site. */
+	--color-accent: #1f5e3d; /* wit erop is 7,7:1 */
+	--color-accent-hover: #16452c;
+	--color-accent-subtle: #ecf3ef; /* achtergrond van "op voorraad" */
+
+	/* Fout en uitverkocht. */
+	--color-danger: #b91c1c; /* 6,2:1 */
+	--color-danger-subtle: #fef2f2;
+
+	/* Afronding. Twee waarden, meer niet. */
+	--radius-control: 6px; /* knoppen en invoervelden */
+	--radius-card: 8px; /* kaarten en panelen */
+
+	/*
+	  Geist, zelf gehost via @fontsource-variable/geist. Het bestand wordt in
+	  Layout.astro geimporteerd en niet hier, zodat Vite de asset-URL's van de
+	  woff2-bestanden herschrijft. Via een @import in dit bestand pakt Tailwind
+	  hem eerst en gaat dat mis.
+
+	  De preflight van Tailwind zet `html { font-family: --theme(--font-sans) }`,
+	  dus hiermee staat Geist meteen op de hele pagina.
+	*/
+	--font-sans:
+		"Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+		Roboto, Arial, sans-serif;
+}
+
+@layer base {
+	:root {
+		/*
+		  We bouwen bewust alleen een lichte modus. Zonder deze regel kleuren
+		  telefoons die in donkere stand staan de formuliervelden en
+		  scrollbalken alsnog donker, en klapt de pagina half om.
+		*/
+		color-scheme: light;
+	}
+
+	html {
+		background-color: var(--color-canvas);
+		color: var(--color-text);
+		-webkit-text-size-adjust: 100%;
+	}
+
+	/*
+	  Tailwind v4 zet de standaardrand op `currentColor`. Een kale `border` neemt
+	  dan de tekstkleur over en wordt veel te hard. Hier staat de decoratieve
+	  rand als vertrekpunt.
+	*/
+	*,
+	::after,
+	::before {
+		border-color: var(--color-border);
+	}
+
+	/*
+	  Een zichtbare focusring op alles wat focus krijgt. Dit is geen afwerking:
+	  zonder dit is de site niet met het toetsenbord te bedienen.
+
+	  De offset van 2px zet de ring buiten het element. Zonder die offset is een
+	  groene ring op een groene koopknop onzichtbaar, want accent op accent is
+	  1,0:1. Erbuiten staat hij op de achtergrond en haalt hij 7,4:1.
+	*/
+	:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+		border-radius: 2px;
+	}
+
+	::selection {
+		background-color: var(--color-accent-subtle);
+		color: var(--color-text);
+	}
+
+	/* Wie geen beweging wil, krijgt geen beweging. */
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		::after,
+		::before {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+			scroll-behavior: auto !important;
+		}
+	}
+}
