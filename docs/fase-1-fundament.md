@@ -291,10 +291,12 @@ Puntsgewijs nalopen:
 
 ## Open punten
 
-1. **Het Neon-wachtwoord moet gerouleerd worden.** Het huidige is via de chat gedeeld.
-   Adam pakt dit aan het eind op. Tot die tijd werken we met het bestaande wachtwoord.
-   Zodra het gewisseld is, moet het op drie plekken bij: lokale `.env`, Vercel preview en
-   Vercel productie
+1. ~~**Het Neon-wachtwoord moet gerouleerd worden.**~~ **Opgelost, anders dan gedacht.**
+   Bij het aanmaken van de dev-branch bleek de database helemaal niet in Adams Neon-account
+   te staan: iemand anders had hem opgezet. Daardoor kon het wachtwoord ook niet gerouleerd
+   worden, en hing de hele webshop aan een project zonder eigen beheer. Er staat nu een vers
+   project in een eigen account, met twee branches. De gelekte gegevens geven nergens meer
+   toegang toe
 2. **Btw-tarief.** Alles staat standaard op 21 procent. Dat klopt voor huishoudelijke
    artikelen, cosmetica, tassen en schoeisel. Mocht er ooit iets bij komen dat onder 9
    procent valt, dan kan dat per variant afwijken zonder aanpassing

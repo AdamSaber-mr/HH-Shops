@@ -255,11 +255,16 @@ npx astro dev --background
 Beheren met `astro dev status`, `astro dev logs` en `astro dev stop`.
 Zie ook `CLAUDE.md` in de repo.
 
-**Database:** Neon PostgreSQL. De verbindingsgegevens horen in een `.env` die
-niet in git komt.
+**Database:** Neon PostgreSQL, project "HH Shops" in eu-central-1 op Postgres 18.
+De verbindingsgegevens horen in een `.env` die niet in git komt.
 
-> **Belangrijk:** het huidige databasewachtwoord is via de chat gedeeld en moet
-> gerouleerd worden voordat de shop live gaat.
+Twee branches: `main` is productie, `dev` is voor lokaal werk en preview-deploys.
+Ontwikkel nooit op main.
+
+> **Opgelost.** De eerste database was door iemand anders aangemaakt, en het
+> wachtwoord ervan is via de chat gedeeld. In plaats van rouleren is het project
+> opnieuw opgezet in een eigen Neon-account. Die oude gegevens geven nu nergens
+> meer toegang toe, en het beheer ligt op de juiste plek.
 
 **Waar het assortiment vandaan komt:** de oude site heeft een open koppeling
 onder `/wp-json/wc/store/v1/` waar producten en categorieen uit op te halen zijn.
