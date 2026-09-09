@@ -29,20 +29,20 @@ const tegels = [
 ---
 
 <section class="border-b border-border bg-surface">
-	<div class="mx-auto max-w-[1400px] px-4 pt-6 pb-10 sm:px-6 sm:pt-8 sm:pb-14">
+	<div class="mx-auto max-w-[1400px] px-4 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-10">
 		<div class="grid gap-3 lg:grid-cols-[1.05fr_1fr]">
 			<!-- Tekstvlak, zelf een tegel in het mozaiek -->
 			<div
-				class="flex flex-col justify-center rounded-media bg-accent px-6 py-10 text-white sm:px-10 sm:py-14"
+				class="flex flex-col justify-center rounded-media bg-accent px-6 py-8 text-white sm:px-9 sm:py-10"
 			>
-				<h1 class="text-4xl leading-[1.05] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+				<h1 class="text-3xl leading-[1.06] font-extrabold tracking-tight text-balance sm:text-4xl lg:text-5xl">
 					{hero.titel}
 				</h1>
-				<p class="mt-4 max-w-md leading-relaxed text-white/85">
+				<p class="mt-3 max-w-md leading-relaxed text-white/85">
 					{hero.tekst}
 				</p>
 
-				<search class="mt-7">
+				<search class="mt-6">
 					<form class="flex flex-col gap-2 sm:flex-row" action="/winkel">
 						<label for="zoeken" class="sr-only">Producten zoeken</label>
 						<div class="relative flex-1">
@@ -69,7 +69,7 @@ const tegels = [
 
 				<a
 					href={hero.knop.href}
-					class="mt-4 inline-flex w-fit items-center gap-1.5 rounded-control text-sm font-medium text-white/90 underline-offset-4 hover:underline"
+					class="mt-3 inline-flex w-fit items-center gap-1.5 rounded-control text-sm font-medium text-white/90 underline-offset-4 hover:underline"
 				>
 					{hero.knop.label}
 					<Icon name="ph:caret-right" class="size-4" />
@@ -81,7 +81,7 @@ const tegels = [
 				{
 					tegels.map((t) => (
 						<li class={`${t.span} lift zoom overflow-hidden rounded-media`}>
-							<a href={`/categorie/${t.bestand}`} class="group relative block h-full min-h-40">
+							<a href={`/categorie/${t.bestand}`} class="group relative block h-full min-h-32">
 								<Image
 									src={afbeelding(`~/assets/site/categorieen/${t.bestand}.png`)}
 									alt={`Categorie ${t.naam}`}
