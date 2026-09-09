@@ -106,21 +106,21 @@ const VARIANTS = [
  */
 const IMAGES = [
 	{
-		url: 'https://qncppdkh3kw1opin.public.blob.vercel-storage.com/producten/zwemvest-hond-met-handvat-1-GesKtHUzbD1h57HWzXhZGYxruP9pqx.jpg',
+		url: 'https://qjzaxiyu1pfuckle.public.blob.vercel-storage.com/producten/zwemvest-hond-met-handvat-1.jpg',
 		alt: 'Hond draagt een oranje zwemvest met een handvat over de volle lengte van de rug',
 		width: 900,
 		height: 900,
 		position: 0,
 	},
 	{
-		url: 'https://qncppdkh3kw1opin.public.blob.vercel-storage.com/producten/zwemvest-hond-met-handvat-2-NaIS6syfGtyctt4DTvfkzfOOPlq7Ep.jpg',
+		url: 'https://qjzaxiyu1pfuckle.public.blob.vercel-storage.com/producten/zwemvest-hond-met-handvat-2.jpg',
 		alt: 'Zwemvest voor honden van bovenaf, met verstelbare buikband en reflecterende bies',
 		width: 550,
 		height: 687,
 		position: 1,
 	},
 	{
-		url: 'https://qncppdkh3kw1opin.public.blob.vercel-storage.com/producten/zwemvest-hond-met-handvat-3-rAOamBgOsf3fhiHZE02weLM4wJ2B3Q.jpg',
+		url: 'https://qjzaxiyu1pfuckle.public.blob.vercel-storage.com/producten/zwemvest-hond-met-handvat-3.jpg',
 		alt: 'Zijaanzicht van het hondenzwemvest, met de gesp van de buikband in beeld',
 		width: 519,
 		height: 840,
