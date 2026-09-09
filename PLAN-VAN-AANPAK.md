@@ -29,12 +29,12 @@ We hebben hem doorgemeten voordat we deze keuze maakten. Wat we vonden:
 | Wat | Meting |
 |---|---|
 | Logo en favicons | Wijzen naar `hh-shops.instawp.co`, een oud stagingdomein dat niet meer bestaat in DNS. Ze laden dus nergens |
-| Afbeeldingen | Gemiddeld 647 KB per productfoto, uitschieters tot 1,9 MB. Allemaal PNG, geen moderne formaten |
+| Afbeeldingen | 227 stuks. De 54 PNG's zijn samen 22 van de 30 MB, gemiddeld 413 KB met uitschieters tot 1,9 MB. De 170 JPG's zijn met 48 KB gemiddeld prima |
 | Winkelpagina | Laadt alle 94 producten tegelijk, 313 KB aan HTML, terwijl er wel een link naar pagina 2 staat |
-| Alt-teksten | 256 afbeeldingen zonder. Slecht voor Google en onbruikbaar voor schermlezers |
-| Productmodel | 12 producten zijn eigenlijk maatvarianten van 4 producten. Ze staan als losse producten in de shop |
+| Alt-teksten | 256 van de 269 afbeeldingsverwijzingen zonder. Slecht voor Google en onbruikbaar voor schermlezers |
+| Productmodel | 92 van de 94 producten staan als `simple` in WooCommerce. Zestien daarvan zijn in werkelijkheid maat- of kleurvarianten van zes producten, los naast elkaar in de shop. Twee producten zijn wel als `variable` opgezet, waarvan er een dubbelt met drie losse maten |
 | Artikelnummers | Geen enkel product heeft een SKU |
-| Voorraad | 34 procent is uitverkocht en staat gewoon tussen de rest |
+| Voorraad | 32 van de 94 is uitverkocht, 34 procent, en staat gewoon tussen de rest |
 | Reviews | Nul in het systeem, terwijl de homepage wel klantbeoordelingen toont |
 
 Los van elkaar zijn dit reparaties. Bij elkaar is het een site waarvan het
@@ -140,7 +140,7 @@ afbeelding.
 Maak dit herhaalbaar. Je gaat het meer dan een keer draaien.
 
 **Klaar wanneer:** alle producten staan in de nieuwe database, kloppen, en de
-afbeeldingen zijn een stuk lichter dan de 647 KB waar we mee begonnen.
+54 zware PNG's zijn terug van 22 MB naar een fractie daarvan.
 
 ### Fase 3, de winkel
 
@@ -261,9 +261,14 @@ niet in git komt.
 > **Belangrijk:** het huidige databasewachtwoord is via de chat gedeeld en moet
 > gerouleerd worden voordat de shop live gaat.
 
-**Waar het assortiment nu vandaan komt:** de oude site heeft een open koppeling
+**Waar het assortiment vandaan komt:** de oude site heeft een open koppeling
 onder `/wp-json/wc/store/v1/` waar producten en categorieen uit op te halen zijn.
-Geen inloggegevens nodig. Zolang die site nog draait, is dat onze bron.
+Geen inloggegevens nodig.
+
+Op 9 september 2026 is daar een volledige kopie van gemaakt in
+[`data/wc-snapshot/`](data/wc-snapshot/README.md): 94 producten, 9 categorieen
+en alle 227 afbeeldingen. Fase 2 werkt vanaf die kopie, niet vanaf de live site.
+Als de klant morgen iets aanpast of de site uitzet, verliezen we niets.
 
 **Ontwerpregels:** `.agents/skills/design-taste-frontend/SKILL.md`. Lees hem
 voordat je aan de UI begint. Er staat ook een audit-aanpak in voor redesigns.

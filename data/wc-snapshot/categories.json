@@ -1,0 +1,173 @@
+[
+  {
+    "id": 20,
+    "name": "Computer artikelen",
+    "slug": "computer-artikelen",
+    "description": "",
+    "parent": 0,
+    "count": 2,
+    "image": {
+      "id": 224,
+      "src": "https://hh-shops.nl/wp-content/uploads/2025/09/computer_artikelen.png",
+      "thumbnail": "https://hh-shops.nl/wp-content/uploads/2025/09/computer_artikelen-300x300.png",
+      "srcset": "https://hh-shops.nl/wp-content/uploads/2025/09/computer_artikelen.png 1024w, https://hh-shops.nl/wp-content/uploads/2025/09/computer_artikelen-300x300.png 300w, https://hh-shops.nl/wp-content/uploads/2025/09/computer_artikelen-600x600.png 600w, https://hh-shops.nl/wp-content/uploads/2025/09/computer_artikelen-64x64.png 64w, https://hh-shops.nl/wp-content/uploads/2025/09/computer_artikelen-150x150.png 150w, https://hh-shops.nl/wp-content/uploads/2025/09/computer_artikelen-768x768.png 768w",
+      "sizes": "(max-width: 1024px) 100vw, 1024px",
+      "name": "computer_artikelen",
+      "alt": ""
+    },
+    "review_count": 0,
+    "permalink": "https://hh-shops.nl/product-categorie/computer-artikelen"
+  },
+  {
+    "id": 18,
+    "name": "Cosmetica artikelen",
+    "slug": "cosmetica-artikelen",
+    "description": "",
+    "parent": 0,
+    "count": 2,
+    "image": {
+      "id": 225,
+      "src": "https://hh-shops.nl/wp-content/uploads/2025/09/cosmetica_artikelen.png",
+      "thumbnail": "https://hh-shops.nl/wp-content/uploads/2025/09/cosmetica_artikelen-300x300.png",
+      "srcset": "https://hh-shops.nl/wp-content/uploads/2025/09/cosmetica_artikelen.png 1024w, https://hh-shops.nl/wp-content/uploads/2025/09/cosmetica_artikelen-300x300.png 300w, https://hh-shops.nl/wp-content/uploads/2025/09/cosmetica_artikelen-600x600.png 600w, https://hh-shops.nl/wp-content/uploads/2025/09/cosmetica_artikelen-64x64.png 64w, https://hh-shops.nl/wp-content/uploads/2025/09/cosmetica_artikelen-150x150.png 150w, https://hh-shops.nl/wp-content/uploads/2025/09/cosmetica_artikelen-768x768.png 768w",
+      "sizes": "(max-width: 1024px) 100vw, 1024px",
+      "name": "cosmetica_artikelen",
+      "alt": ""
+    },
+    "review_count": 0,
+    "permalink": "https://hh-shops.nl/product-categorie/cosmetica-artikelen"
+  },
+  {
+    "id": 19,
+    "name": "Huishoudelijke artikelen",
+    "slug": "huishoudelijke-artikelen",
+    "description": "",
+    "parent": 0,
+    "count": 30,
+    "image": {
+      "id": 226,
+      "src": "https://hh-shops.nl/wp-content/uploads/2025/09/Huishoudelijke_artikelen.png",
+      "thumbnail": "https://hh-shops.nl/wp-content/uploads/2025/09/Huishoudelijke_artikelen-300x300.png",
+      "srcset": "https://hh-shops.nl/wp-content/uploads/2025/09/Huishoudelijke_artikelen.png 1024w, https://hh-shops.nl/wp-content/uploads/2025/09/Huishoudelijke_artikelen-300x300.png 300w, https://hh-shops.nl/wp-content/uploads/2025/09/Huishoudelijke_artikelen-600x600.png 600w, https://hh-shops.nl/wp-content/uploads/2025/09/Huishoudelijke_artikelen-64x64.png 64w, https://hh-shops.nl/wp-content/uploads/2025/09/Huishoudelijke_artikelen-150x150.png 150w, https://hh-shops.nl/wp-content/uploads/2025/09/Huishoudelijke_artikelen-768x768.png 768w",
+      "sizes": "(max-width: 1024px) 100vw, 1024px",
+      "name": "Huishoudelijke_artikelen",
+      "alt": ""
+    },
+    "review_count": 0,
+    "permalink": "https://hh-shops.nl/product-categorie/huishoudelijke-artikelen"
+  },
+  {
+    "id": 16,
+    "name": "Kinder artikelen",
+    "slug": "kinder-artikelen",
+    "description": "",
+    "parent": 0,
+    "count": 16,
+    "image": {
+      "id": 227,
+      "src": "https://hh-shops.nl/wp-content/uploads/2025/09/Kinderen_artikelen.png",
+      "thumbnail": "https://hh-shops.nl/wp-content/uploads/2025/09/Kinderen_artikelen-300x300.png",
+      "srcset": "https://hh-shops.nl/wp-content/uploads/2025/09/Kinderen_artikelen.png 1024w, https://hh-shops.nl/wp-content/uploads/2025/09/Kinderen_artikelen-300x300.png 300w, https://hh-shops.nl/wp-content/uploads/2025/09/Kinderen_artikelen-600x600.png 600w, https://hh-shops.nl/wp-content/uploads/2025/09/Kinderen_artikelen-64x64.png 64w, https://hh-shops.nl/wp-content/uploads/2025/09/Kinderen_artikelen-150x150.png 150w, https://hh-shops.nl/wp-content/uploads/2025/09/Kinderen_artikelen-768x768.png 768w",
+      "sizes": "(max-width: 1024px) 100vw, 1024px",
+      "name": "Kinderen_artikelen",
+      "alt": ""
+    },
+    "review_count": 0,
+    "permalink": "https://hh-shops.nl/product-categorie/kinder-artikelen"
+  },
+  {
+    "id": 21,
+    "name": "Overige",
+    "slug": "overige",
+    "description": "",
+    "parent": 0,
+    "count": 48,
+    "image": {
+      "id": 325,
+      "src": "https://hh-shops.nl/wp-content/uploads/2025/09/ovirige_artikelen.png",
+      "thumbnail": "https://hh-shops.nl/wp-content/uploads/2025/09/ovirige_artikelen-300x300.png",
+      "srcset": "https://hh-shops.nl/wp-content/uploads/2025/09/ovirige_artikelen.png 1024w, https://hh-shops.nl/wp-content/uploads/2025/09/ovirige_artikelen-300x300.png 300w, https://hh-shops.nl/wp-content/uploads/2025/09/ovirige_artikelen-600x600.png 600w, https://hh-shops.nl/wp-content/uploads/2025/09/ovirige_artikelen-64x64.png 64w, https://hh-shops.nl/wp-content/uploads/2025/09/ovirige_artikelen-150x150.png 150w, https://hh-shops.nl/wp-content/uploads/2025/09/ovirige_artikelen-768x768.png 768w",
+      "sizes": "(max-width: 1024px) 100vw, 1024px",
+      "name": "ovirige_artikelen",
+      "alt": ""
+    },
+    "review_count": 0,
+    "permalink": "https://hh-shops.nl/product-categorie/overige"
+  },
+  {
+    "id": 27,
+    "name": "Schoenen",
+    "slug": "schoenen",
+    "description": "",
+    "parent": 0,
+    "count": 3,
+    "image": {
+      "id": 843,
+      "src": "https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T102755.920.png",
+      "thumbnail": "https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T102755.920-300x300.png",
+      "srcset": "https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T102755.920.png 900w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T102755.920-300x300.png 300w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T102755.920-600x600.png 600w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T102755.920-64x64.png 64w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T102755.920-150x150.png 150w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T102755.920-768x768.png 768w",
+      "sizes": "(max-width: 900px) 100vw, 900px",
+      "name": "Ontwerp zonder titel &#8211; 2026-02-10T102755.920",
+      "alt": ""
+    },
+    "review_count": 0,
+    "permalink": "https://hh-shops.nl/product-categorie/schoenen"
+  },
+  {
+    "id": 29,
+    "name": "Slippers",
+    "slug": "slippers",
+    "description": "",
+    "parent": 0,
+    "count": 1,
+    "image": {
+      "id": 856,
+      "src": "https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104359.813.png",
+      "thumbnail": "https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104359.813-300x300.png",
+      "srcset": "https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104359.813.png 900w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104359.813-300x300.png 300w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104359.813-600x600.png 600w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104359.813-64x64.png 64w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104359.813-150x150.png 150w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104359.813-768x768.png 768w",
+      "sizes": "(max-width: 900px) 100vw, 900px",
+      "name": "Ontwerp zonder titel &#8211; 2026-02-10T104359.813",
+      "alt": ""
+    },
+    "review_count": 0,
+    "permalink": "https://hh-shops.nl/product-categorie/slippers"
+  },
+  {
+    "id": 28,
+    "name": "Sloffen",
+    "slug": "sloffen",
+    "description": "",
+    "parent": 0,
+    "count": 2,
+    "image": {
+      "id": 855,
+      "src": "https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104128.666.png",
+      "thumbnail": "https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104128.666-300x300.png",
+      "srcset": "https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104128.666.png 900w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104128.666-300x300.png 300w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104128.666-600x600.png 600w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104128.666-64x64.png 64w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104128.666-150x150.png 150w, https://hh-shops.nl/wp-content/uploads/2026/02/Ontwerp-zonder-titel-2026-02-10T104128.666-768x768.png 768w",
+      "sizes": "(max-width: 900px) 100vw, 900px",
+      "name": "Ontwerp zonder titel &#8211; 2026-02-10T104128.666",
+      "alt": ""
+    },
+    "review_count": 0,
+    "permalink": "https://hh-shops.nl/product-categorie/sloffen"
+  },
+  {
+    "id": 17,
+    "name": "Tassen",
+    "slug": "tassen-rugzakken-hondentassen-etc",
+    "description": "",
+    "parent": 0,
+    "count": 11,
+    "image": {
+      "id": 228,
+      "src": "https://hh-shops.nl/wp-content/uploads/2025/09/tassen_artikelen.png",
+      "thumbnail": "https://hh-shops.nl/wp-content/uploads/2025/09/tassen_artikelen-300x300.png",
+      "srcset": "https://hh-shops.nl/wp-content/uploads/2025/09/tassen_artikelen.png 1024w, https://hh-shops.nl/wp-content/uploads/2025/09/tassen_artikelen-300x300.png 300w, https://hh-shops.nl/wp-content/uploads/2025/09/tassen_artikelen-600x600.png 600w, https://hh-shops.nl/wp-content/uploads/2025/09/tassen_artikelen-64x64.png 64w, https://hh-shops.nl/wp-content/uploads/2025/09/tassen_artikelen-150x150.png 150w, https://hh-shops.nl/wp-content/uploads/2025/09/tassen_artikelen-768x768.png 768w",
+      "sizes": "(max-width: 1024px) 100vw, 1024px",
+      "name": "tassen_artikelen",
+      "alt": ""
+    },
+    "review_count": 0,
+    "permalink": "https://hh-shops.nl/product-categorie/tassen-rugzakken-hondentassen-etc"
+  }
+]
