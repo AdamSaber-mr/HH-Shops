@@ -123,6 +123,8 @@ hebben, zoals maten. Dat is precies wat er nu misgaat.
 **Klaar wanneer:** het project start, de database heeft een schema, en een
 testproduct kan erin en er weer uit.
 
+Deze fase is uitgewerkt in [docs/fase-1-fundament.md](docs/fase-1-fundament.md).
+
 ### Fase 2, het assortiment overzetten
 
 De 94 producten verhuizen van de oude site naar de nieuwe database. De oude
