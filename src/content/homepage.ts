@@ -15,11 +15,21 @@
 
 export const site = {
 	naam: 'HH Shops',
+	/*
+	 * Het logo is wit en oranjerood op zwart. Dat zwart is dragend: haal je het
+	 * weg, dan verdwijnt "H&H SHOPS" omdat die letters wit zijn.
+	 *
+	 * Het bestand van de oude site was 500 bij 500 met de inhoud in het midden,
+	 * dus 84 procent lege zwarte opvulling. Daardoor oogde het als een zwart
+	 * blok. Nu bijgesneden tot 446 bij 212.
+	 *
+	 * Voor een echt doorzichtig logo is het originele ontwerpbestand nodig.
+	 */
 	logo: {
 		src: '~/assets/site/logo.png',
 		alt: 'HH Shops',
-		width: 400,
-		height: 132,
+		width: 446,
+		height: 212,
 	},
 	announcement: 'SHOP NU!',
 };

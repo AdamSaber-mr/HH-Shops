@@ -26,14 +26,22 @@ const logo = afbeelding(site.logo.src);
 >
 	<div class="mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-4 sm:px-6">
 		<a href="/" class="shrink-0 rounded-control">
+			<!--
+				De verhouding hier moet die van het bestand volgen (446 bij 212),
+				anders reserveert de browser de verkeerde ruimte en verspringt de
+				kop tijdens het laden. Stond op 150 bij 50, wat 3:1 is.
+
+				Ronde hoeken omdat het logo een zwart vlak is: zonder afronding
+				staat er een hard blok in een kop waar verder alles rond is.
+			-->
 			<Image
 				src={logo}
 				alt={site.logo.alt}
-				width={150}
-				height={50}
-				quality={90}
+				width={168}
+				height={80}
+				quality={92}
 				loading="eager"
-				class="h-9 w-auto"
+				class="h-9 w-auto rounded-control"
 			/>
 		</a>
 
