@@ -75,6 +75,8 @@ export default defineConfig({
 					'caret-right',
 					'caret-down',
 					'star',
+					'star-fill',
+					'star-half-fill',
 					'clock',
 					'arrow-right',
 					'sparkle',

@@ -94,6 +94,20 @@ export const hero = {
  * overtuigd. Ze staan nu direct onder de hero, waar iemand nog beslist of hij
  * hier durft te kopen.
  */
+/*
+ * De beoordeling die in de hero staat.
+ *
+ * Dit is de 8,1 die de klant zelf op zijn huidige site claimt: "Met een
+ * gemiddelde beoordeling van 8,1 op bol.com". Er is geen Google-beoordeling en
+ * er is geen reviewsysteem in de shop, dus dit cijfer is een claim en geen
+ * meting. Verzin hier nooit een ander getal bij: een sterrenscore op een echte
+ * webshop is een harde uitspraak richting klanten.
+ */
+export const beoordeling = {
+	cijfer: '8,1',
+	bron: 'gemiddeld op bol.com',
+};
+
 export const trustbalk = [
 	{
 		icoon: 'ph:truck',

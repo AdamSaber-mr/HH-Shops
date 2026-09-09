@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
-import { hero } from '../../content/homepage.ts';
+import { beoordeling, hero } from '../../content/homepage.ts';
 import { afbeelding } from '../../lib/images.ts';
 
 /*
@@ -42,9 +42,9 @@ const tegels = [
 ];
 ---
 
-<section class="border-b border-border bg-surface">
-	<div class="mx-auto max-w-[1400px] px-4 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-10">
-		<div class="grid gap-3 md:grid-cols-[1.05fr_1fr]">
+<section class="border-b border-border bg-surface md:flex md:flex-1 md:flex-col">
+	<div class="mx-auto flex w-full max-w-[1400px] flex-col px-4 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-10 md:flex-1">
+		<div class="grid gap-3 md:flex-1 md:grid-cols-[1.05fr_1fr]">
 			<!-- Tekstvlak, zelf een tegel in het mozaiek -->
 			<div
 				class="flex flex-col justify-center rounded-media bg-accent px-6 py-7 text-white sm:px-8 sm:py-8 lg:px-10"
@@ -81,10 +81,30 @@ const tegels = [
 					</form>
 				</search>
 
+				<!--
+					De beoordeling staat hier en niet in de trustbalk, omdat dit het enige
+					harde bewijs op de pagina is en het dus meteen in beeld hoort.
+
+					Let op: dit is de 8,1 van bol.com die de klant zelf op zijn site
+					claimt. Er is geen Google-beoordeling en er is geen reviewsysteem in
+					de shop, dus verzin hier nooit een ander getal bij.
+				-->
+				<p class="mt-5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
+					<span
+						class="flex gap-0.5 text-white"
+						role="img"
+						aria-label={`${beoordeling.cijfer} van de 10`}
+					>
+						{Array.from({ length: 4 }).map(() => <Icon name="ph:star-fill" class="size-4" />)}
+						<Icon name="ph:star-half-fill" class="size-4" />
+					</span>
+					<span class="font-semibold">{beoordeling.cijfer}</span>
+					<span class="text-white/80">{beoordeling.bron}</span>
+				</p>
 			</div>
 
 			<!-- Beeldtegels -->
-			<ul class="grid grid-cols-2 gap-3 md:h-[400px] md:grid-cols-3 md:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
+			<ul class="grid grid-cols-2 gap-3 md:h-full md:grid-cols-3 md:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
 				{
 					tegels.map((t) => (
 						<li class={`${t.span} lift zoom min-h-0 overflow-hidden rounded-media`}>

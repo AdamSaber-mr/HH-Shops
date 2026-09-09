@@ -18,8 +18,19 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout description="Ontdek HH Shops: de webwinkel voor al uw huishoudelijke artikelen. Snel besteld, betrouwbaar geleverd en altijd scherp geprijsd.">
-	<Hero />
-	<TrustBalk />
+	{/*
+		Hero en trustbalk vullen samen precies het eerste scherm, zodat de
+		verzendbeloftes op de vouw landen in plaats van er net onder of ver
+		erboven. De hero rekt mee; de trustbalk houdt zijn eigen hoogte.
+
+		De min() zorgt dat het niet doorslaat op een heel hoog scherm: boven de
+		860 pixels stopt het meegroeien en komt de volgende sectie er gewoon
+		onder. Zonder die grens wordt de hero op een groot scherm absurd hoog.
+	*/}
+	<div class="md:flex md:min-h-[min(calc(100dvh-4rem),860px)] md:flex-col">
+		<Hero />
+		<TrustBalk />
+	</div>
 	<Bestsellers />
 	<Assortiment />
 	<Over />
