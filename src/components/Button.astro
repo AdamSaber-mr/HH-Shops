@@ -1,0 +1,82 @@
+---
+/*
+ * De knop van de site. Alle toestanden zitten erin: normaal, hover, focus,
+ * uitgeschakeld en bezig. Dat is geen afwerking maar functionaliteit: een
+ * uitverkocht product hoort een uitgeschakelde koopknop te hebben, en zonder
+ * zichtbare focus is de site niet met het toetsenbord te bedienen.
+ *
+ * De focusring komt uit global.css en staat met een offset buiten de knop.
+ * Zonder die offset is een groene ring op een groene knop onzichtbaar.
+ */
+
+interface Props {
+	variant?: 'primary' | 'secondary';
+	size?: 'md' | 'lg';
+	/** Rendert als link in plaats van als knop. */
+	href?: string;
+	type?: 'button' | 'submit';
+	disabled?: boolean;
+	/** Toont een draaiend icoon en blokkeert de knop. */
+	busy?: boolean;
+	/** Volle breedte, bijvoorbeeld op telefoon. */
+	block?: boolean;
+	class?: string;
+}
+
+const {
+	variant = 'primary',
+	size = 'md',
+	href,
+	type = 'button',
+	disabled = false,
+	busy = false,
+	block = false,
+	class: extraClass = '',
+} = Astro.props;
+
+const inactive = disabled || busy;
+
+const base =
+	'relative inline-flex items-center justify-center gap-2 rounded-control font-medium transition-colors select-none';
+
+const sizes = {
+	md: 'min-h-11 px-4 text-sm',
+	lg: 'min-h-12 px-6 text-base',
+};
+
+const variants = {
+	// Wit op bosgroen haalt 7,7:1.
+	primary: inactive
+		? 'bg-border text-text-disabled cursor-not-allowed'
+		: 'bg-accent text-white hover:bg-accent-hover',
+	// Een omtrek die je kunt bedienen, dus border-strong en niet de zachte rand.
+	secondary: inactive
+		? 'border border-border text-text-disabled cursor-not-allowed bg-surface'
+		: 'border border-border-strong bg-surface text-text hover:bg-surface-hover',
+};
+
+const classes = [base, sizes[size], variants[variant], block ? 'w-full' : '', extraClass]
+	.filter(Boolean)
+	.join(' ');
+---
+
+{href && !inactive ? (
+		<a href={href} class={classes}>
+			<slot />
+		</a>
+	) : (
+		<button
+			type={type}
+			class={classes}
+			disabled={inactive}
+			aria-busy={busy ? 'true' : undefined}
+		>
+			{busy && (
+				<span
+					class="size-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+					aria-hidden="true"
+				/>
+			)}
+			<slot />
+		</button>
+	)}

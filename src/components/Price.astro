@@ -1,0 +1,35 @@
+---
+import { formatEuro } from '../lib/price.ts';
+
+/*
+ * Prijzen zien er overal hetzelfde uit. Bedragen komen binnen als hele centen,
+ * nooit als kommagetal.
+ */
+
+interface Props {
+	cents: number;
+	/** De oorspronkelijke prijs, als er een korting geldt. */
+	compareAtCents?: number | null;
+	size?: 'md' | 'lg';
+	class?: string;
+}
+
+const { cents, compareAtCents, size = 'md', class: extraClass = '' } = Astro.props;
+
+const sizes = {
+	md: 'text-base',
+	lg: 'text-2xl',
+};
+---
+
+<p class={`flex items-baseline gap-2 ${extraClass}`}>
+	<span class={`font-semibold tracking-tight text-accent ${sizes[size]}`}>
+		{formatEuro(cents)}
+	</span>
+	{compareAtCents && compareAtCents > cents && (
+			<span class="text-sm text-text-muted line-through">
+				<span class="sr-only">Was</span>
+				{formatEuro(compareAtCents)}
+			</span>
+		)}
+</p>

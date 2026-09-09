@@ -1,0 +1,191 @@
+---
+import Button from '../../components/Button.astro';
+import Price from '../../components/Price.astro';
+import ProductImage from '../../components/ProductImage.astro';
+import StockBadge from '../../components/StockBadge.astro';
+import Layout from '../../layouts/Layout.astro';
+import { defaultVariant, getProductBySlug } from '../../lib/catalog.ts';
+
+/*
+ * De productpagina.
+ *
+ * De maatkeuze loopt via de URL en niet via JavaScript. `?maat=S` wordt aan de
+ * serverkant gerenderd, dus prijs, voorraad en de koopknop kloppen altijd bij
+ * wat er geselecteerd staat, ook zonder JavaScript en ook als iemand de link
+ * deelt of bewaart.
+ *
+ * Dat is bewust saai. Dit is het scherm waar iemand besluit geld uit te geven.
+ */
+
+const { slug } = Astro.params;
+const product = slug ? await getProductBySlug(slug) : undefined;
+
+if (!product) {
+	return new Response(null, { status: 404, statusText: 'Niet gevonden' });
+}
+
+const optionName = product.optionNames[0];
+const requested = optionName ? Astro.url.searchParams.get(optionName.toLowerCase()) : null;
+
+const selected =
+	product.variants.find((v) => requested && v.options[optionName] === requested) ??
+	defaultVariant(product.variants);
+
+if (!selected) {
+	return new Response(null, { status: 404, statusText: 'Niet gevonden' });
+}
+
+const hasChoice = product.variants.length > 1 && Boolean(optionName);
+const soldOut = selected.stockQuantity <= 0;
+const cover = product.images[0];
+const rest = product.images.slice(1);
+
+/** Bouwt de link naar een andere maat, zodat de rest van de URL blijft staan. */
+function linkFor(value: string): string {
+	const url = new URL(Astro.url);
+	url.searchParams.set(optionName.toLowerCase(), value);
+	return `${url.pathname}${url.search}`;
+}
+---
+
+<Layout title={product.name} description={product.seoDescription ?? undefined}>
+	<div class="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
+		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
+			<span aria-hidden="true" class="mx-2">/</span>
+			<span aria-current="page" class="text-text">{product.name}</span>
+		</nav>
+
+		<div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+			<!-- Afbeeldingen -->
+			<div class="flex flex-col gap-3">
+				{cover && (
+						<div class="overflow-hidden rounded-card border border-border bg-surface">
+							<ProductImage
+								src={cover.url}
+								alt={cover.alt}
+								width={cover.width}
+								height={cover.height}
+								widths={[480, 640, 828]}
+								sizes="(min-width: 1024px) 640px, 100vw"
+								loading="eager"
+								class="w-full object-contain"
+							/>
+						</div>
+					)}
+				{rest.length > 0 && (
+						<ul class="grid grid-cols-4 gap-3">
+							{rest.map((image) => (
+								<li class="overflow-hidden rounded-card border border-border bg-surface">
+									<ProductImage
+										src={image.url}
+										alt={image.alt}
+										width={image.width}
+										height={image.height}
+										widths={[128, 240]}
+										sizes="120px"
+										class="aspect-square w-full object-cover"
+									/>
+								</li>
+							))}
+						</ul>
+					)}
+			</div>
+
+			<!-- Koopblok -->
+			<div class="flex flex-col gap-5">
+				<div>
+					<h1 class="text-2xl leading-tight font-semibold tracking-tight">
+						{product.name}
+					</h1>
+					{product.shortDescription && (
+							<p class="mt-2 text-sm leading-relaxed text-text-muted">
+								{product.shortDescription}
+							</p>
+						)}
+				</div>
+
+				{hasChoice && (
+						<fieldset>
+							<legend class="text-sm font-medium">
+								{optionName}
+								<span class="ml-1 font-normal text-text-muted">
+									({selected.options[optionName]} geselecteerd)
+								</span>
+							</legend>
+							<ul class="mt-2 flex flex-wrap gap-2">
+								{product.variants.map((variant) => {
+									const value = variant.options[optionName];
+									const isSelected = variant.id === selected.id;
+									// `=== 0` en niet `<= 0`: binnen een JSX-expressie leest de
+									// Astro-compiler `<=` als het begin van een fragment. Voorraad
+									// kan sowieso niet onder nul komen, dat weigert de database.
+									const out = variant.stockQuantity === 0;
+									return (
+										<li>
+											<a
+												href={linkFor(value)}
+												aria-current={isSelected ? 'true' : undefined}
+												class={[
+													'flex min-h-11 min-w-11 items-center justify-center rounded-control border px-3 text-sm font-medium transition-colors',
+													isSelected
+														? 'border-accent bg-accent text-white'
+														: 'border-border-strong bg-surface hover:bg-surface-hover',
+													out && !isSelected ? 'text-text-muted line-through' : '',
+												]
+													.filter(Boolean)
+													.join(' ')}
+											>
+												{value}
+												{out && <span class="sr-only">, uitverkocht</span>}
+											</a>
+										</li>
+									);
+								})}
+							</ul>
+						</fieldset>
+					)}
+
+				<div class="flex flex-col gap-4 rounded-card border border-border bg-surface p-4">
+					<Price
+						cents={selected.priceCents}
+						compareAtCents={selected.compareAtPriceCents}
+						size="lg"
+					/>
+
+					<div class="flex items-center gap-2">
+						<StockBadge quantity={selected.stockQuantity} />
+						<span class="text-xs text-text-muted">Artikelnummer {selected.sku}</span>
+					</div>
+
+					{soldOut ? (
+							<>
+								<Button disabled block size="lg">Uitverkocht</Button>
+								<p class="text-sm text-text-muted">
+									Deze maat is op dit moment niet leverbaar. Kies een andere maat
+									of kom later terug.
+								</p>
+							</>
+						) : (
+							<>
+								<Button block size="lg">In winkelwagen</Button>
+								<p class="text-sm text-text-muted">
+									Voor 16.00 uur besteld, morgen in huis. Dertig dagen bedenktijd.
+								</p>
+							</>
+						)}
+				</div>
+
+				<!--
+					Deze beschrijving komt uit de database en bevat HTML uit de oude
+					WooCommerce-teksten. In fase 2 wordt hij opgeschoond voordat hij
+					wordt weggeschreven, want vanaf hier is het te laat.
+				-->
+				<div
+					class="prose-sm max-w-none text-sm leading-relaxed [&_li]:mt-1 [&_p]:mt-3 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-5"
+					set:html={product.description}
+				/>
+			</div>
+		</div>
+	</div>
+</Layout>

@@ -1,0 +1,41 @@
+---
+/*
+ * Voorraadstatus.
+ *
+ * Een derde van het assortiment is niet leverbaar. Die producten mogen niet
+ * doen alsof ze gewoon te koop zijn, maar ook niet zomaar verdwijnen. Daarom
+ * drie toestanden en niet twee: ruim op voorraad, bijna op, en uitverkocht.
+ *
+ * De kleur is nooit de enige drager van de betekenis: er staat altijd tekst
+ * bij. Iemand die kleuren niet onderscheidt leest gewoon wat er staat.
+ */
+
+interface Props {
+	quantity: number;
+	/** Onder deze grens tonen we het aantal, om aan te zetten tot bestellen. */
+	lowThreshold?: number;
+	class?: string;
+}
+
+const { quantity, lowThreshold = 10, class: extraClass = '' } = Astro.props;
+
+const state = quantity <= 0 ? 'out' : quantity <= lowThreshold ? 'low' : 'in';
+
+const styles = {
+	in: 'bg-accent-subtle text-accent',
+	low: 'bg-accent-subtle text-accent',
+	out: 'bg-danger-subtle text-danger',
+};
+
+const labels = {
+	in: 'Op voorraad',
+	low: `Nog ${quantity} op voorraad`,
+	out: 'Uitverkocht',
+};
+---
+
+<span
+	class={`inline-flex items-center rounded-control px-2 py-1 text-xs font-medium ${styles[state]} ${extraClass}`}
+>
+	{labels[state]}
+</span>

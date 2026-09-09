@@ -1,7 +1,7 @@
 {
-  "price_range": null,
-  "attribute_counts": null,
-  "rating_counts": null,
-  "stock_status_counts": null,
-  "taxonomy_counts": null
+	"price_range": null,
+	"attribute_counts": null,
+	"rating_counts": null,
+	"stock_status_counts": null,
+	"taxonomy_counts": null
 }

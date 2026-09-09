@@ -41,9 +41,7 @@ import {
  * in. `timestamptz` slaat UTC op en rekent bij het lezen om.
  */
 const createdAt = () =>
-	timestamp('created_at', { withTimezone: true, mode: 'date' })
-		.notNull()
-		.defaultNow();
+	timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow();
 
 const updatedAt = () =>
 	timestamp('updated_at', { withTimezone: true, mode: 'date' })
@@ -88,10 +86,9 @@ export const categories = pgTable(
 		imageAlt: text('image_alt'),
 		// De negen categorieen zijn nu plat. parent_id ligt klaar zodat
 		// subcategorieen later geen verbouwing zijn.
-		parentId: integer('parent_id').references(
-			(): AnyPgColumn => categories.id,
-			{ onDelete: 'restrict' },
-		),
+		parentId: integer('parent_id').references((): AnyPgColumn => categories.id, {
+			onDelete: 'restrict',
+		}),
 		position: integer('position').notNull().default(0),
 		createdAt: createdAt(),
 		updatedAt: updatedAt(),
@@ -114,20 +111,14 @@ export const categories = pgTable(
 		),
 		// Een categoriefoto zonder alt-tekst bestaat niet. Dezelfde regel als
 		// bij productfoto's, alleen dan als paar afgedwongen.
-		check(
-			'categories_image_pair',
-			sql`(${t.imageUrl} IS NULL) = (${t.imageAlt} IS NULL)`,
-		),
+		check('categories_image_pair', sql`(${t.imageUrl} IS NULL) = (${t.imageAlt} IS NULL)`),
 		check(
 			'categories_image_alt_quality',
 			sql`${t.imageAlt} IS NULL OR (
 			      btrim(${t.imageAlt}) = ${t.imageAlt}
 			      AND length(${t.imageAlt}) BETWEEN 5 AND 250)`,
 		),
-		check(
-			'categories_no_self_parent',
-			sql`${t.parentId} IS NULL OR ${t.parentId} <> ${t.id}`,
-		),
+		check('categories_no_self_parent', sql`${t.parentId} IS NULL OR ${t.parentId} <> ${t.id}`),
 		check('categories_position_nonneg', sql`${t.position} >= 0`),
 	],
 );
@@ -136,11 +127,7 @@ export const categories = pgTable(
 /* products                                                            */
 /* ------------------------------------------------------------------ */
 
-export const productStatus = pgEnum('product_status', [
-	'draft',
-	'active',
-	'archived',
-]);
+export const productStatus = pgEnum('product_status', ['draft', 'active', 'archived']);
 
 export const products = pgTable(
 	'products',
@@ -156,10 +143,7 @@ export const products = pgTable(
 		status: productStatus('status').notNull().default('draft'),
 		// Bijvoorbeeld ["Maat"] of ["Kleur"]. De echte data heeft allebei:
 		// de werkschoenen gebruiken "maten", de drinkfles "Kleuren".
-		optionNames: text('option_names')
-			.array()
-			.notNull()
-			.default(sql`'{}'::text[]`),
+		optionNames: text('option_names').array().notNull().default(sql`'{}'::text[]`),
 		seoTitle: text('seo_title'),
 		seoDescription: text('seo_description'),
 		createdAt: createdAt(),
@@ -179,10 +163,7 @@ export const products = pgTable(
 			sql`btrim(${t.name}) = ${t.name} AND length(${t.name}) BETWEEN 3 AND 120`,
 		),
 		check('products_name_clean', cleanTextSql(t.name)),
-		check(
-			'products_description_not_blank',
-			sql`length(btrim(${t.description})) >= 20`,
-		),
+		check('products_description_not_blank', sql`length(btrim(${t.description})) >= 20`),
 		// Struikeldraad, geen beveiliging. Het echte schoonmaken gebeurt bij het
 		// schrijven, in fase 2 en fase 5. Dit vangt een ongeluk.
 		check(
@@ -233,10 +214,7 @@ export const productVariants = pgTable(
 			.notNull()
 			.references(() => products.id, { onDelete: 'cascade' }),
 		sku: text('sku').notNull().unique(),
-		options: jsonb('options')
-			.$type<Record<string, string>>()
-			.notNull()
-			.default(sql`'{}'::jsonb`),
+		options: jsonb('options').$type<Record<string, string>>().notNull().default(sql`'{}'::jsonb`),
 		// Gehele centen, inclusief btw. Nooit floats bij geld.
 		priceCents: integer('price_cents').notNull(),
 		compareAtPriceCents: integer('compare_at_price_cents'),
@@ -259,10 +237,7 @@ export const productVariants = pgTable(
 		index('product_variants_product_position_idx').on(t.productId, t.position),
 		// jsonb_path_ops is kleiner en sneller dan de standaard voor de
 		// bevat-filters die fase 3 gaat gebruiken.
-		index('product_variants_options_idx').using(
-			'gin',
-			t.options.op('jsonb_path_ops'),
-		),
+		index('product_variants_options_idx').using('gin', t.options.op('jsonb_path_ops')),
 
 		// Verplicht en uniek is niet genoeg: dat laat een lege tekst eenmalig
 		// toe. Dit formaat is de directe reparatie van "0 van 94 producten
@@ -271,10 +246,7 @@ export const productVariants = pgTable(
 			'product_variants_sku_format',
 			sql`${t.sku} ~ '^[A-Z0-9]+(-[A-Z0-9]+)*$' AND length(${t.sku}) BETWEEN 3 AND 32`,
 		),
-		check(
-			'product_variants_price_range',
-			sql`${t.priceCents} BETWEEN 0 AND 10000000`,
-		),
+		check('product_variants_price_range', sql`${t.priceCents} BETWEEN 0 AND 10000000`),
 		// Een "van"-prijs die niet hoger is dan de huidige prijs is een
 		// misleidende prijsvermelding.
 		check(
@@ -284,25 +256,16 @@ export const productVariants = pgTable(
 		// Nederland kent drie tarieven. Een vierde waarde is een typefout, geen
 		// nieuw tarief.
 		check('product_variants_vat_rate', sql`${t.vatRate} IN (0, 9, 21)`),
-		check(
-			'product_variants_stock_range',
-			sql`${t.stockQuantity} BETWEEN 0 AND 1000000`,
-		),
+		check('product_variants_stock_range', sql`${t.stockQuantity} BETWEEN 0 AND 1000000`),
 		check('product_variants_position_nonneg', sql`${t.position} >= 0`),
 
 		// options is een plat object van niet-lege strings.
-		check(
-			'product_variants_options_is_object',
-			sql`jsonb_typeof(${t.options}) = 'object'`,
-		),
+		check('product_variants_options_is_object', sql`jsonb_typeof(${t.options}) = 'object'`),
 		check(
 			'product_variants_options_values',
 			sql`NOT jsonb_path_exists(${t.options}, '$.* ? (@.type() != "string" || @ == "")'::jsonpath)`,
 		),
-		check(
-			'product_variants_options_no_empty_key',
-			sql`NOT jsonb_exists(${t.options}, '')`,
-		),
+		check('product_variants_options_no_empty_key', sql`NOT jsonb_exists(${t.options}, '')`),
 	],
 );
 
@@ -410,11 +373,7 @@ export const productCategories = pgTable(
 /* legacy_urls                                                         */
 /* ------------------------------------------------------------------ */
 
-export const legacySourceKind = pgEnum('legacy_source_kind', [
-	'product',
-	'variation',
-	'category',
-]);
+export const legacySourceKind = pgEnum('legacy_source_kind', ['product', 'variation', 'category']);
 
 /*
  * De brug naar de oude WooCommerce-site.

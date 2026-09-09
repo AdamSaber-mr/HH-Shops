@@ -83,8 +83,7 @@
 	  dus hiermee staat Geist meteen op de hele pagina.
 	*/
 	--font-sans:
-		"Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-		Roboto, Arial, sans-serif;
+		"Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 @layer base {

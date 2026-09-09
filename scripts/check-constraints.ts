@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { closeDb, getDb } from '../src/db/client.ts';
+import { closeDb, openDb } from './db.ts';
 
 /*
  * Bewijst dat de database slechte data weigert.
@@ -128,7 +128,7 @@ const ATTEMPTS: Attempt[] = [
 ];
 
 async function run(): Promise<void> {
-	const db = getDb();
+	const db = openDb();
 	const geslaagd: string[] = [];
 	let geweigerd = 0;
 
@@ -157,9 +157,7 @@ async function run(): Promise<void> {
 			if (!(error instanceof Error) || error.message !== '__rollback__') throw error;
 		});
 
-	console.log(
-		`\n${geweigerd} van de ${ATTEMPTS.length} pogingen geweigerd door de database.`,
-	);
+	console.log(`\n${geweigerd} van de ${ATTEMPTS.length} pogingen geweigerd door de database.`);
 	if (geslaagd.length > 0) {
 		console.error(
 			`\nEr zitten ${geslaagd.length} gaten in het datamodel:\n  - ${geslaagd.join('\n  - ')}`,

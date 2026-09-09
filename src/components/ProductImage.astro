@@ -1,0 +1,74 @@
+---
+import { Image } from 'astro:assets';
+
+/*
+ * Productfoto's komen uit de database als URL, en die URL verandert onderweg.
+ *
+ * In fase 1 staan de testfoto's lokaal in public/. Astro kan die niet
+ * optimaliseren: alleen geimporteerde en externe afbeeldingen gaan door de
+ * beeldverwerking heen. Vanaf stap 7 staan ze in Vercel Blob en zijn ze extern,
+ * en dan wel.
+ *
+ * Dit component kiest zelf het juiste pad, zodat de aanroepende pagina er niets
+ * van hoeft te weten en fase 2 niets hoeft te herschrijven.
+ *
+ * width en height zijn altijd verplicht, ook op het kale img-pad. Zonder die
+ * twee verspringt de layout tijdens het laden, en daarom staan ze in het schema
+ * op NOT NULL.
+ */
+
+interface Props {
+	src: string;
+	alt: string;
+	width: number;
+	height: number;
+	widths?: number[];
+	sizes?: string;
+	quality?: number;
+	loading?: 'lazy' | 'eager';
+	class?: string;
+}
+
+const {
+	src,
+	alt,
+	width,
+	height,
+	widths,
+	sizes,
+	// Zonder expliciete kwaliteit zet de Vercel-adapter hem stil op 100, en dat
+	// is bijna verliesloos. Op een project waarvan het hoofdprobleem 22 MB aan
+	// afbeeldingen is, is dat het verkeerde vertrekpunt.
+	quality = 72,
+	loading = 'lazy',
+	class: extraClass = '',
+} = Astro.props;
+
+const isRemote = src.startsWith('http://') || src.startsWith('https://');
+---
+
+{isRemote ? (
+		<Image
+			src={src}
+			alt={alt}
+			width={width}
+			height={height}
+			widths={widths}
+			sizes={sizes}
+			quality={quality}
+			loading={loading}
+			decoding="async"
+			class={extraClass}
+		/>
+	) : (
+		<img
+			src={src}
+			alt={alt}
+			width={width}
+			height={height}
+			sizes={sizes}
+			loading={loading}
+			decoding="async"
+			class={extraClass}
+		/>
+	)}

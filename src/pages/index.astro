@@ -1,16 +1,55 @@
 ---
-// Tijdelijk. In stap 5 haalt deze pagina het testproduct uit de database en
-// toont hem als productkaart. Voor nu bewijst hij dat de layout, de tokens en
-// Geist geladen zijn.
+import ProductCard from '../components/ProductCard.astro';
 import Layout from '../layouts/Layout.astro';
+import { defaultVariant, listActiveProducts, optionSummary } from '../lib/catalog.ts';
+
+/*
+ * De startpagina.
+ *
+ * In fase 1 is dit het bewijs dat alles samenwerkt: serverside renderen, de
+ * databaseverbinding, de tokens, Geist en de afbeeldingen. In fase 3 wordt dit
+ * de echte startpagina met uitgelichte producten en categorieen.
+ */
+
+const items = await listActiveProducts();
 ---
 
-<Layout title="Fundament">
-	<div class="mx-auto max-w-[1400px] px-4 py-12 sm:px-6">
-		<h1 class="text-3xl font-semibold tracking-tight">Fundament staat</h1>
-		<p class="mt-2 max-w-prose text-text-muted">
-			Deze pagina is tijdelijk. Zodra het datamodel er is, komt hier het
-			testproduct uit de database te staan.
+<Layout description="Huishoudelijke artikelen, kinderartikelen, cosmetica, tassen en schoeisel.">
+	<div class="mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
+		<h1 class="text-2xl font-semibold tracking-tight">Ons assortiment</h1>
+		<p class="mt-1 text-sm text-text-muted">
+			{items.length === 1 ? '1 product' : `${items.length} producten`}
 		</p>
+
+		{items.length === 0 ? (
+				<div class="mt-8 rounded-card border border-border bg-surface p-8 text-center">
+					<p class="font-medium">Er staat nog niets in de winkel</p>
+					<p class="mt-1 text-sm text-text-muted">
+						Zodra het assortiment is overgezet, staan de producten hier.
+					</p>
+				</div>
+			) : (
+				<div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+					{items.map((product) => {
+						const variant = defaultVariant(product.variants);
+						const image = product.images[0];
+						if (!variant || !image) return null;
+						return (
+							<ProductCard
+								slug={product.slug}
+								name={product.name}
+								image={image}
+								priceCents={variant.priceCents}
+								compareAtPriceCents={variant.compareAtPriceCents}
+								stockQuantity={variant.stockQuantity}
+								optionSummary={optionSummary(
+									product.optionNames,
+									product.variants.length,
+								)}
+							/>
+						);
+					})}
+				</div>
+			)}
 	</div>
 </Layout>

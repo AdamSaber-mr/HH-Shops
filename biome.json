@@ -1,0 +1,101 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.5.12/schema.json",
+	"root": true,
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true,
+		"defaultBranch": "main"
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": [
+			"**",
+			"!node_modules/",
+			"!dist/",
+			"!.astro/",
+			"!.vercel/",
+			"!data/",
+			"!drizzle/",
+			"!.agents/",
+			"!public/",
+			"!package-lock.json"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"lineWidth": 100,
+		"lineEnding": "lf"
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"correctness": {
+				"noUnusedImports": "error",
+				"noUnusedVariables": "error"
+			},
+			"style": {
+				"useConst": "error",
+				"useImportType": "error",
+				"noNonNullAssertion": "error"
+			},
+			"suspicious": {
+				"noExplicitAny": "error"
+			},
+			"preset": "recommended"
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single",
+			"jsxQuoteStyle": "double",
+			"semicolons": "always",
+			"trailingCommas": "all"
+		}
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		},
+		"formatter": {
+			"enabled": true
+		},
+		"linter": {
+			"enabled": true
+		}
+	},
+	"html": {
+		"experimentalFullSupportEnabled": true,
+		"formatter": {
+			"enabled": true
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["src/styles/global.css"],
+			"linter": {
+				"rules": {
+					"complexity": {
+						"noImportantStyles": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/*.astro"],
+			"formatter": {
+				"enabled": false
+			}
+		}
+	]
+}

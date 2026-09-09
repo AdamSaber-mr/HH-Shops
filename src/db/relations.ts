@@ -4,8 +4,8 @@ import {
 	legacyUrls,
 	productCategories,
 	productImages,
-	productVariants,
 	products,
+	productVariants,
 } from './schema.ts';
 
 /*
@@ -32,16 +32,13 @@ export const productsRelations = relations(products, ({ many }) => ({
 	legacyUrls: many(legacyUrls),
 }));
 
-export const productVariantsRelations = relations(
-	productVariants,
-	({ one, many }) => ({
-		product: one(products, {
-			fields: [productVariants.productId],
-			references: [products.id],
-		}),
-		images: many(productImages),
+export const productVariantsRelations = relations(productVariants, ({ one, many }) => ({
+	product: one(products, {
+		fields: [productVariants.productId],
+		references: [products.id],
 	}),
-);
+	images: many(productImages),
+}));
 
 export const productImagesRelations = relations(productImages, ({ one }) => ({
 	product: one(products, {
@@ -50,19 +47,16 @@ export const productImagesRelations = relations(productImages, ({ one }) => ({
 	}),
 }));
 
-export const productCategoriesRelations = relations(
-	productCategories,
-	({ one }) => ({
-		product: one(products, {
-			fields: [productCategories.productId],
-			references: [products.id],
-		}),
-		category: one(categories, {
-			fields: [productCategories.categoryId],
-			references: [categories.id],
-		}),
+export const productCategoriesRelations = relations(productCategories, ({ one }) => ({
+	product: one(products, {
+		fields: [productCategories.productId],
+		references: [products.id],
 	}),
-);
+	category: one(categories, {
+		fields: [productCategories.categoryId],
+		references: [categories.id],
+	}),
+}));
 
 export const legacyUrlsRelations = relations(legacyUrls, ({ one }) => ({
 	product: one(products, {

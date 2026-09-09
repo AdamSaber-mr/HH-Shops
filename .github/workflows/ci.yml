@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kwaliteit:
+    name: Opmaak, tests, types en build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Repository ophalen
+        uses: actions/checkout@v7
+
+      - name: Node installeren
+        uses: actions/setup-node@v7
+        with:
+          # Gelijk aan de runtime die de Vercel-adapter kiest (nodejs24.x).
+          node-version: 24
+          cache: npm
+
+      - name: Afhankelijkheden installeren
+        run: npm ci
+
+      - name: Opmaak en lint
+        run: npm run ci:lint
+
+      - name: Migratiebestanden controleren
+        # Draait offline: drizzle-kit check leest alleen de bestanden in
+        # drizzle/ en kijkt of ze consistent zijn met de snapshots.
+        run: npm run db:check
+
+      - name: Tests
+        run: npm run test
+
+      # Deze stap draait BEWUST zonder DATABASE_URL.
+      #
+      # Dat kan omdat astro:env geheimen pas controleert op het moment dat ze
+      # echt gelezen worden, en een build met output: 'server' geen enkele
+      # pagina uitvoert zolang er niets geprerenderd wordt.
+      #
+      # Faalt deze stap met "Invalid environment variables", dan heeft iemand
+      # `export const prerender = true` gezet op een pagina die de database
+      # raakt. Dat is precies wat we hier willen zien, en geen reden om alsnog
+      # een databasegeheim aan deze workflow toe te voegen.
+      - name: Build
+        run: npm run build
+
+      # Na de build en niet ervoor: astro-icon schrijft .astro/icon.d.ts pas
+      # tijdens een build of een dev-run. Zonder dat bestand kan astro check het
+      # type van virtual:astro-icon niet vinden.
+      - name: Typecontrole
+        run: npm run check

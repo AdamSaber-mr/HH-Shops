@@ -1,1062 +1,993 @@
 {
-  "id": "72853df1-8b66-4898-b199-a074925ffed6",
-  "prevId": "948426cb-9bee-4dee-96ca-ab5a44bd1e4f",
-  "version": "7",
-  "dialect": "postgresql",
-  "tables": {
-    "public.categories": {
-      "name": "categories",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "name": "categories_id_seq",
-            "increment": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "startWith": "1",
-            "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "always"
-          }
-        },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "image_url": {
-          "name": "image_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "image_alt": {
-          "name": "image_alt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "categories_parent_position_idx": {
-          "name": "categories_parent_position_idx",
-          "columns": [
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "position",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        }
-      },
-      "foreignKeys": {
-        "categories_parent_id_categories_id_fk": {
-          "name": "categories_parent_id_categories_id_fk",
-          "tableFrom": "categories",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "tableTo": "categories",
-          "columnsTo": [
-            "id"
-          ],
-          "onUpdate": "no action",
-          "onDelete": "restrict"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "categories_slug_unique": {
-          "name": "categories_slug_unique",
-          "columns": [
-            "slug"
-          ],
-          "nullsNotDistinct": false
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "categories_slug_format": {
-          "name": "categories_slug_format",
-          "value": "\"categories\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND length(\"categories\".\"slug\") BETWEEN 2 AND 80"
-        },
-        "categories_name_shape": {
-          "name": "categories_name_shape",
-          "value": "btrim(\"categories\".\"name\") = \"categories\".\"name\" AND length(\"categories\".\"name\") BETWEEN 2 AND 80"
-        },
-        "categories_name_clean": {
-          "name": "categories_name_clean",
-          "value": "\"categories\".\"name\" !~ ('&(#[0-9]+|[a-zA-Z]+)' || chr(59))\n\t    AND position(chr(8211) in \"categories\".\"name\") = 0\n\t    AND position(chr(8212) in \"categories\".\"name\") = 0"
-        },
-        "categories_description_not_blank": {
-          "name": "categories_description_not_blank",
-          "value": "\"categories\".\"description\" IS NULL OR btrim(\"categories\".\"description\") <> ''"
-        },
-        "categories_image_pair": {
-          "name": "categories_image_pair",
-          "value": "(\"categories\".\"image_url\" IS NULL) = (\"categories\".\"image_alt\" IS NULL)"
-        },
-        "categories_image_alt_quality": {
-          "name": "categories_image_alt_quality",
-          "value": "\"categories\".\"image_alt\" IS NULL OR (\n\t\t\t      btrim(\"categories\".\"image_alt\") = \"categories\".\"image_alt\"\n\t\t\t      AND length(\"categories\".\"image_alt\") BETWEEN 5 AND 250)"
-        },
-        "categories_no_self_parent": {
-          "name": "categories_no_self_parent",
-          "value": "\"categories\".\"parent_id\" IS NULL OR \"categories\".\"parent_id\" <> \"categories\".\"id\""
-        },
-        "categories_position_nonneg": {
-          "name": "categories_position_nonneg",
-          "value": "\"categories\".\"position\" >= 0"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.legacy_urls": {
-      "name": "legacy_urls",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "name": "legacy_urls_id_seq",
-            "increment": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "startWith": "1",
-            "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "always"
-          }
-        },
-        "path": {
-          "name": "path",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_kind": {
-          "name": "source_kind",
-          "type": "legacy_source_kind",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_id": {
-          "name": "source_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "product_id": {
-          "name": "product_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "variant_id": {
-          "name": "variant_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "category_id": {
-          "name": "category_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "legacy_urls_product_idx": {
-          "name": "legacy_urls_product_idx",
-          "columns": [
-            {
-              "expression": "product_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        },
-        "legacy_urls_category_idx": {
-          "name": "legacy_urls_category_idx",
-          "columns": [
-            {
-              "expression": "category_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        }
-      },
-      "foreignKeys": {
-        "legacy_urls_product_id_products_id_fk": {
-          "name": "legacy_urls_product_id_products_id_fk",
-          "tableFrom": "legacy_urls",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
-        },
-        "legacy_urls_variant_id_product_variants_id_fk": {
-          "name": "legacy_urls_variant_id_product_variants_id_fk",
-          "tableFrom": "legacy_urls",
-          "columnsFrom": [
-            "variant_id"
-          ],
-          "tableTo": "product_variants",
-          "columnsTo": [
-            "id"
-          ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
-        },
-        "legacy_urls_category_id_categories_id_fk": {
-          "name": "legacy_urls_category_id_categories_id_fk",
-          "tableFrom": "legacy_urls",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "tableTo": "categories",
-          "columnsTo": [
-            "id"
-          ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "legacy_urls_path_unique": {
-          "name": "legacy_urls_path_unique",
-          "columns": [
-            "path"
-          ],
-          "nullsNotDistinct": false
-        },
-        "legacy_urls_source_key": {
-          "name": "legacy_urls_source_key",
-          "columns": [
-            "source_kind",
-            "source_id"
-          ],
-          "nullsNotDistinct": false
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "legacy_urls_path_shape": {
-          "name": "legacy_urls_path_shape",
-          "value": "\"legacy_urls\".\"path\" ~ '^/[a-z0-9/-]+$' AND length(\"legacy_urls\".\"path\") BETWEEN 2 AND 300"
-        },
-        "legacy_urls_single_target": {
-          "name": "legacy_urls_single_target",
-          "value": "(CASE WHEN \"legacy_urls\".\"product_id\" IS NULL THEN 0 ELSE 1 END)\n\t\t\t  + (CASE WHEN \"legacy_urls\".\"category_id\" IS NULL THEN 0 ELSE 1 END) = 1"
-        },
-        "legacy_urls_variant_needs_product": {
-          "name": "legacy_urls_variant_needs_product",
-          "value": "\"legacy_urls\".\"variant_id\" IS NULL OR \"legacy_urls\".\"product_id\" IS NOT NULL"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.product_categories": {
-      "name": "product_categories",
-      "schema": "",
-      "columns": {
-        "product_id": {
-          "name": "product_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "category_id": {
-          "name": "category_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "product_categories_category_idx": {
-          "name": "product_categories_category_idx",
-          "columns": [
-            {
-              "expression": "category_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "position",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        }
-      },
-      "foreignKeys": {
-        "product_categories_product_id_products_id_fk": {
-          "name": "product_categories_product_id_products_id_fk",
-          "tableFrom": "product_categories",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
-        },
-        "product_categories_category_id_categories_id_fk": {
-          "name": "product_categories_category_id_categories_id_fk",
-          "tableFrom": "product_categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "tableTo": "categories",
-          "columnsTo": [
-            "id"
-          ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {
-        "product_categories_product_id_category_id_pk": {
-          "name": "product_categories_product_id_category_id_pk",
-          "columns": [
-            "product_id",
-            "category_id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "product_categories_position_nonneg": {
-          "name": "product_categories_position_nonneg",
-          "value": "\"product_categories\".\"position\" >= 0"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.product_images": {
-      "name": "product_images",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "name": "product_images_id_seq",
-            "increment": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "startWith": "1",
-            "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "always"
-          }
-        },
-        "product_id": {
-          "name": "product_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "variant_id": {
-          "name": "variant_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "url": {
-          "name": "url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "alt": {
-          "name": "alt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "width": {
-          "name": "width",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "height": {
-          "name": "height",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "product_images_product_position_idx": {
-          "name": "product_images_product_position_idx",
-          "columns": [
-            {
-              "expression": "product_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "position",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        },
-        "product_images_variant_idx": {
-          "name": "product_images_variant_idx",
-          "columns": [
-            {
-              "expression": "variant_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        }
-      },
-      "foreignKeys": {
-        "product_images_product_id_products_id_fk": {
-          "name": "product_images_product_id_products_id_fk",
-          "tableFrom": "product_images",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
-        },
-        "product_images_variant_fk": {
-          "name": "product_images_variant_fk",
-          "tableFrom": "product_images",
-          "columnsFrom": [
-            "product_id",
-            "variant_id"
-          ],
-          "tableTo": "product_variants",
-          "columnsTo": [
-            "product_id",
-            "id"
-          ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "product_images_product_url_key": {
-          "name": "product_images_product_url_key",
-          "columns": [
-            "product_id",
-            "url"
-          ],
-          "nullsNotDistinct": false
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "product_images_url_shape": {
-          "name": "product_images_url_shape",
-          "value": "\"product_images\".\"url\" ~ '^(https://|/)'\n\t\t\t    AND \"product_images\".\"url\" NOT LIKE '%/wp-content/%'\n\t\t\t    AND \"product_images\".\"url\" NOT LIKE '%instawp.co%'\n\t\t\t    AND length(\"product_images\".\"url\") BETWEEN 5 AND 500"
-        },
-        "product_images_alt_trimmed": {
-          "name": "product_images_alt_trimmed",
-          "value": "\"product_images\".\"alt\" = btrim(\"product_images\".\"alt\")"
-        },
-        "product_images_alt_length": {
-          "name": "product_images_alt_length",
-          "value": "length(\"product_images\".\"alt\") BETWEEN 5 AND 250"
-        },
-        "product_images_alt_not_filename": {
-          "name": "product_images_alt_not_filename",
-          "value": "\"product_images\".\"alt\" !~ '^[0-9]+$'\n\t\t\t    AND \"product_images\".\"alt\" !~* '^(img|image|afbeelding|foto|photo|dsc|copilot|chatgpt|post-hh-shops|[0-9]+x[0-9]+)[ _.-]*[0-9]*(.(jpe?g|png|webp))?$'"
-        },
-        "product_images_dimensions": {
-          "name": "product_images_dimensions",
-          "value": "\"product_images\".\"width\" BETWEEN 1 AND 10000 AND \"product_images\".\"height\" BETWEEN 1 AND 10000"
-        },
-        "product_images_position_nonneg": {
-          "name": "product_images_position_nonneg",
-          "value": "\"product_images\".\"position\" >= 0"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.product_variants": {
-      "name": "product_variants",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "name": "product_variants_id_seq",
-            "increment": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "startWith": "1",
-            "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "always"
-          }
-        },
-        "product_id": {
-          "name": "product_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sku": {
-          "name": "sku",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "options": {
-          "name": "options",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
-        "price_cents": {
-          "name": "price_cents",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "compare_at_price_cents": {
-          "name": "compare_at_price_cents",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "vat_rate": {
-          "name": "vat_rate",
-          "type": "smallint",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 21
-        },
-        "stock_quantity": {
-          "name": "stock_quantity",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "is_active": {
-          "name": "is_active",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "product_variants_product_position_idx": {
-          "name": "product_variants_product_position_idx",
-          "columns": [
-            {
-              "expression": "product_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "position",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        },
-        "product_variants_options_idx": {
-          "name": "product_variants_options_idx",
-          "columns": [
-            {
-              "expression": "options",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last",
-              "opclass": "jsonb_path_ops"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "gin",
-          "concurrently": false
-        }
-      },
-      "foreignKeys": {
-        "product_variants_product_id_products_id_fk": {
-          "name": "product_variants_product_id_products_id_fk",
-          "tableFrom": "product_variants",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "product_variants_sku_unique": {
-          "name": "product_variants_sku_unique",
-          "columns": [
-            "sku"
-          ],
-          "nullsNotDistinct": false
-        },
-        "product_variants_product_options_key": {
-          "name": "product_variants_product_options_key",
-          "columns": [
-            "product_id",
-            "options"
-          ],
-          "nullsNotDistinct": false
-        },
-        "product_variants_product_id_id_key": {
-          "name": "product_variants_product_id_id_key",
-          "columns": [
-            "product_id",
-            "id"
-          ],
-          "nullsNotDistinct": false
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "product_variants_sku_format": {
-          "name": "product_variants_sku_format",
-          "value": "\"product_variants\".\"sku\" ~ '^[A-Z0-9]+(-[A-Z0-9]+)*$' AND length(\"product_variants\".\"sku\") BETWEEN 3 AND 32"
-        },
-        "product_variants_price_range": {
-          "name": "product_variants_price_range",
-          "value": "\"product_variants\".\"price_cents\" BETWEEN 0 AND 10000000"
-        },
-        "product_variants_compare_price_higher": {
-          "name": "product_variants_compare_price_higher",
-          "value": "\"product_variants\".\"compare_at_price_cents\" IS NULL OR \"product_variants\".\"compare_at_price_cents\" > \"product_variants\".\"price_cents\""
-        },
-        "product_variants_vat_rate": {
-          "name": "product_variants_vat_rate",
-          "value": "\"product_variants\".\"vat_rate\" IN (0, 9, 21)"
-        },
-        "product_variants_stock_range": {
-          "name": "product_variants_stock_range",
-          "value": "\"product_variants\".\"stock_quantity\" BETWEEN 0 AND 1000000"
-        },
-        "product_variants_position_nonneg": {
-          "name": "product_variants_position_nonneg",
-          "value": "\"product_variants\".\"position\" >= 0"
-        },
-        "product_variants_options_is_object": {
-          "name": "product_variants_options_is_object",
-          "value": "jsonb_typeof(\"product_variants\".\"options\") = 'object'"
-        },
-        "product_variants_options_values": {
-          "name": "product_variants_options_values",
-          "value": "NOT jsonb_path_exists(\"product_variants\".\"options\", '$.* ? (@.type() != \"string\" || @ == \"\")'::jsonpath)"
-        },
-        "product_variants_options_no_empty_key": {
-          "name": "product_variants_options_no_empty_key",
-          "value": "NOT jsonb_exists(\"product_variants\".\"options\", '')"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.products": {
-      "name": "products",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "name": "products_id_seq",
-            "increment": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "startWith": "1",
-            "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "always"
-          }
-        },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "short_description": {
-          "name": "short_description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "brand": {
-          "name": "brand",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "product_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'draft'"
-        },
-        "option_names": {
-          "name": "option_names",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::text[]"
-        },
-        "seo_title": {
-          "name": "seo_title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "seo_description": {
-          "name": "seo_description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "products_status_idx": {
-          "name": "products_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        },
-        "products_name_trgm_idx": {
-          "name": "products_name_trgm_idx",
-          "columns": [
-            {
-              "expression": "name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last",
-              "opclass": "gin_trgm_ops"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "gin",
-          "concurrently": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "products_slug_unique": {
-          "name": "products_slug_unique",
-          "columns": [
-            "slug"
-          ],
-          "nullsNotDistinct": false
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "products_slug_format": {
-          "name": "products_slug_format",
-          "value": "\"products\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND length(\"products\".\"slug\") BETWEEN 2 AND 120"
-        },
-        "products_name_shape": {
-          "name": "products_name_shape",
-          "value": "btrim(\"products\".\"name\") = \"products\".\"name\" AND length(\"products\".\"name\") BETWEEN 3 AND 120"
-        },
-        "products_name_clean": {
-          "name": "products_name_clean",
-          "value": "\"products\".\"name\" !~ ('&(#[0-9]+|[a-zA-Z]+)' || chr(59))\n\t    AND position(chr(8211) in \"products\".\"name\") = 0\n\t    AND position(chr(8212) in \"products\".\"name\") = 0"
-        },
-        "products_description_not_blank": {
-          "name": "products_description_not_blank",
-          "value": "length(btrim(\"products\".\"description\")) >= 20"
-        },
-        "products_description_no_script": {
-          "name": "products_description_no_script",
-          "value": "\"products\".\"description\" !~* '<script' AND \"products\".\"description\" !~* 'javascript:'"
-        },
-        "products_short_description_shape": {
-          "name": "products_short_description_shape",
-          "value": "\"products\".\"short_description\" IS NULL OR (\n\t\t\t      btrim(\"products\".\"short_description\") = \"products\".\"short_description\"\n\t\t\t      AND length(\"products\".\"short_description\") BETWEEN 10 AND 600)"
-        },
-        "products_brand_not_blank": {
-          "name": "products_brand_not_blank",
-          "value": "\"products\".\"brand\" IS NULL OR btrim(\"products\".\"brand\") = \"products\".\"brand\" AND \"products\".\"brand\" <> ''"
-        },
-        "products_seo_title_length": {
-          "name": "products_seo_title_length",
-          "value": "\"products\".\"seo_title\" IS NULL OR length(btrim(\"products\".\"seo_title\")) BETWEEN 1 AND 120"
-        },
-        "products_seo_description_length": {
-          "name": "products_seo_description_length",
-          "value": "\"products\".\"seo_description\" IS NULL OR length(btrim(\"products\".\"seo_description\")) BETWEEN 1 AND 320"
-        },
-        "products_option_names_shape": {
-          "name": "products_option_names_shape",
-          "value": "cardinality(\"products\".\"option_names\") <= 3\n\t\t\t    AND array_position(\"products\".\"option_names\", NULL) IS NULL\n\t\t\t    AND NOT ('' = ANY(\"products\".\"option_names\"))"
-        }
-      },
-      "isRLSEnabled": false
-    }
-  },
-  "enums": {
-    "public.legacy_source_kind": {
-      "name": "legacy_source_kind",
-      "schema": "public",
-      "values": [
-        "product",
-        "variation",
-        "category"
-      ]
-    },
-    "public.product_status": {
-      "name": "product_status",
-      "schema": "public",
-      "values": [
-        "draft",
-        "active",
-        "archived"
-      ]
-    }
-  },
-  "schemas": {},
-  "views": {},
-  "sequences": {},
-  "roles": {},
-  "policies": {},
-  "_meta": {
-    "columns": {},
-    "schemas": {},
-    "tables": {}
-  }
+	"id": "72853df1-8b66-4898-b199-a074925ffed6",
+	"prevId": "948426cb-9bee-4dee-96ca-ab5a44bd1e4f",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.categories": {
+			"name": "categories",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "integer",
+					"primaryKey": true,
+					"notNull": true,
+					"identity": {
+						"name": "categories_id_seq",
+						"increment": "1",
+						"minValue": "1",
+						"maxValue": "2147483647",
+						"startWith": "1",
+						"cache": "1",
+						"cycle": false,
+						"schema": "public",
+						"type": "always"
+					}
+				},
+				"slug": {
+					"name": "slug",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"image_url": {
+					"name": "image_url",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"image_alt": {
+					"name": "image_alt",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"parent_id": {
+					"name": "parent_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"position": {
+					"name": "position",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"categories_parent_position_idx": {
+					"name": "categories_parent_position_idx",
+					"columns": [
+						{
+							"expression": "parent_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "position",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"with": {},
+					"method": "btree",
+					"concurrently": false
+				}
+			},
+			"foreignKeys": {
+				"categories_parent_id_categories_id_fk": {
+					"name": "categories_parent_id_categories_id_fk",
+					"tableFrom": "categories",
+					"columnsFrom": ["parent_id"],
+					"tableTo": "categories",
+					"columnsTo": ["id"],
+					"onUpdate": "no action",
+					"onDelete": "restrict"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"categories_slug_unique": {
+					"name": "categories_slug_unique",
+					"columns": ["slug"],
+					"nullsNotDistinct": false
+				}
+			},
+			"policies": {},
+			"checkConstraints": {
+				"categories_slug_format": {
+					"name": "categories_slug_format",
+					"value": "\"categories\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND length(\"categories\".\"slug\") BETWEEN 2 AND 80"
+				},
+				"categories_name_shape": {
+					"name": "categories_name_shape",
+					"value": "btrim(\"categories\".\"name\") = \"categories\".\"name\" AND length(\"categories\".\"name\") BETWEEN 2 AND 80"
+				},
+				"categories_name_clean": {
+					"name": "categories_name_clean",
+					"value": "\"categories\".\"name\" !~ ('&(#[0-9]+|[a-zA-Z]+)' || chr(59))\n\t    AND position(chr(8211) in \"categories\".\"name\") = 0\n\t    AND position(chr(8212) in \"categories\".\"name\") = 0"
+				},
+				"categories_description_not_blank": {
+					"name": "categories_description_not_blank",
+					"value": "\"categories\".\"description\" IS NULL OR btrim(\"categories\".\"description\") <> ''"
+				},
+				"categories_image_pair": {
+					"name": "categories_image_pair",
+					"value": "(\"categories\".\"image_url\" IS NULL) = (\"categories\".\"image_alt\" IS NULL)"
+				},
+				"categories_image_alt_quality": {
+					"name": "categories_image_alt_quality",
+					"value": "\"categories\".\"image_alt\" IS NULL OR (\n\t\t\t      btrim(\"categories\".\"image_alt\") = \"categories\".\"image_alt\"\n\t\t\t      AND length(\"categories\".\"image_alt\") BETWEEN 5 AND 250)"
+				},
+				"categories_no_self_parent": {
+					"name": "categories_no_self_parent",
+					"value": "\"categories\".\"parent_id\" IS NULL OR \"categories\".\"parent_id\" <> \"categories\".\"id\""
+				},
+				"categories_position_nonneg": {
+					"name": "categories_position_nonneg",
+					"value": "\"categories\".\"position\" >= 0"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.legacy_urls": {
+			"name": "legacy_urls",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "integer",
+					"primaryKey": true,
+					"notNull": true,
+					"identity": {
+						"name": "legacy_urls_id_seq",
+						"increment": "1",
+						"minValue": "1",
+						"maxValue": "2147483647",
+						"startWith": "1",
+						"cache": "1",
+						"cycle": false,
+						"schema": "public",
+						"type": "always"
+					}
+				},
+				"path": {
+					"name": "path",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"source_kind": {
+					"name": "source_kind",
+					"type": "legacy_source_kind",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"source_id": {
+					"name": "source_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"product_id": {
+					"name": "product_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"variant_id": {
+					"name": "variant_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"category_id": {
+					"name": "category_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"legacy_urls_product_idx": {
+					"name": "legacy_urls_product_idx",
+					"columns": [
+						{
+							"expression": "product_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"with": {},
+					"method": "btree",
+					"concurrently": false
+				},
+				"legacy_urls_category_idx": {
+					"name": "legacy_urls_category_idx",
+					"columns": [
+						{
+							"expression": "category_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"with": {},
+					"method": "btree",
+					"concurrently": false
+				}
+			},
+			"foreignKeys": {
+				"legacy_urls_product_id_products_id_fk": {
+					"name": "legacy_urls_product_id_products_id_fk",
+					"tableFrom": "legacy_urls",
+					"columnsFrom": ["product_id"],
+					"tableTo": "products",
+					"columnsTo": ["id"],
+					"onUpdate": "no action",
+					"onDelete": "cascade"
+				},
+				"legacy_urls_variant_id_product_variants_id_fk": {
+					"name": "legacy_urls_variant_id_product_variants_id_fk",
+					"tableFrom": "legacy_urls",
+					"columnsFrom": ["variant_id"],
+					"tableTo": "product_variants",
+					"columnsTo": ["id"],
+					"onUpdate": "no action",
+					"onDelete": "set null"
+				},
+				"legacy_urls_category_id_categories_id_fk": {
+					"name": "legacy_urls_category_id_categories_id_fk",
+					"tableFrom": "legacy_urls",
+					"columnsFrom": ["category_id"],
+					"tableTo": "categories",
+					"columnsTo": ["id"],
+					"onUpdate": "no action",
+					"onDelete": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"legacy_urls_path_unique": {
+					"name": "legacy_urls_path_unique",
+					"columns": ["path"],
+					"nullsNotDistinct": false
+				},
+				"legacy_urls_source_key": {
+					"name": "legacy_urls_source_key",
+					"columns": ["source_kind", "source_id"],
+					"nullsNotDistinct": false
+				}
+			},
+			"policies": {},
+			"checkConstraints": {
+				"legacy_urls_path_shape": {
+					"name": "legacy_urls_path_shape",
+					"value": "\"legacy_urls\".\"path\" ~ '^/[a-z0-9/-]+$' AND length(\"legacy_urls\".\"path\") BETWEEN 2 AND 300"
+				},
+				"legacy_urls_single_target": {
+					"name": "legacy_urls_single_target",
+					"value": "(CASE WHEN \"legacy_urls\".\"product_id\" IS NULL THEN 0 ELSE 1 END)\n\t\t\t  + (CASE WHEN \"legacy_urls\".\"category_id\" IS NULL THEN 0 ELSE 1 END) = 1"
+				},
+				"legacy_urls_variant_needs_product": {
+					"name": "legacy_urls_variant_needs_product",
+					"value": "\"legacy_urls\".\"variant_id\" IS NULL OR \"legacy_urls\".\"product_id\" IS NOT NULL"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.product_categories": {
+			"name": "product_categories",
+			"schema": "",
+			"columns": {
+				"product_id": {
+					"name": "product_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"category_id": {
+					"name": "category_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"position": {
+					"name": "position",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"product_categories_category_idx": {
+					"name": "product_categories_category_idx",
+					"columns": [
+						{
+							"expression": "category_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "position",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"with": {},
+					"method": "btree",
+					"concurrently": false
+				}
+			},
+			"foreignKeys": {
+				"product_categories_product_id_products_id_fk": {
+					"name": "product_categories_product_id_products_id_fk",
+					"tableFrom": "product_categories",
+					"columnsFrom": ["product_id"],
+					"tableTo": "products",
+					"columnsTo": ["id"],
+					"onUpdate": "no action",
+					"onDelete": "cascade"
+				},
+				"product_categories_category_id_categories_id_fk": {
+					"name": "product_categories_category_id_categories_id_fk",
+					"tableFrom": "product_categories",
+					"columnsFrom": ["category_id"],
+					"tableTo": "categories",
+					"columnsTo": ["id"],
+					"onUpdate": "no action",
+					"onDelete": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {
+				"product_categories_product_id_category_id_pk": {
+					"name": "product_categories_product_id_category_id_pk",
+					"columns": ["product_id", "category_id"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"product_categories_position_nonneg": {
+					"name": "product_categories_position_nonneg",
+					"value": "\"product_categories\".\"position\" >= 0"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.product_images": {
+			"name": "product_images",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "integer",
+					"primaryKey": true,
+					"notNull": true,
+					"identity": {
+						"name": "product_images_id_seq",
+						"increment": "1",
+						"minValue": "1",
+						"maxValue": "2147483647",
+						"startWith": "1",
+						"cache": "1",
+						"cycle": false,
+						"schema": "public",
+						"type": "always"
+					}
+				},
+				"product_id": {
+					"name": "product_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"variant_id": {
+					"name": "variant_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"url": {
+					"name": "url",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"alt": {
+					"name": "alt",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"width": {
+					"name": "width",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"height": {
+					"name": "height",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"position": {
+					"name": "position",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"product_images_product_position_idx": {
+					"name": "product_images_product_position_idx",
+					"columns": [
+						{
+							"expression": "product_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "position",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"with": {},
+					"method": "btree",
+					"concurrently": false
+				},
+				"product_images_variant_idx": {
+					"name": "product_images_variant_idx",
+					"columns": [
+						{
+							"expression": "variant_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"with": {},
+					"method": "btree",
+					"concurrently": false
+				}
+			},
+			"foreignKeys": {
+				"product_images_product_id_products_id_fk": {
+					"name": "product_images_product_id_products_id_fk",
+					"tableFrom": "product_images",
+					"columnsFrom": ["product_id"],
+					"tableTo": "products",
+					"columnsTo": ["id"],
+					"onUpdate": "no action",
+					"onDelete": "cascade"
+				},
+				"product_images_variant_fk": {
+					"name": "product_images_variant_fk",
+					"tableFrom": "product_images",
+					"columnsFrom": ["product_id", "variant_id"],
+					"tableTo": "product_variants",
+					"columnsTo": ["product_id", "id"],
+					"onUpdate": "no action",
+					"onDelete": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"product_images_product_url_key": {
+					"name": "product_images_product_url_key",
+					"columns": ["product_id", "url"],
+					"nullsNotDistinct": false
+				}
+			},
+			"policies": {},
+			"checkConstraints": {
+				"product_images_url_shape": {
+					"name": "product_images_url_shape",
+					"value": "\"product_images\".\"url\" ~ '^(https://|/)'\n\t\t\t    AND \"product_images\".\"url\" NOT LIKE '%/wp-content/%'\n\t\t\t    AND \"product_images\".\"url\" NOT LIKE '%instawp.co%'\n\t\t\t    AND length(\"product_images\".\"url\") BETWEEN 5 AND 500"
+				},
+				"product_images_alt_trimmed": {
+					"name": "product_images_alt_trimmed",
+					"value": "\"product_images\".\"alt\" = btrim(\"product_images\".\"alt\")"
+				},
+				"product_images_alt_length": {
+					"name": "product_images_alt_length",
+					"value": "length(\"product_images\".\"alt\") BETWEEN 5 AND 250"
+				},
+				"product_images_alt_not_filename": {
+					"name": "product_images_alt_not_filename",
+					"value": "\"product_images\".\"alt\" !~ '^[0-9]+$'\n\t\t\t    AND \"product_images\".\"alt\" !~* '^(img|image|afbeelding|foto|photo|dsc|copilot|chatgpt|post-hh-shops|[0-9]+x[0-9]+)[ _.-]*[0-9]*(.(jpe?g|png|webp))?$'"
+				},
+				"product_images_dimensions": {
+					"name": "product_images_dimensions",
+					"value": "\"product_images\".\"width\" BETWEEN 1 AND 10000 AND \"product_images\".\"height\" BETWEEN 1 AND 10000"
+				},
+				"product_images_position_nonneg": {
+					"name": "product_images_position_nonneg",
+					"value": "\"product_images\".\"position\" >= 0"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.product_variants": {
+			"name": "product_variants",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "integer",
+					"primaryKey": true,
+					"notNull": true,
+					"identity": {
+						"name": "product_variants_id_seq",
+						"increment": "1",
+						"minValue": "1",
+						"maxValue": "2147483647",
+						"startWith": "1",
+						"cache": "1",
+						"cycle": false,
+						"schema": "public",
+						"type": "always"
+					}
+				},
+				"product_id": {
+					"name": "product_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"sku": {
+					"name": "sku",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"options": {
+					"name": "options",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'{}'::jsonb"
+				},
+				"price_cents": {
+					"name": "price_cents",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"compare_at_price_cents": {
+					"name": "compare_at_price_cents",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"vat_rate": {
+					"name": "vat_rate",
+					"type": "smallint",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 21
+				},
+				"stock_quantity": {
+					"name": "stock_quantity",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"position": {
+					"name": "position",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"is_active": {
+					"name": "is_active",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"product_variants_product_position_idx": {
+					"name": "product_variants_product_position_idx",
+					"columns": [
+						{
+							"expression": "product_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "position",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"with": {},
+					"method": "btree",
+					"concurrently": false
+				},
+				"product_variants_options_idx": {
+					"name": "product_variants_options_idx",
+					"columns": [
+						{
+							"expression": "options",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last",
+							"opclass": "jsonb_path_ops"
+						}
+					],
+					"isUnique": false,
+					"with": {},
+					"method": "gin",
+					"concurrently": false
+				}
+			},
+			"foreignKeys": {
+				"product_variants_product_id_products_id_fk": {
+					"name": "product_variants_product_id_products_id_fk",
+					"tableFrom": "product_variants",
+					"columnsFrom": ["product_id"],
+					"tableTo": "products",
+					"columnsTo": ["id"],
+					"onUpdate": "no action",
+					"onDelete": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"product_variants_sku_unique": {
+					"name": "product_variants_sku_unique",
+					"columns": ["sku"],
+					"nullsNotDistinct": false
+				},
+				"product_variants_product_options_key": {
+					"name": "product_variants_product_options_key",
+					"columns": ["product_id", "options"],
+					"nullsNotDistinct": false
+				},
+				"product_variants_product_id_id_key": {
+					"name": "product_variants_product_id_id_key",
+					"columns": ["product_id", "id"],
+					"nullsNotDistinct": false
+				}
+			},
+			"policies": {},
+			"checkConstraints": {
+				"product_variants_sku_format": {
+					"name": "product_variants_sku_format",
+					"value": "\"product_variants\".\"sku\" ~ '^[A-Z0-9]+(-[A-Z0-9]+)*$' AND length(\"product_variants\".\"sku\") BETWEEN 3 AND 32"
+				},
+				"product_variants_price_range": {
+					"name": "product_variants_price_range",
+					"value": "\"product_variants\".\"price_cents\" BETWEEN 0 AND 10000000"
+				},
+				"product_variants_compare_price_higher": {
+					"name": "product_variants_compare_price_higher",
+					"value": "\"product_variants\".\"compare_at_price_cents\" IS NULL OR \"product_variants\".\"compare_at_price_cents\" > \"product_variants\".\"price_cents\""
+				},
+				"product_variants_vat_rate": {
+					"name": "product_variants_vat_rate",
+					"value": "\"product_variants\".\"vat_rate\" IN (0, 9, 21)"
+				},
+				"product_variants_stock_range": {
+					"name": "product_variants_stock_range",
+					"value": "\"product_variants\".\"stock_quantity\" BETWEEN 0 AND 1000000"
+				},
+				"product_variants_position_nonneg": {
+					"name": "product_variants_position_nonneg",
+					"value": "\"product_variants\".\"position\" >= 0"
+				},
+				"product_variants_options_is_object": {
+					"name": "product_variants_options_is_object",
+					"value": "jsonb_typeof(\"product_variants\".\"options\") = 'object'"
+				},
+				"product_variants_options_values": {
+					"name": "product_variants_options_values",
+					"value": "NOT jsonb_path_exists(\"product_variants\".\"options\", '$.* ? (@.type() != \"string\" || @ == \"\")'::jsonpath)"
+				},
+				"product_variants_options_no_empty_key": {
+					"name": "product_variants_options_no_empty_key",
+					"value": "NOT jsonb_exists(\"product_variants\".\"options\", '')"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.products": {
+			"name": "products",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "integer",
+					"primaryKey": true,
+					"notNull": true,
+					"identity": {
+						"name": "products_id_seq",
+						"increment": "1",
+						"minValue": "1",
+						"maxValue": "2147483647",
+						"startWith": "1",
+						"cache": "1",
+						"cycle": false,
+						"schema": "public",
+						"type": "always"
+					}
+				},
+				"slug": {
+					"name": "slug",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"short_description": {
+					"name": "short_description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"brand": {
+					"name": "brand",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"status": {
+					"name": "status",
+					"type": "product_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'draft'"
+				},
+				"option_names": {
+					"name": "option_names",
+					"type": "text[]",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'{}'::text[]"
+				},
+				"seo_title": {
+					"name": "seo_title",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"seo_description": {
+					"name": "seo_description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"products_status_idx": {
+					"name": "products_status_idx",
+					"columns": [
+						{
+							"expression": "status",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"with": {},
+					"method": "btree",
+					"concurrently": false
+				},
+				"products_name_trgm_idx": {
+					"name": "products_name_trgm_idx",
+					"columns": [
+						{
+							"expression": "name",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last",
+							"opclass": "gin_trgm_ops"
+						}
+					],
+					"isUnique": false,
+					"with": {},
+					"method": "gin",
+					"concurrently": false
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"products_slug_unique": {
+					"name": "products_slug_unique",
+					"columns": ["slug"],
+					"nullsNotDistinct": false
+				}
+			},
+			"policies": {},
+			"checkConstraints": {
+				"products_slug_format": {
+					"name": "products_slug_format",
+					"value": "\"products\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND length(\"products\".\"slug\") BETWEEN 2 AND 120"
+				},
+				"products_name_shape": {
+					"name": "products_name_shape",
+					"value": "btrim(\"products\".\"name\") = \"products\".\"name\" AND length(\"products\".\"name\") BETWEEN 3 AND 120"
+				},
+				"products_name_clean": {
+					"name": "products_name_clean",
+					"value": "\"products\".\"name\" !~ ('&(#[0-9]+|[a-zA-Z]+)' || chr(59))\n\t    AND position(chr(8211) in \"products\".\"name\") = 0\n\t    AND position(chr(8212) in \"products\".\"name\") = 0"
+				},
+				"products_description_not_blank": {
+					"name": "products_description_not_blank",
+					"value": "length(btrim(\"products\".\"description\")) >= 20"
+				},
+				"products_description_no_script": {
+					"name": "products_description_no_script",
+					"value": "\"products\".\"description\" !~* '<script' AND \"products\".\"description\" !~* 'javascript:'"
+				},
+				"products_short_description_shape": {
+					"name": "products_short_description_shape",
+					"value": "\"products\".\"short_description\" IS NULL OR (\n\t\t\t      btrim(\"products\".\"short_description\") = \"products\".\"short_description\"\n\t\t\t      AND length(\"products\".\"short_description\") BETWEEN 10 AND 600)"
+				},
+				"products_brand_not_blank": {
+					"name": "products_brand_not_blank",
+					"value": "\"products\".\"brand\" IS NULL OR btrim(\"products\".\"brand\") = \"products\".\"brand\" AND \"products\".\"brand\" <> ''"
+				},
+				"products_seo_title_length": {
+					"name": "products_seo_title_length",
+					"value": "\"products\".\"seo_title\" IS NULL OR length(btrim(\"products\".\"seo_title\")) BETWEEN 1 AND 120"
+				},
+				"products_seo_description_length": {
+					"name": "products_seo_description_length",
+					"value": "\"products\".\"seo_description\" IS NULL OR length(btrim(\"products\".\"seo_description\")) BETWEEN 1 AND 320"
+				},
+				"products_option_names_shape": {
+					"name": "products_option_names_shape",
+					"value": "cardinality(\"products\".\"option_names\") <= 3\n\t\t\t    AND array_position(\"products\".\"option_names\", NULL) IS NULL\n\t\t\t    AND NOT ('' = ANY(\"products\".\"option_names\"))"
+				}
+			},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {
+		"public.legacy_source_kind": {
+			"name": "legacy_source_kind",
+			"schema": "public",
+			"values": ["product", "variation", "category"]
+		},
+		"public.product_status": {
+			"name": "product_status",
+			"schema": "public",
+			"values": ["draft", "active", "archived"]
+		}
+	},
+	"schemas": {},
+	"views": {},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
 }

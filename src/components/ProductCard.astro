@@ -1,0 +1,66 @@
+---
+import Price from './Price.astro';
+import ProductImage from './ProductImage.astro';
+import StockBadge from './StockBadge.astro';
+
+/*
+ * De productkaart uit het overzicht.
+ *
+ * Dicht gevuld, zoals bol.com, maar rustiger: geen banner, geen promoblok, geen
+ * beweging. Wat er staat is wat je nodig hebt om door te klikken.
+ *
+ * De hele kaart is klikbaar via een uitgerekt anker over de titel. Dat houdt
+ * het aantal links per kaart op een, wat een schermlezer een stuk rustiger
+ * maakt dan een kaart met vijf losse links naar dezelfde pagina.
+ */
+
+interface Props {
+	slug: string;
+	name: string;
+	image: { url: string; alt: string; width: number; height: number };
+	priceCents: number;
+	compareAtPriceCents?: number | null;
+	stockQuantity: number;
+	/** Bijvoorbeeld "4 maten". Leeg bij een product zonder keuzes. */
+	optionSummary?: string;
+}
+
+const { slug, name, image, priceCents, compareAtPriceCents, stockQuantity, optionSummary } =
+	Astro.props;
+
+const soldOut = stockQuantity <= 0;
+---
+
+<article
+	class="group relative flex flex-col rounded-card border border-border bg-surface transition-colors hover:bg-surface-hover focus-within:bg-surface-hover"
+>
+	<div class="aspect-square overflow-hidden rounded-t-card bg-canvas">
+		<ProductImage
+			src={image.url}
+			alt={image.alt}
+			width={image.width}
+			height={image.height}
+			widths={[240, 320, 480]}
+			sizes="(min-width: 1024px) 240px, (min-width: 640px) 33vw, 50vw"
+			class={`size-full object-cover ${soldOut ? 'opacity-60' : ''}`}
+		/>
+	</div>
+
+	<div class="flex flex-1 flex-col gap-2 p-3">
+		<h3 class="text-sm leading-snug font-medium">
+			<!-- Het uitgerekte anker maakt de hele kaart klikbaar. -->
+			<a href={`/product/${slug}`} class="after:absolute after:inset-0">
+				{name}
+			</a>
+		</h3>
+
+		{optionSummary && (
+				<p class="text-xs text-text-muted">{optionSummary}</p>
+			)}
+
+		<div class="mt-auto flex flex-col gap-2 pt-1">
+			<Price cents={priceCents} compareAtCents={compareAtPriceCents} />
+			<StockBadge quantity={stockQuantity} class="self-start" />
+		</div>
+	</div>
+</article>

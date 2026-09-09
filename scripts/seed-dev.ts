@@ -1,12 +1,12 @@
 import { and, eq, notInArray } from 'drizzle-orm';
-import { closeDb, getDb } from '../src/db/client.ts';
 import {
 	categories,
 	productCategories,
 	productImages,
-	productVariants,
 	products,
+	productVariants,
 } from '../src/db/schema.ts';
+import { closeDb, openDb } from './db.ts';
 
 /*
  * Ontwikkeldata voor fase 1.
@@ -125,7 +125,7 @@ const IMAGES = [
 ];
 
 async function seed(): Promise<void> {
-	const db = getDb();
+	const db = openDb();
 	const now = new Date();
 
 	/*

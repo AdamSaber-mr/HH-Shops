@@ -19,8 +19,7 @@ try {
  * een andere backend worden gegeven. Dat is niet wat je wil onder een DDL-
  * transactie. Neon raadt de pooler expliciet af voor migraties.
  */
-const url =
-	process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL ?? '';
+const url = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL ?? '';
 
 export default defineConfig({
 	dialect: 'postgresql',
