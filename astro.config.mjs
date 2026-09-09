@@ -31,9 +31,31 @@ export default defineConfig({
 			formats: ['image/webp'],
 			minimumCacheTTL: 60 * 60 * 24 * 30,
 			domains: [],
-			remotePatterns: [],
+			// Productfoto's staan in Vercel Blob. Zonder dit patroon weigert de
+			// beeldoptimalisatie ze, want ze komen van een ander domein.
+			remotePatterns: [
+				{
+					protocol: 'https',
+					hostname: '**.public.blob.vercel-storage.com',
+					pathname: '/producten/**',
+				},
+			],
 		},
 	}),
+
+	// LET OP: dit staat er NAAST de `imagesConfig` van de adapter, en dat is
+	// geen duplicatie. `imagesConfig` vertelt Vercel wat het mag optimaliseren;
+	// dit vertelt Astro zelf welke externe hosts het vertrouwt. Zonder dit blok
+	// antwoordt het beeld-endpoint met 403 en laadt er geen enkele productfoto.
+	image: {
+		remotePatterns: [
+			{
+				protocol: 'https',
+				hostname: '**.public.blob.vercel-storage.com',
+				pathname: '/producten/**',
+			},
+		],
+	},
 
 	integrations: [
 		// Zonder expliciete `include` detecteert astro-icon het pakket

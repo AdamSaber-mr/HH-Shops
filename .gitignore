@@ -28,3 +28,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+.env*
+# .env.example hoort wel in git: die documenteert welke sleutels nodig zijn.
+!.env.example

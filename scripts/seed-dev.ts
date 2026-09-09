@@ -91,6 +91,10 @@ const VARIANTS = [
 ];
 
 /*
+ * De URL's wijzen naar Vercel Blob en niet naar public/. Dat is met opzet: in
+ * fase 5 moet de klant zelf foto's kunnen uploaden via de beheeromgeving, en
+ * dat kan alleen als ze buiten de repo staan. De klant kan niet committen.
+ *
  * Afmetingen zijn met de hand nagemeten aan de bestanden in de snapshot. De
  * Store API van WooCommerce geeft ze niet mee, dus fase 2 moet ze straks uit de
  * bestanden zelf lezen. Zonder afmetingen verspringt de layout tijdens het
@@ -102,21 +106,21 @@ const VARIANTS = [
  */
 const IMAGES = [
 	{
-		url: '/producten/zwemvest-hond-met-handvat-1.jpg',
+		url: 'https://qncppdkh3kw1opin.public.blob.vercel-storage.com/producten/zwemvest-hond-met-handvat-1-GesKtHUzbD1h57HWzXhZGYxruP9pqx.jpg',
 		alt: 'Hond draagt een oranje zwemvest met een handvat over de volle lengte van de rug',
 		width: 900,
 		height: 900,
 		position: 0,
 	},
 	{
-		url: '/producten/zwemvest-hond-met-handvat-2.jpg',
+		url: 'https://qncppdkh3kw1opin.public.blob.vercel-storage.com/producten/zwemvest-hond-met-handvat-2-NaIS6syfGtyctt4DTvfkzfOOPlq7Ep.jpg',
 		alt: 'Zwemvest voor honden van bovenaf, met verstelbare buikband en reflecterende bies',
 		width: 550,
 		height: 687,
 		position: 1,
 	},
 	{
-		url: '/producten/zwemvest-hond-met-handvat-3.jpg',
+		url: 'https://qncppdkh3kw1opin.public.blob.vercel-storage.com/producten/zwemvest-hond-met-handvat-3-rAOamBgOsf3fhiHZE02weLM4wJ2B3Q.jpg',
 		alt: 'Zijaanzicht van het hondenzwemvest, met de gesp van de buikband in beeld',
 		width: 519,
 		height: 840,
