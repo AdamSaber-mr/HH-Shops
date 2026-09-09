@@ -10,7 +10,8 @@ styling, geen database. De Neon-database is leeg. Alles moet er dus nog in.
 
 **Waar het in deze fase om draait:** een fundament dat de fouten van de oude site
 structureel onmogelijk maakt. Op de huidige site heeft geen enkel product een SKU, staan
-12 maatvarianten als losse producten, en missen 256 afbeeldingen hun alt-tekst. Dat zijn
+16 maat- en kleurvarianten van 6 producten als losse producten, en missen 256 afbeeldingen
+hun alt-tekst. Dat zijn
 geen vergissingen van de beheerder, dat is een datamodel dat het toeliet. Het nieuwe model
 dwingt het af.
 
@@ -18,7 +19,7 @@ dwingt het af.
 
 1. `npx astro dev` start zonder fouten en `npx astro build` bouwt schoon
 2. De database heeft een schema, met migratiebestanden in git
-3. Een testproduct met twee maten gaat de database in en komt er weer uit
+3. Een testproduct met meerdere maten gaat de database in en komt er weer uit
 4. Een pagina toont dat product, met de juiste kleuren en het juiste font
 5. Het staat live op een Vercel-testadres
 6. Biome, Vitest en GitHub Actions draaien groen
@@ -63,8 +64,12 @@ Er komt een `.env.example` in git met lege sleutels, zodat duidelijk is wat er n
 De echte `.env` blijft erbuiten, die staat al in `.gitignore`.
 
 > Let op: `drizzle-kit` draait buiten Astro om en ziet `astro:env` niet. Die leest `.env`
-> rechtstreeks via dotenv in `drizzle.config.ts`. Beide wegen wijzen naar dezelfde
-> variabele. Dat is geen duplicatie maar twee verschillende contexten.
+> rechtstreeks in `drizzle.config.ts`, via `process.loadEnvFile()`. Beide wegen wijzen naar
+> dezelfde variabele. Dat is geen duplicatie maar twee verschillende contexten.
+>
+> **Bijgesteld:** geen dotenv nodig. Node laadt een .env sinds v20.12 zelf, en draait op v26
+> ook TypeScript rechtstreeks (`process.features.typescript` staat op `strip`). Scripts
+> draaien dus met `node --env-file=.env scripts/x.ts`, zonder tsx en zonder dotenv.
 
 ## Stap 2, het styling-fundament
 
@@ -75,9 +80,10 @@ Tailwind v4 via de Vite-plugin, niet via PostCSS. In `src/styles/global.css` kom
 |---|---|---|
 | `--color-canvas` | `#FAFAF9` | paginaachtergrond |
 | `--color-surface` | `#FFFFFF` | kaarten en panelen |
-| `--color-border` | `#E7E5E4` | randen en scheidingslijnen |
+| `--color-border` | `#E7E5E4` | scheidingslijnen en kaartranden, decoratief |
+| `--color-border-strong` | `#8C8681` | invoervelden, selects, knoppen met omtrek |
 | `--color-text` | `#1C1917` | koppen en bodytekst |
-| `--color-text-muted` | `#78716C` | secundaire tekst |
+| `--color-text-muted` | `#6B6560` | secundaire tekst |
 | `--color-accent` | `#1F5E3D` | knoppen, links, prijs |
 | `--color-accent-hover` | `#16452C` | hover |
 | `--color-danger` | `#B91C1C` | uitverkocht en foutmeldingen |
@@ -87,8 +93,12 @@ Tailwind v4 via de Vite-plugin, niet via PostCSS. In `src/styles/global.css` kom
 Geist komt uit `@fontsource-variable/geist`, dus zelf gehost. Geen `<link>` naar Google
 Fonts: dat kost een extra verbinding en lekt bezoekgegevens naar Google.
 
-Iconen via `astro-icon` met `@iconify-json/ph` (Phosphor). Alleen de iconen die we echt
-gebruiken komen in de bundel. Zelf SVG-paden tekenen doen we niet.
+Iconen via `astro-icon` met `@iconify-json/ph` (Phosphor). Zelf SVG-paden tekenen doen we niet.
+
+> **Bijgesteld.** Hier stond dat alleen de gebruikte iconen in de bundel komen. Dat is niet
+> wat er gebeurt: zonder een expliciete `include` detecteert astro-icon het pakket en zet
+> het de complete Phosphor-set van 4,5 MB JSON in de serverbundel. `astro.config.mjs` heeft
+> daarom een allowlist. Nieuw icoon nodig, dan zet je het daar erbij.
 
 De ontwerpregels staan in `.agents/skills/design-taste-frontend/SKILL.md`. Relevant hier:
 een accentkleur door de hele site, een vaste afrondingsschaal, geen em-dash of en-dash in
@@ -96,9 +106,23 @@ zichtbare tekst, geen emoji.
 
 ## Stap 3, de database
 
-Drizzle met de `neon-serverless` driver. De verbinding komt in `src/db/client.ts` en wordt
-eenmalig aangemaakt en hergebruikt, zodat we niet per serverless-aanroep een nieuwe
-WebSocket opzetten.
+Drizzle met de `neon-serverless` driver. De verbinding wordt eenmalig aangemaakt en
+hergebruikt, zodat we niet per serverless-aanroep een nieuwe WebSocket opzetten.
+
+> **Bijgesteld, drie keer.**
+>
+> **Twee verbindingsreeksen, niet een.** `DATABASE_URL` is de gepoolde endpoint, voor de
+> shop. `DATABASE_URL_UNPOOLED` is dezelfde host zonder `-pooler`, voor migraties. De pooler
+> is PgBouncer in transaction mode en Neon raadt hem expliciet af voor DDL.
+>
+> **`pg` staat als devDependency zonder dat code hem importeert.** drizzle-kit kiest zijn
+> driver door node_modules af te zoeken. Zonder `pg` zou hij migraties over een WebSocket
+> draaien. Niet weghalen omdat het ongebruikt lijkt.
+>
+> **De verbinding is gesplitst over drie bestanden.** `src/db/connection.ts` bouwt hem,
+> `src/db/client.ts` leest het geheim via `astro:env` binnen Astro, `scripts/db.ts` leest
+> `process.env` erbuiten. Dat moet, want Vite zet niet-geprefixte variabelen niet in
+> `process.env`: alleen `process.env` lezen werkt wel op Vercel maar niet in `astro dev`.
 
 Migratieopzet:
 
@@ -110,12 +134,22 @@ Migratieopzet:
 - Migraties draaien niet automatisch bij een Vercel-build, dat is te riskant. Ze gaan
   handmatig via een npm-script
 
-De eerste migratie zet ook `pg_trgm` en `unaccent` aan. Die hebben we nodig voor het
-zoeken in fase 3, en nu meenemen kost een regel.
+De eerste migratie zet ook `pg_trgm` en `unaccent` aan, plus een `immutable_unaccent()`
+wrapper. Die wrapper is niet optioneel: `unaccent()` is als STABLE gemarkeerd en mag daardoor
+niet in een index-expressie staan. Zonder hem loopt het zoeken in fase 3 vast op
+"functions in index expression must be marked IMMUTABLE".
+
+Ook staan er triggers op `updated_at`. Drizzle's `$onUpdate` werkt alleen als de wijziging
+via Drizzle loopt, en de beheeromgeving in fase 5 doet dat niet per se.
 
 ## Stap 4, het datamodel
 
 Zes tabellen. Elke keuze hieronder repareert iets dat op de oude site misgaat.
+
+> **Bijgesteld.** Dit document somde er vijf op. De zesde is `legacy_urls`, en die is niet
+> optioneel: 16 producten worden er 6, dus 16 bestaande productlinks verliezen hun doel. De
+> koppeling van oud naar nieuw bestaat alleen op het moment dat de import van fase 2 draait,
+> en WordPress gaat daarna uit. Zie onderaan deze stap.
 
 **`categories`**
 
@@ -146,15 +180,31 @@ Waarborgen in de database zelf:
 - een GIN-index op `options`, voor het filteren in fase 3
 
 Dat `sku` verplicht is, is de directe reparatie van "0 van 94 producten heeft een
-artikelnummer". De migratie in fase 2 moet ze dus genereren, er is geen ontsnapping.
+artikelnummer". Ook hier is `NOT NULL UNIQUE` niet genoeg: dat laat een lege tekst eenmalig
+door. Er staat een formaatcontrole op (`^[A-Z0-9]+(-[A-Z0-9]+)*$`), zodat `hh-001` en
+`HH-001` ook niet naast elkaar kunnen bestaan.
+
+**Kolomtypen.** Tijdstempels zijn `timestamptz` en niet `timestamp`: Nederland heeft
+zomertijd, en met een kale timestamp bestaat 02:30 op de omschakelnacht in oktober twee keer.
+Bestellingen in fase 4 landen daar vroeg of laat in. Sleutels zijn
+`integer generated always as identity`, prijzen zijn `integer` in centen, en `vat_rate` is
+`smallint` met een controle op 0, 9 of 21.
+
+**De zesde tabel, `legacy_urls`.** Oud pad, oud WooCommerce-id, en waar het naartoe wijst.
+Meerdere rijen mogen naar dezelfde variant wijzen: maat 41 van de veiligheidsschoenen bestaat
+op de oude site twee keer, als los product 441 en als variatie 847 van product 842. Fase 2
+gebruikt hem als sleutel om herhaalbaar te importeren, fase 6 om oude links door te verwijzen.
 
 **`product_images`**
 
 `id`, `product_id`, `variant_id` (mag leeg, voor als een maat een eigen foto krijgt),
 `url`, **`alt` verplicht**, `width`, `height`, `position`, tijdstempel.
 
-`alt` staat op `NOT NULL`. Dat is de reparatie van de 256 ontbrekende alt-teksten: een
-afbeelding zonder alt-tekst kan de database niet in.
+`alt` staat op `NOT NULL` **plus een CHECK**. Dat laatste is essentieel: `NOT NULL` laat een
+lege tekst gewoon toe, dus alleen daarmee was de belofte niet waar. Er is ook een controle
+die bestandsnamen als alt-tekst weigert, want de oude data heeft namen als
+`Post-HH-Shops-15.jpg` en `Copilot_20260217_132555`, en "map bestandsnaam naar alt" is de
+makkelijkste weg in fase 2.
 
 `width` en `height` zijn verplicht, zodat de layout niet verspringt tijdens het laden.
 
@@ -170,9 +220,18 @@ fase 4 en 5. Ze nu al modelleren betekent gokken naar hoe het afrekenen werkt.
 
 Het bewijs dat alles samenwerkt.
 
-`scripts/seed-dev.ts` zet er een realistisch testproduct in: een product met twee maten,
-twee afbeeldingen met alt-tekst, gekoppeld aan een categorie. Realistisch en niet
-`test123`, want dan zie je meteen of lange Nederlandse productnamen de layout breken.
+`scripts/seed-dev.ts` zet **Zwemvest Hond met Handvat** in de database: vier maten, drie
+afbeeldingen met alt-tekst, gekoppeld aan een categorie.
+
+Dat is bewust een echt product uit `data/wc-snapshot/` en geen verzinsel. Op de oude site
+staat het als vier losse producten, een per maat. Zo bewijst deze stap niet dat het schema
+werkt op een bedacht geval, maar dat het precies het probleem oplost waarvoor het gebouwd is.
+De prijzen zijn bovendien 17,00 / 16,00 / 17,00 / 15,00 en lopen dus niet op met de maat,
+wat meteen laat zien waarom prijs op de variant hoort.
+
+Daarnaast `scripts/check-constraints.ts`: zestien pogingen om slechte data in te voeren, die
+alle zestien geweigerd moeten worden. Dat maakt van verificatiepunt 2 hieronder een script
+in plaats van een handmatige checklist.
 
 De startpagina wordt tijdelijk een pagina die dat product uit de database haalt en toont.
 Dat bewijst in een keer dat serverside renderen werkt, dat de databaseverbinding staat,
