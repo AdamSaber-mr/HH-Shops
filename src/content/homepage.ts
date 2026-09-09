@@ -73,7 +73,7 @@ export const navCategorieen = [
 export const hero = {
 	titel: 'Alles voor in huis',
 	tekst:
-		'Van huishoudelijke artikelen tot kinderspullen, tassen en cosmetica. Voor 15:00 besteld is morgen in huis.',
+		'Ruim negentig artikelen voor huis, kinderen en onderweg. Voor 15:00 besteld is morgen in huis.',
 	knop: { label: 'Bekijk het hele assortiment', href: '/winkel' },
 	zoekPlaceholder: 'Waar ben je naar op zoek?',
 };

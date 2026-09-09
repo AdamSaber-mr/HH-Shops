@@ -30,10 +30,10 @@ const tegels = [
 
 <section class="border-b border-border bg-surface">
 	<div class="mx-auto max-w-[1400px] px-4 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-10">
-		<div class="grid gap-3 lg:grid-cols-[1.05fr_1fr]">
+		<div class="grid gap-3 md:h-[320px] md:grid-cols-[1.05fr_1fr]">
 			<!-- Tekstvlak, zelf een tegel in het mozaiek -->
 			<div
-				class="flex flex-col justify-center rounded-media bg-accent px-6 py-8 text-white sm:px-9 sm:py-10"
+				class="flex flex-col justify-center rounded-media bg-accent px-6 py-7 text-white sm:px-8 sm:py-8 lg:px-10"
 			>
 				<h1 class="text-3xl leading-[1.06] font-extrabold tracking-tight text-balance sm:text-4xl lg:text-5xl">
 					{hero.titel}
@@ -67,13 +67,6 @@ const tegels = [
 					</form>
 				</search>
 
-				<a
-					href={hero.knop.href}
-					class="mt-3 inline-flex w-fit items-center gap-1.5 rounded-control text-sm font-medium text-white/90 underline-offset-4 hover:underline"
-				>
-					{hero.knop.label}
-					<Icon name="ph:caret-right" class="size-4" />
-				</a>
 			</div>
 
 			<!-- Beeldtegels -->
@@ -81,7 +74,7 @@ const tegels = [
 				{
 					tegels.map((t) => (
 						<li class={`${t.span} lift zoom overflow-hidden rounded-media`}>
-							<a href={`/categorie/${t.bestand}`} class="group relative block h-full min-h-32">
+							<a href={`/categorie/${t.bestand}`} class="group relative block h-full min-h-28 md:min-h-0">
 								<Image
 									src={afbeelding(`~/assets/site/categorieen/${t.bestand}.png`)}
 									alt={`Categorie ${t.naam}`}
