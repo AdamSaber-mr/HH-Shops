@@ -9,7 +9,20 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "check": "astro check",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "ci:lint": "biome ci .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:generate:custom": "drizzle-kit generate --custom",
+    "db:migrate": "drizzle-kit migrate",
+    "db:check": "drizzle-kit check",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "node --env-file=.env scripts/seed-dev.ts",
+    "db:check-constraints": "node --env-file=.env scripts/check-constraints.ts"
   },
   "dependencies": {
     "@astrojs/vercel": "^11.0.10",
@@ -21,16 +34,16 @@
     "drizzle-orm": "^0.45.2",
     "tailwindcss": "^4.3.3"
   },
-  "allowScripts": {
-    "esbuild": true
-  },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@biomejs/biome": "^2.5.12",
     "@iconify-json/ph": "^1.2.2",
+    "@types/pg": "^8.23.1",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
+    "pg": "^8.23.0",
     "typescript": "^6.0.3",
     "vitest": "^5.0.0"
-  }
+  },
+  "private": true
 }
