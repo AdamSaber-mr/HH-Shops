@@ -61,13 +61,51 @@ export const navCategorieen = [
 	{ naam: 'Overige artikelen', omschrijving: 'Van alles en nog wat', href: '/categorie/overige' },
 ];
 
+/*
+ * De kop van de oude site was "HH Shops | Online winkel voor huishoudelijke
+ * artikelen". Dat is een zoekmachinezin, geen belofte aan een bezoeker, en hij
+ * liep over drie regels. Die zin staat nog wel in de <title> van de pagina, dus
+ * de vindbaarheid gaat niet verloren.
+ *
+ * De belofte is nu kort genoeg om groot te zetten, en de ondertekst doet het
+ * werk: wat verkopen jullie, en wanneer heb ik het.
+ */
 export const hero = {
-	titel: 'HH Shops | Online winkel voor huishoudelijke artikelen',
+	titel: 'Alles voor in huis',
 	tekst:
-		'Ontdek HH Shops: de webwinkel voor al uw huishoudelijke artikelen. Snel besteld, betrouwbaar geleverd en altijd scherp geprijsd. Bestel eenvoudig online!',
-	knop: { label: 'Shop nu jouw favorieten', href: '/winkel' },
-	zoekPlaceholder: 'Producten zoeken',
+		'Van huishoudelijke artikelen tot kinderspullen, tassen en cosmetica. Voor 15:00 besteld is morgen in huis.',
+	knop: { label: 'Bekijk het hele assortiment', href: '/winkel' },
+	zoekPlaceholder: 'Waar ben je naar op zoek?',
 };
+
+/*
+ * De drie beloftes stonden op de oude site als drie identieke kaarten
+ * halverwege de pagina. Daar doen ze weinig: wie tot daar gescrold heeft, is al
+ * overtuigd. Ze staan nu direct onder de hero, waar iemand nog beslist of hij
+ * hier durft te kopen.
+ */
+export const trustbalk = [
+	{
+		icoon: 'ph:truck',
+		titel: 'Gratis verzending vanaf 50 euro',
+		tekst: 'Daaronder rekenen we de werkelijke verzendkosten.',
+	},
+	{
+		icoon: 'ph:clock',
+		titel: 'Voor 15:00 besteld, morgen in huis',
+		tekst: 'Op werkdagen, zolang de voorraad strekt.',
+	},
+	{
+		icoon: 'ph:lock-simple',
+		titel: 'Veilig betalen',
+		tekst: 'Met iDEAL, creditcard of achteraf via Klarna.',
+	},
+	{
+		icoon: 'ph:arrow-counter-clockwise',
+		titel: 'Dertig dagen bedenktijd',
+		tekst: 'Niet goed? Stuur het terug binnen dertig dagen.',
+	},
+];
 
 export const bestsellers = {
 	titel: 'Onze bestsellers',

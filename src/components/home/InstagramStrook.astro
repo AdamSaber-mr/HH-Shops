@@ -12,7 +12,7 @@ import { afbeelding } from '../../lib/images.ts';
  */
 ---
 
-<section aria-labelledby="instagram-titel" class="bg-surface">
+<section aria-labelledby="instagram-titel" class="opkomen">
 	<div class="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 sm:py-16">
 		<div class="flex flex-wrap items-center justify-between gap-4">
 			<a href={instagram.profiel} rel="noopener noreferrer" target="_blank" class="flex items-center gap-3 rounded-control">
@@ -39,7 +39,7 @@ import { afbeelding } from '../../lib/images.ts';
 		<ul class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
 			{instagram.berichten.map((b) => (
 				<li>
-					<a href={b.href} rel="noopener noreferrer" target="_blank" class="block overflow-hidden rounded-card border border-border">
+					<a href={b.href} rel="noopener noreferrer" target="_blank" class="lift zoom block overflow-hidden rounded-card border border-border">
 						<Image
 							src={afbeelding(b.src)}
 							alt={b.alt}

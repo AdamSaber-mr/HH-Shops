@@ -1,43 +1,104 @@
 ---
+import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import { hero } from '../../content/homepage.ts';
+import { afbeelding } from '../../lib/images.ts';
+
+/*
+ * Hero als categorie-mozaiek.
+ *
+ * Het tekstvlak is zelf een tegel in het raster en geen laag over een foto.
+ * Dat is met opzet: tekst over beeld vraagt om een donkere waas, die waas
+ * verpest de foto, en het contrast blijft alsnog afhankelijk van welke foto er
+ * toevallig onder ligt. Zo is het contrast gegarandeerd en blijft het beeld
+ * schoon.
+ *
+ * Het raster is asymmetrisch, want vier gelijke vierkanten naast elkaar is
+ * precies het patroon dat elke sjabloonwebsite gebruikt.
+ *
+ * Zoeken staat vooraan en niet de knop. Dit is een winkel met ruim 90
+ * artikelen: wie hier komt zoekt meestal iets specifieks.
+ */
+
+const tegels = [
+	{ naam: 'Huishoudelijke artikelen', bestand: 'huishoudelijke-artikelen', span: 'sm:col-span-2' },
+	{ naam: 'Kinder artikelen', bestand: 'kinder-artikelen', span: 'sm:col-span-1' },
+	{ naam: 'Cosmetica artikelen', bestand: 'cosmetica-artikelen', span: 'sm:col-span-1' },
+	{ naam: 'Tassen', bestand: 'tassen', span: 'sm:col-span-2' },
+];
 ---
 
 <section class="border-b border-border bg-surface">
-	<div class="mx-auto max-w-[1200px] px-4 py-16 text-center sm:px-6 sm:py-24">
-		<h1 class="mx-auto max-w-4xl text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-5xl">
-			{hero.titel}
-		</h1>
-		<p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-text-muted sm:text-lg">
-			{hero.tekst}
-		</p>
-
-		<div class="mt-8 flex flex-col items-center gap-4">
-			<a
-				href={hero.knop.href}
-				class="inline-flex min-h-12 items-center rounded-control bg-accent px-6 font-medium text-white hover:bg-accent-hover"
+	<div class="mx-auto max-w-[1400px] px-4 pt-6 pb-10 sm:px-6 sm:pt-8 sm:pb-14">
+		<div class="grid gap-3 lg:grid-cols-[1.05fr_1fr]">
+			<!-- Tekstvlak, zelf een tegel in het mozaiek -->
+			<div
+				class="flex flex-col justify-center rounded-media bg-accent px-6 py-10 text-white sm:px-10 sm:py-14"
 			>
-				{hero.knop.label}
-			</a>
+				<h1 class="text-4xl leading-[1.05] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+					{hero.titel}
+				</h1>
+				<p class="mt-4 max-w-md leading-relaxed text-white/85">
+					{hero.tekst}
+				</p>
 
-			<search class="w-full max-w-md">
-				<form class="flex gap-2" action="/winkel">
-				<label for="zoeken" class="sr-only">Producten zoeken</label>
-				<div class="relative flex-1">
-					<Icon name="ph:magnifying-glass" class="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-text-muted" />
-					<input
-						id="zoeken"
-						name="q"
-						type="search"
-						placeholder={hero.zoekPlaceholder}
-						class="min-h-11 w-full rounded-control border border-border-strong bg-surface pr-3 pl-10 text-sm placeholder:text-text-muted"
-					/>
-				</div>
-				<button type="submit" class="min-h-11 rounded-control border border-border-strong px-4 text-sm font-medium hover:bg-surface-hover">
-					Zoeken
-				</button>
-			</form>
-			</search>
+				<search class="mt-7">
+					<form class="flex flex-col gap-2 sm:flex-row" action="/winkel">
+						<label for="zoeken" class="sr-only">Producten zoeken</label>
+						<div class="relative flex-1">
+							<Icon
+								name="ph:magnifying-glass"
+								class="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-text-muted"
+							/>
+							<input
+								id="zoeken"
+								name="q"
+								type="search"
+								placeholder={hero.zoekPlaceholder}
+								class="min-h-12 w-full rounded-control bg-surface pr-4 pl-11 text-text placeholder:text-text-muted"
+							/>
+						</div>
+						<button
+							type="submit"
+							class="min-h-12 rounded-control bg-text px-6 font-semibold text-white transition-colors hover:bg-text/85"
+						>
+							Zoeken
+						</button>
+					</form>
+				</search>
+
+				<a
+					href={hero.knop.href}
+					class="mt-4 inline-flex w-fit items-center gap-1.5 rounded-control text-sm font-medium text-white/90 underline-offset-4 hover:underline"
+				>
+					{hero.knop.label}
+					<Icon name="ph:caret-right" class="size-4" />
+				</a>
+			</div>
+
+			<!-- Beeldtegels -->
+			<ul class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+				{
+					tegels.map((t) => (
+						<li class={`${t.span} lift zoom overflow-hidden rounded-media`}>
+							<a href={`/categorie/${t.bestand}`} class="group relative block h-full min-h-40">
+								<Image
+									src={afbeelding(`~/assets/site/categorieen/${t.bestand}.png`)}
+									alt={`Categorie ${t.naam}`}
+									widths={[320, 480, 640]}
+									sizes="(min-width: 1024px) 320px, (min-width: 640px) 30vw, 45vw"
+									quality={74}
+									loading="eager"
+									class="size-full object-cover"
+								/>
+								<span class="absolute inset-x-3 bottom-3 rounded-control bg-surface/95 px-3 py-1.5 text-xs font-semibold">
+									{t.naam}
+								</span>
+							</a>
+						</li>
+					))
+				}
+			</ul>
 		</div>
 	</div>
 </section>

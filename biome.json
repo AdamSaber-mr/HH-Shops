@@ -19,7 +19,9 @@
 			"!drizzle/",
 			"!.agents/",
 			"!public/",
-			"!package-lock.json"
+			"!package-lock.json",
+			"!**/*.md",
+			"!.claude/"
 		]
 	},
 	"formatter": {

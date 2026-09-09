@@ -6,16 +6,16 @@ import { footer } from '../../content/homepage.ts';
 	<div class="mx-auto max-w-[1200px] px-4 py-12 sm:px-6">
 		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
 			<div>
-				<p class="text-lg font-semibold text-accent">HH Shops</p>
+				<p class="text-xl font-extrabold tracking-tight text-accent">HH Shops</p>
 				<p class="mt-2 text-sm leading-relaxed text-text-muted">{footer.tagline}</p>
-				<a href={footer.knop.href} class="mt-4 inline-flex min-h-11 items-center rounded-control bg-accent px-4 text-sm font-medium text-white hover:bg-accent-hover">
+				<a href={footer.knop.href} class="mt-4 inline-flex min-h-11 items-center rounded-control bg-accent px-5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover">
 					{footer.knop.label}
 				</a>
 			</div>
 
 			{footer.kolommen.map((kolom) => (
 				<nav aria-label={kolom.titel}>
-					<h2 class="text-sm font-semibold">{kolom.titel}</h2>
+					<h2 class="text-sm font-bold">{kolom.titel}</h2>
 					<ul class="mt-3 space-y-2">
 						{kolom.links.map((l) => (
 							<li>
@@ -29,7 +29,7 @@ import { footer } from '../../content/homepage.ts';
 			))}
 
 			<div>
-				<h2 class="text-sm font-semibold">{footer.contact.titel}</h2>
+				<h2 class="text-sm font-bold">{footer.contact.titel}</h2>
 				<address class="mt-3 space-y-1 text-sm text-text-muted not-italic">
 					{footer.contact.regels.map((r) => <p>{r}</p>)}
 					<p>

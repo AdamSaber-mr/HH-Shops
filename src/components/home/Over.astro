@@ -1,13 +1,46 @@
 ---
-import { over } from '../../content/homepage.ts';
+import { Icon } from 'astro-icon/components';
+import { over, reviews } from '../../content/homepage.ts';
+
+/*
+ * Asymmetrische splitsing in plaats van een gecentreerd tekstblok.
+ *
+ * Rechts staat het cijfer van bol.com als groot vlak. Dat is het enige harde
+ * bewijs dat er op deze pagina staat, en dat verdient meer dan een zin in een
+ * alinea. Zo doet deze sectie twee dingen tegelijk: vertellen wie jullie zijn,
+ * en laten zien dat anderen er al kochten.
+ */
 ---
 
-<section aria-labelledby="over-titel">
-	<div class="mx-auto max-w-3xl px-4 py-12 text-center sm:px-6 sm:py-16">
-		<h2 id="over-titel" class="text-2xl font-semibold tracking-tight sm:text-3xl">{over.titel}</h2>
-		<p class="mt-4 leading-relaxed text-text-muted">{over.tekst}</p>
-		<a href={over.knop.href} class="mt-8 inline-flex min-h-12 items-center rounded-control border border-border-strong bg-surface px-6 font-medium hover:bg-surface-hover">
-			{over.knop.label}
-		</a>
+<section aria-labelledby="over-titel" class="opkomen">
+	<div class="mx-auto max-w-[1400px] px-4 py-14 sm:px-6 sm:py-20">
+		<div class="grid items-center gap-8 lg:grid-cols-[1.4fr_1fr]">
+			<div>
+				<h2 id="over-titel" class="text-2xl font-bold tracking-tight sm:text-3xl">
+					{over.titel}
+				</h2>
+				<p class="mt-4 max-w-[62ch] text-lg leading-relaxed text-text-muted">
+					{over.tekst}
+				</p>
+				<a
+					href={over.knop.href}
+					class="mt-7 inline-flex min-h-12 items-center gap-1.5 rounded-control bg-accent px-6 font-semibold text-white transition-colors hover:bg-accent-hover"
+				>
+					{over.knop.label}
+					<Icon name="ph:arrow-right" class="size-4" />
+				</a>
+			</div>
+
+			<div class="rounded-media bg-accent-subtle p-8 text-center">
+				<div class="flex justify-center gap-0.5 text-accent" role="img" aria-label="5 van de 5 sterren">
+					{Array.from({ length: 5 }).map(() => <Icon name="ph:star" class="size-5" />)}
+				</div>
+				<p class="mt-4 text-5xl font-extrabold tracking-tight text-accent tabular-nums">8,1</p>
+				<p class="mt-2 text-sm font-medium">Gemiddelde beoordeling op bol.com</p>
+				<p class="mt-1 text-sm text-text-muted">
+					{reviews.items.length} van onze klanten vertellen hieronder waarom.
+				</p>
+			</div>
+		</div>
 	</div>
 </section>

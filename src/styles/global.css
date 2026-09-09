@@ -69,21 +69,29 @@
 	--color-danger: #b91c1c; /* 6,2:1 */
 	--color-danger-subtle: #fef2f2;
 
-	/* Afronding. Twee waarden, meer niet. */
-	--radius-control: 6px; /* knoppen en invoervelden */
-	--radius-card: 8px; /* kaarten en panelen */
+	/*
+	  Afronding. Drie waarden met een vaste regel: hoe groter het vlak, hoe
+	  ronder de hoek. Bedienbare dingen het strakst, beeld het rondst. Wijk
+	  hier nergens van af, want gemengde afrondingen zijn het snelste manier
+	  om een pagina rommelig te laten ogen.
+	*/
+	--radius-control: 10px; /* knoppen, invoervelden, kleine labels */
+	--radius-card: 14px; /* kaarten en panelen */
+	--radius-media: 18px; /* foto's en beeldvlakken */
 
 	/*
-	  Geist, zelf gehost via @fontsource-variable/geist. Het bestand wordt in
-	  Layout.astro geimporteerd en niet hier, zodat Vite de asset-URL's van de
-	  woff2-bestanden herschrijft. Via een @import in dit bestand pakt Tailwind
-	  hem eerst en gaat dat mis.
+	  Plus Jakarta Sans, zelf gehost. Geometrisch met ronde uiteinden, dus
+	  warmer dan Geist, maar nog scherp genoeg voor prijzen en labels van 13px.
+	  Gewichten 200 tot 800, zodat het verschil tussen kop en tekst uit gewicht
+	  kan komen in plaats van uit grootte.
 
-	  De preflight van Tailwind zet `html { font-family: --theme(--font-sans) }`,
-	  dus hiermee staat Geist meteen op de hele pagina.
+	  Het bestand wordt in Layout.astro geimporteerd en niet hier, zodat Vite de
+	  asset-URL's van de woff2-bestanden herschrijft. Via een @import hier pakt
+	  Tailwind hem eerst en gaat dat mis.
 	*/
 	--font-sans:
-		"Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+		"Plus Jakarta Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+		Arial, sans-serif;
 }
 
 @layer base {
@@ -142,5 +150,68 @@
 			transition-duration: 0.01ms !important;
 			scroll-behavior: auto !important;
 		}
+	}
+}
+
+/*
+  Beweging.
+
+  Bewust geen animatiebibliotheek. Dit is een winkel, geen showcase: elke
+  beweging moet iets uitleggen. Wat hier staat doet drie dingen en meer niet.
+
+  1. Secties komen zacht op wanneer ze in beeld scrollen. Dat geeft ritme aan
+     een lange pagina zonder dat je erop hoeft te wachten.
+  2. Kaarten liften onder de muis. Dat zegt: hier kun je op klikken.
+  3. Foto's zoomen minimaal in binnen hun kader. Dat geeft leven zonder dat de
+     layout verspringt.
+
+  Alles zit achter twee poorten. `prefers-reduced-motion` schakelt het uit, en
+  `@supports` zorgt dat browsers zonder scroll-gestuurde animaties de inhoud
+  gewoon meteen tonen in plaats van een lege pagina.
+*/
+@media (prefers-reduced-motion: no-preference) {
+	@supports (animation-timeline: view()) {
+		@keyframes opkomen {
+			from {
+				opacity: 0;
+				transform: translateY(1.25rem);
+			}
+			to {
+				opacity: 1;
+				transform: none;
+			}
+		}
+
+		.opkomen {
+			animation: opkomen linear both;
+			animation-timeline: view();
+			animation-range: entry 5% cover 22%;
+		}
+	}
+
+	/* Kaarten die je kunt aanklikken. Alleen transform en opacity, zodat de
+	   browser het op de grafische kaart kan afhandelen. */
+	.lift {
+		transition:
+			transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+			box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+			border-color 220ms ease;
+	}
+	.lift:hover,
+	.lift:focus-within {
+		transform: translateY(-3px);
+		box-shadow: 0 12px 28px -12px rgb(28 25 23 / 0.18);
+	}
+	.lift:active {
+		transform: translateY(-1px);
+	}
+
+	/* Beeld binnen een kader met overflow-hidden. */
+	.zoom img {
+		transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+	}
+	.zoom:hover img,
+	.zoom:focus-within img {
+		transform: scale(1.04);
 	}
 }

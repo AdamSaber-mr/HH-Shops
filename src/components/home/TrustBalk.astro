@@ -1,0 +1,30 @@
+---
+import { Icon } from 'astro-icon/components';
+import { trustbalk } from '../../content/homepage.ts';
+
+/*
+ * Vier beloftes direct onder de hero.
+ *
+ * Geen kaarten, alleen ruimte en een icoon. Kaarten zouden dit even zwaar maken
+ * als de producten eronder, en dat klopt niet: dit is geruststelling, geen
+ * koopwaar.
+ */
+---
+
+<section aria-label="Onze beloftes" class="border-b border-border bg-canvas">
+	<div class="mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
+		<ul class="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
+			{
+				trustbalk.map((t) => (
+					<li class="flex gap-3">
+						<Icon name={t.icoon} class="mt-0.5 size-5 shrink-0 text-accent" />
+						<div>
+							<p class="text-sm font-semibold">{t.titel}</p>
+							<p class="mt-0.5 text-sm text-text-muted">{t.tekst}</p>
+						</div>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</section>

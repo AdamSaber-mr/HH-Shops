@@ -1,29 +1,40 @@
 ---
 import { Icon } from 'astro-icon/components';
 import { reviews } from '../../content/homepage.ts';
+
+/*
+ * Reviews zonder kaartranden.
+ *
+ * Vier omlijnde vakjes naast elkaar is precies het patroon dat elke
+ * sjabloonsite gebruikt. Hier dragen ruimte en een aanhalingsteken de vorm, en
+ * scheiden dunne lijnen de kolommen. Dat leest rustiger en de tekst komt naar
+ * voren in plaats van het kader.
+ *
+ * Het cijfer 8,1 staat bewust in de sectie hierboven en niet hier, zodat het
+ * niet twee keer op dezelfde pagina staat.
+ */
 ---
 
-<section aria-labelledby="reviews-titel">
-	<div class="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 sm:py-16">
-		<div class="text-center">
-			<h2 id="reviews-titel" class="text-2xl font-semibold tracking-tight sm:text-3xl">
-				{reviews.titel}
-			</h2>
-			<p class="mx-auto mt-2 max-w-2xl text-text-muted">{reviews.tekst}</p>
-		</div>
+<section aria-labelledby="reviews-titel" class="opkomen bg-surface">
+	<div class="mx-auto max-w-[1400px] px-4 py-14 sm:px-6 sm:py-20">
+		<h2 id="reviews-titel" class="text-2xl font-bold tracking-tight sm:text-3xl">
+			{reviews.titel}
+		</h2>
 
-		<ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-			{reviews.items.map((r) => (
-				<li class="flex flex-col rounded-card border border-border bg-surface p-5">
-					<div class="flex gap-0.5 text-accent" role="img" aria-label={`${reviews.sterren} van de 5 sterren`}>
-						{Array.from({ length: reviews.sterren }).map(() => (
-							<Icon name="ph:star" class="size-4" />
-						))}
-					</div>
-					<blockquote class="mt-3 flex-1 text-sm leading-relaxed">{r.tekst}</blockquote>
-					<p class="mt-4 text-sm font-medium text-text-muted">{r.naam}</p>
-				</li>
-			))}
+		<ul class="mt-10 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+			{
+				reviews.items.map((r) => (
+					<li class="border-t border-border pt-5">
+						<div class="flex gap-0.5 text-accent" role="img" aria-label="5 van de 5 sterren">
+							{Array.from({ length: reviews.sterren }).map(() => (
+								<Icon name="ph:star" class="size-4" />
+							))}
+						</div>
+						<blockquote class="mt-3 leading-relaxed">{r.tekst}</blockquote>
+						<p class="mt-4 text-sm font-semibold text-text-muted">{r.naam}</p>
+					</li>
+				))
+			}
 		</ul>
 	</div>
 </section>

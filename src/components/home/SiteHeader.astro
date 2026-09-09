@@ -5,65 +5,107 @@ import { nav, navCategorieen, site } from '../../content/homepage.ts';
 import { afbeelding } from '../../lib/images.ts';
 
 /*
- * De kop van de site: aankondigingsbalk, logo, navigatie, zoeken, winkelwagen.
+ * De kop van de site.
  *
- * De uitklap onder "Producten" werkt met een <details>, dus zonder JavaScript.
- * Dat is bewust: een menu dat alleen met JavaScript opengaat, gaat op een
- * trage verbinding helemaal niet open.
+ * Blijft plakken bij het scrollen, want op een winkel met negentig artikelen wil
+ * je onderweg kunnen zoeken zonder terug naar boven te scrollen.
+ *
+ * De balk met "SHOP NU!" die op de oude site boven de kop stond is weg. Die zei
+ * niets: je staat al in een winkel. De ruimte die dat oplevert gaat naar het
+ * zoekveld, dat hier meer werk doet.
+ *
+ * De uitklap onder Producten werkt met <details>, dus zonder JavaScript. Een
+ * menu dat alleen met JavaScript opengaat, gaat op een trage verbinding
+ * helemaal niet open.
  */
 const logo = afbeelding(site.logo.src);
 ---
 
-<div class="bg-accent text-center text-sm font-medium text-white">
-	<div class="mx-auto max-w-[1200px] px-4 py-2">{site.announcement}</div>
-</div>
-
-<header class="border-b border-border bg-surface">
-	<div class="mx-auto flex max-w-[1200px] items-center gap-4 px-4 py-3 sm:px-6">
+<header
+	class="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur supports-[backdrop-filter]:bg-surface/75"
+>
+	<div class="mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-4 sm:px-6">
 		<a href="/" class="shrink-0 rounded-control">
-			<Image src={logo} alt={site.logo.alt} width={150} height={50} quality={85} loading="eager" class="h-10 w-auto" />
+			<Image
+				src={logo}
+				alt={site.logo.alt}
+				width={150}
+				height={50}
+				quality={90}
+				loading="eager"
+				class="h-9 w-auto"
+			/>
 		</a>
 
-		<nav aria-label="Hoofdmenu" class="ml-4 hidden lg:block">
-			<ul class="flex items-center gap-1">
-				{nav.map((item) => (
-					<li>
-						{item.heeftUitklap ? (
-							<details class="group relative">
-								<summary class="flex cursor-pointer list-none items-center gap-1 rounded-control px-3 py-2 text-sm font-medium tracking-wide uppercase hover:bg-surface-hover">
+		<nav aria-label="Hoofdmenu" class="ml-2 hidden lg:block">
+			<ul class="flex items-center gap-0.5">
+				{
+					nav.map((item) => (
+						<li>
+							{item.heeftUitklap ? (
+								<details class="group relative">
+									<summary class="flex min-h-10 cursor-pointer list-none items-center gap-1 rounded-control px-3 text-sm font-semibold transition-colors hover:bg-surface-hover">
+										{item.label}
+										<Icon
+											name="ph:caret-down"
+											class="size-3.5 transition-transform group-open:rotate-180"
+										/>
+									</summary>
+									<ul class="absolute left-0 z-20 mt-2 w-80 rounded-card border border-border bg-surface p-2 shadow-lg shadow-text/5">
+										{navCategorieen.map((c) => (
+											<li>
+												<a
+													href={c.href}
+													class="block rounded-control px-3 py-2.5 transition-colors hover:bg-surface-hover"
+												>
+													<span class="block text-sm font-semibold">{c.naam}</span>
+													<span class="block text-xs text-text-muted">{c.omschrijving}</span>
+												</a>
+											</li>
+										))}
+									</ul>
+								</details>
+							) : (
+								<a
+									href={item.href}
+									class="flex min-h-10 items-center rounded-control px-3 text-sm font-semibold transition-colors hover:bg-surface-hover"
+								>
 									{item.label}
-									<Icon name="ph:caret-down" class="size-3.5 transition-transform group-open:rotate-180" />
-								</summary>
-								<ul class="absolute left-0 z-20 mt-1 w-80 rounded-card border border-border bg-surface p-2 shadow-sm">
-									{navCategorieen.map((c) => (
-										<li>
-											<a href={c.href} class="block rounded-control px-3 py-2 hover:bg-surface-hover">
-												<span class="block text-sm font-medium">{c.naam}</span>
-												<span class="block text-xs text-text-muted">{c.omschrijving}</span>
-											</a>
-										</li>
-									))}
-								</ul>
-							</details>
-						) : (
-							<a href={item.href} class="block rounded-control px-3 py-2 text-sm font-medium tracking-wide uppercase hover:bg-surface-hover">
-								{item.label}
-							</a>
-						)}
-					</li>
-				))}
+								</a>
+							)}
+						</li>
+					))
+				}
 			</ul>
 		</nav>
 
-		<div class="ml-auto flex items-center gap-2">
-			<a href="/winkelwagen" class="flex min-h-11 items-center gap-2 rounded-control px-3 text-sm hover:bg-surface-hover">
-				<Icon name="ph:shopping-cart-simple" class="size-5" />
-				<span class="hidden sm:inline">€&nbsp;0,00</span>
-				<span class="sr-only">Winkelwagen, 0 artikelen</span>
-			</a>
-			<a href="/winkel" class="inline-flex min-h-11 items-center rounded-control bg-accent px-4 text-sm font-medium text-white hover:bg-accent-hover">
-				Shop nu!
-			</a>
-		</div>
+		<!-- Zoeken in de kop, zodat het meescrollt met de pagina. -->
+		<search class="ml-auto hidden max-w-xs flex-1 md:block">
+			<form action="/winkel">
+				<label for="zoeken-kop" class="sr-only">Producten zoeken</label>
+				<div class="relative">
+					<Icon
+						name="ph:magnifying-glass"
+						class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text-muted"
+					/>
+					<input
+						id="zoeken-kop"
+						name="q"
+						type="search"
+						placeholder="Zoeken"
+						class="min-h-10 w-full rounded-control border border-border-strong bg-canvas pr-3 pl-9 text-sm placeholder:text-text-muted"
+					/>
+				</div>
+			</form>
+		</search>
+
+		<a
+			href="/winkelwagen"
+			class="ml-auto flex min-h-10 items-center gap-2 rounded-control px-3 text-sm font-semibold transition-colors hover:bg-surface-hover md:ml-2"
+		>
+			<Icon name="ph:shopping-cart-simple" class="size-5" />
+			<span class="hidden sm:inline tabular-nums">€&nbsp;0,00</span>
+			<span class="sr-only">Winkelwagen, 0 artikelen</span>
+		</a>
 	</div>
 </header>
