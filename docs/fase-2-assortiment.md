@@ -489,6 +489,7 @@ Gedraaid op 10 september 2026 tegen de `dev`-branch, twee keer achter elkaar.
 | Afbeeldingen | 233 bestanden, van 39,6 MB naar 6,4 MB. Grootste na verwerking 121 KB |
 | Controle | Som van voorraad (4724) en van prijzen (164.213 cent) over alle varianten gelijk aan de snapshot. Geen product zonder variant, foto of categorie. Geen URL meer naar hh-shops.nl |
 | Werkschoenen | Zes maten, vier uitverkocht, zoals de variaties op de oude site |
+| Productie | Later op 10 september ook gedraaid tegen de Neon-branch `main`, met de reeks uit een lokaal `.env.production`. Zelfde uitkomst, tweede run nul wijzigingen. De storefront op hh-shops.vercel.app toont sindsdien het assortiment |
 
 Het rapport meldt 129 aandachtspunten. Verreweg de meeste zijn "korte
 beschrijving was een trefwoordenlijst, begin van de lange gebruikt": 60 van de
