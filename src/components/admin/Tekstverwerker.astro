@@ -1,0 +1,153 @@
+---
+/*
+ * Een eenvoudige tekstverwerker voor productbeschrijvingen: vet, cursief,
+ * tussenkopjes en opsommingen. Meer niet, want de shop toont ook niet meer.
+ *
+ * Het echte veld blijft een textarea met de HTML erin. Zonder JavaScript zie
+ * je die HTML en kun je hem gewoon bewerken; met JavaScript komt er een
+ * bewerkvlak overheen en gaat de inhoud bij het verzenden terug in de
+ * textarea. De server schoont alles altijd op (cleanHtml), dus wat de
+ * browser ook stuurt, in de database komt alleen p, ul, ol, li, strong, em,
+ * br en h3.
+ */
+
+interface Props {
+	naam: string;
+	label: string;
+	waarde?: string;
+	hint?: string;
+	fout?: string[] | undefined;
+	verplicht?: boolean;
+}
+
+const { naam, label, waarde = '', hint, fout, verplicht = false } = Astro.props;
+const id = `veld-${naam}`;
+const foutTekst = fout?.[0];
+const beschrijving = [hint ? `${id}-hint` : null, foutTekst ? `${id}-fout` : null].filter(Boolean).join(' ') || undefined;
+const knop =
+	'inline-flex min-h-9 items-center rounded-control border border-border-strong bg-surface px-2.5 text-xs font-medium text-text hover:bg-surface-hover';
+---
+
+<div data-tekstverwerker>
+	<label for={id} class="block text-sm font-medium">
+		{label}
+		{verplicht && <span class="text-text-muted font-normal"> (verplicht)</span>}
+	</label>
+	{hint && <p id={`${id}-hint`} class="mt-0.5 text-xs text-text-muted">{hint}</p>}
+
+	<div data-werkbalk hidden class="mt-1.5 flex flex-wrap gap-1" role="toolbar" aria-label="Opmaak">
+		<button type="button" class={knop} data-opdracht="bold"><strong>Vet</strong></button>
+		<button type="button" class={knop} data-opdracht="italic"><em>Cursief</em></button>
+		<button type="button" class={knop} data-opdracht="formatBlock" data-waarde="h3">Kopje</button>
+		<button type="button" class={knop} data-opdracht="formatBlock" data-waarde="p">Alinea</button>
+		<button type="button" class={knop} data-opdracht="insertUnorderedList">Opsomming</button>
+		<button type="button" class={knop} data-opdracht="insertOrderedList">Nummering</button>
+	</div>
+
+	<div
+		data-vlak
+		hidden
+		contenteditable="true"
+		role="textbox"
+		aria-multiline="true"
+		aria-labelledby={id}
+		class:list={[
+			'tekstvlak mt-1.5 min-h-64 w-full rounded-control border bg-surface px-3 py-2 text-base leading-relaxed',
+			foutTekst ? 'border-danger' : 'border-border-strong',
+		]}
+	>
+	</div>
+
+	<textarea
+		id={id}
+		name={naam}
+		rows="12"
+		required={verplicht}
+		aria-invalid={foutTekst ? 'true' : undefined}
+		aria-describedby={beschrijving}
+		class:list={[
+			'mt-1.5 block w-full rounded-control border bg-surface px-3 py-2 font-mono text-sm leading-relaxed',
+			foutTekst ? 'border-danger' : 'border-border-strong',
+		]}
+		set:text={waarde}
+	/>
+	{foutTekst && <p id={`${id}-fout`} class="mt-1 text-sm text-danger">{foutTekst}</p>}
+</div>
+
+<style>
+	/* De opmaak in het bewerkvlak, zodat een kopje er als kopje uitziet. */
+	.tekstvlak :global(h3) {
+		font-size: 1.05rem;
+		font-weight: 600;
+		margin: 0.9em 0 0.35em;
+	}
+	.tekstvlak :global(p) {
+		margin: 0 0 0.75em;
+	}
+	.tekstvlak :global(ul),
+	.tekstvlak :global(ol) {
+		margin: 0 0 0.75em;
+		padding-left: 1.4em;
+	}
+	.tekstvlak :global(ul) {
+		list-style: disc;
+	}
+	.tekstvlak :global(ol) {
+		list-style: decimal;
+	}
+	.tekstvlak :global(strong) {
+		font-weight: 600;
+	}
+</style>
+
+<script>
+	for (const wrapper of document.querySelectorAll<HTMLElement>('[data-tekstverwerker]')) {
+		const textarea = wrapper.querySelector<HTMLTextAreaElement>('textarea');
+		const vlak = wrapper.querySelector<HTMLElement>('[data-vlak]');
+		const werkbalk = wrapper.querySelector<HTMLElement>('[data-werkbalk]');
+		if (!textarea || !vlak || !werkbalk) continue;
+
+		// Van textarea naar bewerkvlak, en de textarea uit beeld (niet uit het formulier).
+		vlak.innerHTML = textarea.value;
+		vlak.hidden = false;
+		werkbalk.hidden = false;
+		textarea.hidden = true;
+		textarea.setAttribute('aria-hidden', 'true');
+		textarea.tabIndex = -1;
+
+		const synchroniseer = () => {
+			textarea.value = vlak.innerHTML;
+		};
+		vlak.addEventListener('input', synchroniseer);
+		textarea.form?.addEventListener('submit', synchroniseer);
+
+		for (const knop of werkbalk.querySelectorAll<HTMLButtonElement>('button[data-opdracht]')) {
+			// mousedown in plaats van click, anders verliest het vlak de selectie.
+			knop.addEventListener('mousedown', (event) => {
+				event.preventDefault();
+				vlak.focus();
+				document.execCommand(knop.dataset.opdracht ?? '', false, knop.dataset.waarde);
+				synchroniseer();
+			});
+		}
+
+		// Plakken als platte tekst met alinea's; de opmaak van Word of ChatGPT
+		// komt toch niet door de opschoning op de server.
+		vlak.addEventListener('paste', (event) => {
+			const html = event.clipboardData?.getData('text/html');
+			const text = event.clipboardData?.getData('text/plain') ?? '';
+			if (!html && !text) return;
+			event.preventDefault();
+			if (html) {
+				document.execCommand('insertHTML', false, html);
+			} else {
+				const alineas = text
+					.split(/\n\s*\n/)
+					.map((a) => `<p>${a.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')}</p>`)
+					.join('');
+				document.execCommand('insertHTML', false, alineas);
+			}
+			synchroniseer();
+		});
+	}
+</script>

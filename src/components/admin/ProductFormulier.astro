@@ -3,6 +3,7 @@ import type { Veldfouten } from '../../lib/admin/formulier.ts';
 import Button from '../Button.astro';
 import Keuzelijst from './Keuzelijst.astro';
 import Tekstvak from './Tekstvak.astro';
+import Tekstverwerker from './Tekstverwerker.astro';
 import Veld from './Veld.astro';
 
 /*
@@ -82,14 +83,13 @@ const optieNaam = w('optieNaam');
 				maxlength={600}
 				hint="Een of twee zinnen voor op de productkaart. Platte tekst, maximaal 600 tekens."
 			/>
-			<Tekstvak
+			<Tekstverwerker
 				naam="beschrijving"
 				label="Beschrijving"
 				waarde={w('beschrijving')}
 				fout={veldfouten.beschrijving}
 				verplicht
-				rijen={12}
-				hint="De volledige tekst op de productpagina. Alinea's, opsommingen en tussenkopjes blijven bewaard; de rest van de opmaak wordt opgeschoond."
+				hint="De volledige tekst op de productpagina. Vet, tussenkopjes en opsommingen blijven bewaard; de rest van de opmaak wordt opgeschoond."
 			/>
 		</div>
 	</section>
