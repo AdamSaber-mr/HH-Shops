@@ -1,5 +1,7 @@
 import { createInterface } from 'node:readline/promises';
-import { createAuth } from '../src/auth/create.ts';
+import { eq } from 'drizzle-orm';
+import { createAuth, ROL_ADMIN } from '../src/auth/create.ts';
+import { users } from '../src/db/auth-schema.ts';
 import { closeDb, openDb } from './db.ts';
 
 /*
@@ -11,7 +13,8 @@ import { closeDb, openDb } from './db.ts';
  * in de geschiedenis van de terminal belandt. Het wordt wel getoond tijdens
  * het typen. Latere beheerders maak je aan in het paneel zelf.
  *
- * Alleen dit script mag registreren: in de shop staat sign-up uit.
+ * Registreren geeft de rol `klant`; dit script zet hem daarna op `admin`.
+ * Latere beheerders komen uit het paneel, dat de rol meteen goed zet.
  */
 
 const [email, name] = process.argv.slice(2);
@@ -48,8 +51,9 @@ if (password.length < 12) {
 
 const db = openDb();
 try {
-	const auth = createAuth({ db, secret, allowSignUp: true, rateLimit: false });
+	const auth = createAuth({ db, secret, rateLimit: false });
 	const result = await auth.api.signUpEmail({ body: { email, password, name } });
+	await db.update(users).set({ role: ROL_ADMIN }).where(eq(users.id, result.user.id));
 	console.log(`Beheerder aangemaakt: ${result.user.email} (${result.user.name})`);
 } catch (error) {
 	console.error('Mislukt:', error instanceof Error ? error.message : error);

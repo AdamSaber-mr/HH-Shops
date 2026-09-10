@@ -9,22 +9,29 @@ import type { Database } from '../db/connection.ts';
  * en het geheim vandaan komen. Binnen Astro komen die uit astro:env (zie
  * server.ts), in scripts uit process.env. Dezelfde splitsing als bij
  * src/db/connection.ts.
+ *
+ * Een instantie voor twee soorten gebruikers. Klanten registreren zichzelf
+ * en krijgen de rol `klant`; beheerders worden aangemaakt vanuit het paneel
+ * of het script en hebben de rol `admin`. Wie wat mag, wordt op de rol
+ * beslist (src/auth/sessie.ts en src/middleware.ts), nooit op "is ingelogd".
  */
 
 const DAG = 60 * 60 * 24;
 
+/** De rol die elke zelfregistratie krijgt. Alles wat geen `admin` is, is klant. */
+export const ROL_KLANT = 'klant';
+export const ROL_ADMIN = 'admin';
+
 export type AuthOptions = {
 	db: Database;
 	secret: string;
-	/** Alleen voor het script dat de eerste beheerder aanmaakt. In de shop staat registratie altijd uit. */
-	allowSignUp?: boolean;
 	/** Uit te zetten in tests. Op Vercel altijd aan, met opslag in de database. */
 	rateLimit?: boolean;
 };
 
-export function createAuth({ db, secret, allowSignUp = false, rateLimit = true }: AuthOptions) {
+export function createAuth({ db, secret, rateLimit = true }: AuthOptions) {
 	return betterAuth({
-		appName: 'HH Shops beheer',
+		appName: 'HH Shops',
 		secret,
 		database: drizzleAdapter(db, { provider: 'pg', schema: authSchema }),
 
@@ -46,21 +53,31 @@ export function createAuth({ db, secret, allowSignUp = false, rateLimit = true }
 
 		emailAndPassword: {
 			enabled: true,
-			disableSignUp: !allowSignUp,
+			// Registreren staat open voor klanten. Een registratie levert nooit
+			// een beheerder op: de plugin hieronder geeft de rol `klant`.
+			disableSignUp: false,
 			minPasswordLength: 12,
 			maxPasswordLength: 128,
 		},
 
-		// Iedereen die kan inloggen is beheerder. De plugin geeft ons createUser,
-		// listUsers en removeUser, met de controle dat alleen een admin dat mag.
-		plugins: [admin({ defaultRole: 'admin', adminRoles: ['admin'] })],
+		user: {
+			// Zonder mailkoppeling is geen enkel adres geverifieerd, en dan werkt
+			// Better Auth een adreswijziging meteen bij. Zodra verificatie aan
+			// gaat, loopt dit via een bevestigingslink.
+			changeEmail: { enabled: true },
+		},
+
+		// De admin-plugin geeft createUser, listUsers en removeUser voor het
+		// beheerpaneel, met de controle dat alleen een admin dat mag.
+		plugins: [admin({ defaultRole: ROL_KLANT, adminRoles: [ROL_ADMIN] })],
 
 		session: {
 			expiresIn: 7 * DAG,
 			updateAge: DAG,
 			// Geen cookiecache: dan zou een uitgelogde of ingetrokken sessie nog
-			// minutenlang werken vanuit de cookie zelf. Het beheerpaneel heeft een
-			// handvol gebruikers, een databasequery per aanvraag is niets.
+			// minutenlang werken vanuit de cookie zelf. Gasten kosten geen query
+			// (de middleware kijkt eerst of er een sessiecookie is), ingelogde
+			// bezoekers een per pagina.
 			cookieCache: { enabled: false },
 		},
 
@@ -70,6 +87,7 @@ export function createAuth({ db, secret, allowSignUp = false, rateLimit = true }
 			modelName: 'rateLimit',
 			customRules: {
 				'/sign-in/email': { window: 60, max: 5 },
+				'/sign-up/email': { window: 600, max: 3 },
 			},
 		},
 	});

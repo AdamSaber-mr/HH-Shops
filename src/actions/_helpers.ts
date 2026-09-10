@@ -1,14 +1,24 @@
 import type { ActionAPIContext } from 'astro:actions';
 import { ActionError } from 'astro:actions';
 import { z } from 'astro/zod';
+import { isBeheerder } from '../auth/sessie.ts';
 import { veldfoutUit } from '../lib/admin/fouten.ts';
 
 /*
- * Wat elke action van het beheerpaneel deelt.
+ * Wat de actions delen.
  */
 
-/** Geeft de ingelogde beheerder terug, of gooit een 401. Dubbele verdediging naast de middleware. */
+/** Geeft de ingelogde beheerder terug, of gooit 401 (niet ingelogd) of 403 (wel ingelogd, geen beheerder). */
 export function vereisBeheerder(context: ActionAPIContext) {
+	const user = vereisKlant(context);
+	if (!isBeheerder(user)) {
+		throw new ActionError({ code: 'FORBIDDEN', message: 'Hier heb je geen toegang toe.' });
+	}
+	return user;
+}
+
+/** Geeft de ingelogde gebruiker terug (klant of beheerder), of gooit een 401. */
+export function vereisKlant(context: ActionAPIContext) {
 	const user = context.locals.user;
 	if (!user) {
 		throw new ActionError({ code: 'UNAUTHORIZED', message: 'Je bent niet ingelogd.' });
