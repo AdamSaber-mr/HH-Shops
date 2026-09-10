@@ -39,14 +39,14 @@ export const featuredCategories: readonly FeaturedCategory[] = [
 		tagline: 'Speelgoed en spullen voor de kleintjes',
 	},
 	{
-		slug: 'tassen-rugzakken-hondentassen-etc',
+		slug: 'tassen',
 		name: 'Tassen & rugzakken',
 		tagline: 'Handtassen, rugzakken en hondentassen',
 	},
 	{ slug: 'schoenen', name: 'Schoenen', tagline: 'Voor elke dag en elk seizoen' },
 	{ slug: 'sloffen', name: 'Sloffen', tagline: 'Warm en zacht voor thuis' },
 	{ slug: 'slippers', name: 'Slippers', tagline: 'Voor zomer, strand en badkamer' },
-	{ slug: 'cosmetica-artikelen', name: 'Cosmetica', tagline: 'Verzorging en make-up' },
+	{ slug: 'cosmetica', name: 'Cosmetica', tagline: 'Verzorging en make-up' },
 	{
 		slug: 'computer-artikelen',
 		name: 'Computerartikelen',
@@ -64,9 +64,9 @@ export const featuredCategories: readonly FeaturedCategory[] = [
 const trendingSlugs = [
 	'huishoudelijke-artikelen',
 	'kinder-artikelen',
-	'tassen-rugzakken-hondentassen-etc',
+	'tassen',
 	'schoenen',
-	'cosmetica-artikelen',
+	'cosmetica',
 ] as const;
 
 export const trendingCategories: readonly FeaturedCategory[] = trendingSlugs.map((slug) => {
