@@ -1,0 +1,16 @@
+---
+import { actions } from 'astro:actions';
+import { zetFlash } from '../../lib/admin/flash.ts';
+
+/*
+ * Doelpagina van het uitlogformulier in de bovenbalk. Na de action is de
+ * sessie weg en gaat de bezoeker naar het inlogscherm. Rechtstreeks bezoeken
+ * (GET) doet niets dan doorsturen: uitloggen hoort een POST te zijn.
+ */
+
+const result = Astro.getActionResult(actions.auth.uitloggen);
+if (result && !result.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Je bent uitgelogd.' });
+}
+return Astro.redirect('/admin/inloggen');
+---

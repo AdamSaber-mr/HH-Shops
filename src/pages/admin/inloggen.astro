@@ -1,0 +1,97 @@
+---
+import { actions, isInputError } from 'astro:actions';
+import Button from '../../components/Button.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { veiligPad, zetFlash } from '../../lib/admin/flash.ts';
+
+/*
+ * Het inlogscherm. Een gewoon formulier: werkt zonder JavaScript, en de
+ * middleware stuurt ingelogde bezoekers meteen door naar het paneel.
+ */
+
+const result = Astro.getActionResult(actions.auth.inloggen);
+if (result && !result.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Je bent ingelogd.' });
+	return Astro.redirect(result.data.naar);
+}
+
+const naar = veiligPad(Astro.url.searchParams.get('naar'));
+
+let fout: string | null = null;
+let veldfouten: Record<string, string[] | undefined> = {};
+if (result?.error) {
+	if (isInputError(result.error)) {
+		veldfouten = result.error.fields;
+		fout = 'Controleer de velden hieronder.';
+	} else {
+		fout = result.error.message;
+	}
+}
+
+const ingevuld = result?.error ? await Astro.request.clone().formData().catch(() => null) : null;
+const email = typeof ingevuld?.get('email') === 'string' ? String(ingevuld.get('email')) : '';
+---
+
+<AdminLayout title="Inloggen" variant="kaal">
+	<div class="rounded-card border border-border bg-surface p-6 sm:p-8">
+		<h1 class="text-xl font-semibold">Beheer HH Shops</h1>
+		<p class="mt-1 text-sm text-text-muted">Log in met je beheerdersaccount.</p>
+
+		{
+			fout && (
+				<p
+					role="alert"
+					class="mt-5 rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger"
+				>
+					{fout}
+				</p>
+			)
+		}
+
+		<form method="POST" action={actions.auth.inloggen} class="mt-6 space-y-5" novalidate>
+			<input type="hidden" name="naar" value={naar} />
+
+			<div>
+				<label for="email" class="block text-sm font-medium">E-mailadres</label>
+				<input
+					id="email"
+					name="email"
+					type="email"
+					autocomplete="username"
+					required
+					value={email}
+					aria-invalid={veldfouten.email ? 'true' : undefined}
+					aria-describedby={veldfouten.email ? 'email-fout' : undefined}
+					class="mt-1.5 block min-h-11 w-full rounded-control border border-border-strong bg-surface px-3 text-base"
+				/>
+				{veldfouten.email && <p id="email-fout" class="mt-1 text-sm text-danger">{veldfouten.email[0]}</p>}
+			</div>
+
+			<div>
+				<label for="wachtwoord" class="block text-sm font-medium">Wachtwoord</label>
+				<input
+					id="wachtwoord"
+					name="wachtwoord"
+					type="password"
+					autocomplete="current-password"
+					required
+					aria-invalid={veldfouten.wachtwoord ? 'true' : undefined}
+					aria-describedby={veldfouten.wachtwoord ? 'wachtwoord-fout' : undefined}
+					class="mt-1.5 block min-h-11 w-full rounded-control border border-border-strong bg-surface px-3 text-base"
+				/>
+				{
+					veldfouten.wachtwoord && (
+						<p id="wachtwoord-fout" class="mt-1 text-sm text-danger">
+							{veldfouten.wachtwoord[0]}
+						</p>
+					)
+				}
+			</div>
+
+			<Button type="submit" block>Inloggen</Button>
+		</form>
+	</div>
+	<p class="mt-6 text-center text-sm text-text-muted">
+		<a href="/" class="text-accent underline-offset-2 hover:underline">Naar de winkel</a>
+	</p>
+</AdminLayout>

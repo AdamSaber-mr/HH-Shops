@@ -1,0 +1,50 @@
+---
+import { sql } from 'drizzle-orm';
+import { getDb } from '../../db/client.ts';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+
+/*
+ * Het overzicht: de cijfers die een beheerder wil zien voordat hij iets
+ * gaat doen. Groeit mee met de rest van het paneel.
+ */
+
+const db = getDb();
+const [cijfers] = (
+	await db.execute(sql`
+		select
+			(select count(*) from products where status = 'active') as actief,
+			(select count(*) from products where status = 'draft') as concept,
+			(select count(*) from products where status = 'archived') as gearchiveerd,
+			(select count(*) from products p where p.status = 'active'
+				and not exists (select 1 from product_variants v where v.product_id = p.id and v.stock_quantity > 0)) as uitverkocht,
+			(select count(*) from categories) as categorieen
+	`)
+).rows as Array<Record<string, string>>;
+
+const tegels = [
+	{ label: 'Actieve producten', waarde: cijfers.actief, href: '/admin/producten?status=active' },
+	{ label: 'Concepten', waarde: cijfers.concept, href: '/admin/producten?status=draft' },
+	{ label: 'Uitverkocht', waarde: cijfers.uitverkocht, href: '/admin/producten?voorraad=uitverkocht' },
+	{ label: 'Gearchiveerd', waarde: cijfers.gearchiveerd, href: '/admin/producten?status=archived' },
+	{ label: 'Categorieen', waarde: cijfers.categorieen, href: '/admin/categorieen' },
+];
+---
+
+<AdminLayout title="Overzicht">
+	<h1 class="text-2xl font-semibold">Overzicht</h1>
+	<ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+		{
+			tegels.map((tegel) => (
+				<li>
+					<a
+						href={tegel.href}
+						class="block rounded-card border border-border bg-surface p-5 hover:bg-surface-hover"
+					>
+						<p class="text-sm text-text-muted">{tegel.label}</p>
+						<p class="mt-1 text-3xl font-semibold">{tegel.waarde}</p>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</AdminLayout>

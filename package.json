@@ -38,13 +38,13 @@
 		"better-auth": "^1.6.31",
 		"drizzle-orm": "^0.45.2",
 		"entities": "^8.1.0",
+		"jose": "^6.2.12",
 		"sanitize-html": "^2.17.7",
 		"sharp": "^0.35.4",
 		"tailwindcss": "^4.3.3"
 	},
 	"devDependencies": {
 		"@astrojs/check": "^0.9.10",
-		"@better-auth/cli": "^1.4.21",
 		"@biomejs/biome": "^2.5.12",
 		"@iconify-json/ph": "^1.2.2",
 		"@types/pg": "^8.23.1",

@@ -90,6 +90,20 @@ export default defineConfig({
 					'arrow-counter-clockwise',
 					'lock-simple',
 					'warning-circle',
+					// Beheerpaneel
+					'sign-out',
+					'squares-four',
+					'package',
+					'tag',
+					'users',
+					'pencil-simple',
+					'trash',
+					'archive',
+					'arrow-up',
+					'arrow-down',
+					'upload-simple',
+					'funnel',
+					'image',
 					'heart',
 					'star-fill',
 					'quotes',
@@ -111,6 +125,8 @@ export default defineConfig({
 			// `access: 'secret'` garandeert dat deze waarde nooit in een
 			// browserbundel terechtkomt.
 			DATABASE_URL: envField.string({ context: 'server', access: 'secret' }),
+			// Ondertekent de sessiecookies van het beheerpaneel. Zie .env.example.
+			BETTER_AUTH_SECRET: envField.string({ context: 'server', access: 'secret' }),
 		},
 		// `validateSecrets` blijft bewust op de standaard `false`. Geheimen
 		// worden dan pas gecontroleerd wanneer ze echt gelezen worden, en niet

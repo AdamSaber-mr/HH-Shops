@@ -22,6 +22,13 @@
 			"when": 1788965590379,
 			"tag": "0002_triggers_en_indexen",
 			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1789035651026,
+			"tag": "0003_beheerders",
+			"breakpoints": true
 		}
 	]
 }

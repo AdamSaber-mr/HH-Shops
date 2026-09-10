@@ -1,0 +1,119 @@
+---
+import '@fontsource-variable/geist';
+import '../styles/global.css';
+import { actions } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+import Flash from '../components/admin/Flash.astro';
+import { leesFlash } from '../lib/admin/flash.ts';
+
+/*
+ * De layout van het beheerpaneel. Eigen html-skelet, los van Layout.astro
+ * van de winkel: geen winkelheader, geen footer, wel dezelfde tokens en
+ * hetzelfde lettertype. Nooit indexeren.
+ *
+ * Twee varianten: "app" met zijbalk en bovenbalk voor ingelogde beheerders,
+ * en "kaal" voor het inlogscherm.
+ */
+
+interface Props {
+	title: string;
+	variant?: 'app' | 'kaal';
+}
+
+const { title, variant = 'app' } = Astro.props;
+const user = Astro.locals.user;
+const flash = leesFlash(Astro.cookies);
+const pad = Astro.url.pathname;
+
+const menu = [
+	{ href: '/admin', label: 'Overzicht', icon: 'ph:squares-four', exact: true },
+	{ href: '/admin/producten', label: 'Producten', icon: 'ph:package' },
+	{ href: '/admin/categorieen', label: 'Categorieen', icon: 'ph:tag' },
+	{ href: '/admin/beheerders', label: 'Beheerders', icon: 'ph:users' },
+];
+
+const actief = (item: (typeof menu)[number]) =>
+	item.exact ? pad === item.href : pad === item.href || pad.startsWith(`${item.href}/`);
+---
+
+<!doctype html>
+<html lang="nl">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>{title} | Beheer HH Shops</title>
+		<meta name="robots" content="noindex, nofollow">
+		<meta name="theme-color" content="#fafaf9">
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+	</head>
+	<body class="min-h-dvh bg-canvas text-text">
+		<a
+			href="#inhoud"
+			class="sr-only rounded-control border border-border-strong bg-surface px-4 py-2 font-medium text-accent focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50"
+		>
+			Naar de inhoud
+		</a>
+
+		{
+			variant === 'kaal' ? (
+				<main id="inhoud" class="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-12">
+					<Flash flash={flash} />
+					<slot />
+				</main>
+			) : (
+				<div class="min-h-dvh lg:grid lg:grid-cols-[15rem_1fr]">
+					<aside class="border-b border-border bg-surface lg:border-r lg:border-b-0">
+						<div class="flex items-center justify-between px-4 py-4 lg:block lg:px-5 lg:py-6">
+							<a href="/admin" class="font-semibold text-text">
+								HH Shops <span class="font-normal text-text-muted">beheer</span>
+							</a>
+						</div>
+						<nav aria-label="Beheer" class="px-2 pb-3 lg:px-3">
+							<ul class="flex gap-1 overflow-x-auto lg:flex-col">
+								{menu.map((item) => (
+									<li>
+										<a
+											href={item.href}
+											aria-current={actief(item) ? 'page' : undefined}
+											class:list={[
+												'flex min-h-11 items-center gap-2 whitespace-nowrap rounded-control px-3 text-sm font-medium',
+												actief(item)
+													? 'bg-accent-subtle text-accent'
+													: 'text-text hover:bg-surface-hover',
+											]}
+										>
+											<Icon name={item.icon} class="size-5 shrink-0" aria-hidden="true" />
+											{item.label}
+										</a>
+									</li>
+								))}
+							</ul>
+						</nav>
+					</aside>
+
+					<div class="flex min-w-0 flex-col">
+						<header class="flex min-h-14 items-center justify-between gap-4 border-b border-border bg-surface px-4 lg:px-8">
+							<p class="truncate text-sm text-text-muted">
+								Ingelogd als <span class="font-medium text-text">{user?.name ?? user?.email}</span>
+							</p>
+							<form method="POST" action={`/admin/uitloggen${actions.auth.uitloggen}`}>
+								<button
+									type="submit"
+									class="inline-flex min-h-10 items-center gap-2 rounded-control border border-border-strong bg-surface px-3 text-sm font-medium text-text hover:bg-surface-hover"
+								>
+									<Icon name="ph:sign-out" class="size-4" aria-hidden="true" />
+									Uitloggen
+								</button>
+							</form>
+						</header>
+
+						<main id="inhoud" class="w-full max-w-6xl flex-1 px-4 py-6 lg:px-8 lg:py-8">
+							<Flash flash={flash} />
+							<slot />
+						</main>
+					</div>
+				</div>
+			)
+		}
+	</body>
+</html>
