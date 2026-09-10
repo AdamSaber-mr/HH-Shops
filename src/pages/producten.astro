@@ -35,7 +35,7 @@ import { leesFavorieten } from '../lib/klanten/favorieten.ts';
  * blijft het op naam.
  */
 
-const PER_PAGINA = 16;
+const PER_PAGINA = 20;
 const STANDAARD_SORTERING = 'nieuwste';
 const pad = '/producten';
 const params = Astro.url.searchParams;
@@ -125,7 +125,7 @@ const favorieten = new Set(await leesFavorieten(Astro));
 
 		<!-- Categorierij: snelle ingang, schuift horizontaal op telefoon -->
 		<ul
-			class="-mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:thin] sm:-mx-6 sm:px-6"
+			class="-mx-4 mt-8 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:thin] sm:-mx-6 sm:px-6"
 			aria-label="Categorie"
 		>
 			<li>
@@ -152,7 +152,7 @@ const favorieten = new Set(await leesFavorieten(Astro));
 			))}
 		</ul>
 
-		<div class="mt-5">
+		<div class="mt-6">
 			<FilterBar
 				pad={pad}
 				params={params}

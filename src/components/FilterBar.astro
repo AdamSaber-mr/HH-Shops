@@ -13,8 +13,13 @@ import {
 import Button from './Button.astro';
 
 /*
- * De filterbalk van de categoriepagina: links de filterknoppen, rechts
- * sorteren.
+ * De filterbalk van de categorie- en productenpagina: links de filterknoppen,
+ * rechts sorteren.
+ *
+ * De balk heeft een lijn erboven en eronder, zodat hij als een geheel leest
+ * en los staat van de categorierij erboven en het raster eronder. Sorteren
+ * is bewust geen pil maar een tekstknop: het is geen filter, en als pil
+ * leek hij een losse knop die rechts uitstak.
  *
  * Alles werkt zonder JavaScript en met het toetsenbord:
  *  - Prijs, Maat en Kleur zijn <details>-uitklappers met een <summary> als
@@ -63,7 +68,12 @@ const paneel =
 const keuze = 'flex min-h-10 cursor-pointer items-center gap-2.5 rounded-control px-2 text-sm hover:bg-surface-hover';
 ---
 
-<form method="get" action={pad} class="flex flex-wrap items-center gap-2" aria-label="Filters">
+<form
+	method="get"
+	action={pad}
+	class="flex flex-wrap items-center gap-2 border-y border-border py-3"
+	aria-label="Filters"
+>
 	{Object.entries(vast).map(([naam, waarde]) => (
 		<input type="hidden" name={naam} value={waarde} />
 	))}
@@ -175,7 +185,9 @@ const keuze = 'flex min-h-10 cursor-pointer items-center gap-2.5 rounded-control
 
 	<!-- Sorteren -->
 	<details class="relative sm:ml-auto" name="sorteren">
-		<summary class:list={[chip, chipRust]}>
+		<summary
+			class="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-control px-2 text-sm font-medium text-text select-none hover:bg-surface-hover [&::-webkit-details-marker]:hidden"
+		>
 			<span class="text-text-muted">Sorteren:</span>
 			{sorteerLabel(filter.sorteer)}
 			<Icon name="ph:caret-down" class="size-4" aria-hidden="true" />
