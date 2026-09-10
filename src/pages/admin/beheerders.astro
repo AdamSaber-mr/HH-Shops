@@ -1,0 +1,100 @@
+---
+import { actions } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+import Veld from '../../components/admin/Veld.astro';
+import Button from '../../components/Button.astro';
+import { getDb } from '../../db/client.ts';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import * as beheerders from '../../lib/admin/beheerders.ts';
+import { zetFlash } from '../../lib/admin/flash.ts';
+import { leesFormulier, veldfoutenUit } from '../../lib/admin/formulier.ts';
+
+/*
+ * Wie mag inloggen. Elke beheerder mag alles, ook beheerders toevoegen en
+ * verwijderen; jezelf en de laatste kunnen niet weg.
+ */
+
+const toevoegen = Astro.getActionResult(actions.beheerders.toevoegen);
+if (toevoegen && !toevoegen.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: `Beheerder ${toevoegen.data.email} toegevoegd. Geef het wachtwoord persoonlijk door, niet per e-mail.` });
+	return Astro.redirect('/admin/beheerders');
+}
+const verwijderen = Astro.getActionResult(actions.beheerders.verwijderen);
+if (verwijderen && !verwijderen.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: `Beheerder ${verwijderen.data.email} verwijderd.` });
+	return Astro.redirect('/admin/beheerders');
+}
+
+const { velden: veldfouten, algemeen } = veldfoutenUit(toevoegen?.error);
+const formulier = toevoegen?.error ? await leesFormulier(Astro.request) : { velden: {}, lijsten: {} };
+const verwijderFout = verwijderen?.error?.message ?? null;
+
+const lijst = await beheerders.lijst(getDb());
+const ik = Astro.locals.user;
+const datum = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<AdminLayout title="Beheerders">
+	<h1 class="text-2xl font-semibold">Beheerders</h1>
+	<p class="mt-1 text-sm text-text-muted">Iedereen hier kan alles in het paneel, ook beheerders toevoegen en verwijderen.</p>
+
+	{verwijderFout && <p role="alert" class="mt-4 rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">{verwijderFout}</p>}
+
+	<div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+		<div class="overflow-x-auto rounded-card border border-border bg-surface">
+			<table class="w-full text-sm">
+				<caption class="sr-only">Beheerders</caption>
+				<thead class="border-b border-border text-left text-xs text-text-muted uppercase tracking-wide">
+					<tr>
+						<th scope="col" class="px-4 py-3">Naam</th>
+						<th scope="col" class="px-4 py-3">E-mailadres</th>
+						<th scope="col" class="px-4 py-3">Sinds</th>
+						<th scope="col" class="px-4 py-3"><span class="sr-only">Acties</span></th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-border">
+					{
+						lijst.map((b) => (
+							<tr>
+								<td class="px-4 py-3 font-medium">
+									{b.name}
+									{b.id === ik?.id && <span class="ml-2 text-xs font-normal text-text-muted">(jij)</span>}
+								</td>
+								<td class="px-4 py-3">{b.email}</td>
+								<td class="px-4 py-3 whitespace-nowrap text-text-muted">{datum.format(b.createdAt)}</td>
+								<td class="px-4 py-3 text-right">
+									{b.id !== ik?.id && lijst.length > 1 && (
+										<form method="POST" action={actions.beheerders.verwijderen} data-bevestig={`Beheerder ${b.email} verwijderen?`}>
+											<input type="hidden" name="userId" value={b.id} />
+											<button type="submit" class="inline-flex min-h-9 items-center gap-1 rounded-control border border-danger/40 bg-surface px-2 text-xs font-medium text-danger hover:bg-danger-subtle">
+												<Icon name="ph:trash" class="size-4" aria-hidden="true" />
+												Verwijderen
+											</button>
+										</form>
+									)}
+								</td>
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
+		</div>
+
+		<form method="POST" action={actions.beheerders.toevoegen} class="space-y-5 rounded-card border border-border bg-surface p-5" novalidate autocomplete="off">
+			<h2 class="text-lg font-semibold">Beheerder toevoegen</h2>
+			{algemeen && <p role="alert" class="rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">{algemeen}</p>}
+			<Veld naam="naam" label="Naam" waarde={formulier.velden.naam ?? ''} verplicht fout={veldfouten.naam} autocomplete="off" />
+			<Veld naam="email" label="E-mailadres" type="email" waarde={formulier.velden.email ?? ''} verplicht fout={veldfouten.email} autocomplete="off" />
+			<Veld naam="wachtwoord" label="Wachtwoord" type="password" verplicht fout={veldfouten.wachtwoord} autocomplete="new-password" hint="Minstens 12 tekens. Geef het persoonlijk door; de nieuwe beheerder kan het daarna niet zelf wijzigen, dus kies iets goeds." />
+			<Button type="submit">Toevoegen</Button>
+		</form>
+	</div>
+
+	<script>
+		for (const form of document.querySelectorAll<HTMLFormElement>('form[data-bevestig]')) {
+			form.addEventListener('submit', (event) => {
+				if (!window.confirm(form.dataset.bevestig)) event.preventDefault();
+			});
+		}
+	</script>
+</AdminLayout>

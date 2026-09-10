@@ -1,0 +1,31 @@
+---
+import type { Veldfouten } from '../../lib/admin/formulier.ts';
+import Button from '../Button.astro';
+import Tekstvak from './Tekstvak.astro';
+import Veld from './Veld.astro';
+
+interface Props {
+	action: string;
+	nieuw: boolean;
+	id?: number;
+	waarden: Record<string, string>;
+	veldfouten: Veldfouten;
+	algemeen: string | null;
+}
+
+const { action, nieuw, id, waarden, veldfouten, algemeen } = Astro.props;
+const w = (naam: string, standaard = '') => waarden[naam] ?? standaard;
+---
+
+<form method="POST" action={action} class="space-y-5 rounded-card border border-border bg-surface p-5 sm:p-6" novalidate>
+	{id !== undefined && <input type="hidden" name="id" value={id} />}
+	{algemeen && <p role="alert" class="rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">{algemeen}</p>}
+	<Veld naam="naam" label="Naam" waarde={w('naam')} verplicht fout={veldfouten.naam} maxlength={80} />
+	<Veld naam="slug" label="Adres in de shop" waarde={w('slug')} fout={veldfouten.slug} hint="Leeg laten om hem uit de naam af te leiden." />
+	<Veld naam="positie" label="Volgorde" waarde={w('positie', '0')} fout={veldfouten.positie} inputmode="numeric" hint="Lager staat eerder in het menu. Bijvoorbeeld 10, 20, 30, dan is er ruimte om iets tussen te zetten." />
+	<Tekstvak naam="beschrijving" label="Beschrijving" waarde={w('beschrijving')} fout={veldfouten.beschrijving} rijen={3} hint="Optioneel. Komt bovenaan de categoriepagina." />
+	<div class="flex flex-wrap gap-3">
+		<Button type="submit">{nieuw ? 'Categorie aanmaken' : 'Opslaan'}</Button>
+		<Button href="/admin/categorieen" variant="secondary">Annuleren</Button>
+	</div>
+</form>

@@ -1,0 +1,157 @@
+---
+import { actions } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+import CategorieFormulier from '../../../components/admin/CategorieFormulier.astro';
+import ProductImage from '../../../components/ProductImage.astro';
+import { getDb } from '../../../db/client.ts';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import * as categorieen from '../../../lib/admin/categorieen.ts';
+import { zetFlash } from '../../../lib/admin/flash.ts';
+import { leesFormulier, veldfoutenUit } from '../../../lib/admin/formulier.ts';
+import { MAX_BESTAND } from '../../../lib/admin/fotos.ts';
+
+const id = Number.parseInt(Astro.params.id ?? '', 10);
+if (!Number.isFinite(id) || id <= 0) return new Response(null, { status: 404 });
+const pad = `/admin/categorieen/${id}`;
+
+const geslaagd = (tekst: string, doel = pad) => {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst });
+	return Astro.redirect(doel);
+};
+const bijwerken = Astro.getActionResult(actions.categorieen.bijwerken);
+if (bijwerken && !bijwerken.error) return geslaagd('Categorie opgeslagen.');
+const fotoUploaden = Astro.getActionResult(actions.categorieen.fotoUploaden);
+if (fotoUploaden && !fotoUploaden.error) return geslaagd('Foto opgeslagen.');
+const fotoVerwijderen = Astro.getActionResult(actions.categorieen.fotoVerwijderen);
+if (fotoVerwijderen && !fotoVerwijderen.error) return geslaagd('Foto verwijderd.');
+const verwijderen = Astro.getActionResult(actions.categorieen.verwijderen);
+if (verwijderen && !verwijderen.error) return geslaagd('Categorie verwijderd.', '/admin/categorieen');
+
+const categorie = await categorieen.haal(getDb(), id);
+if (!categorie) return new Response(null, { status: 404 });
+
+const { velden: veldfouten, algemeen } = veldfoutenUit(bijwerken?.error);
+const formulier = bijwerken?.error || fotoUploaden?.error ? await leesFormulier(Astro.request) : { velden: {}, lijsten: {} };
+const waarden = bijwerken?.error
+	? formulier.velden
+	: { naam: categorie.name, slug: categorie.slug, positie: String(categorie.position), beschrijving: categorie.description ?? '' };
+const fotoFout = veldfoutenUit(fotoUploaden?.error ?? fotoVerwijderen?.error);
+const verwijderFout = verwijderen?.error?.message ?? null;
+
+const knop =
+	'inline-flex min-h-10 items-center gap-2 rounded-control border border-border-strong bg-surface px-3 text-sm font-medium text-text hover:bg-surface-hover';
+const veld = 'min-h-10 rounded-control border border-border-strong bg-surface px-2 text-sm';
+---
+
+<AdminLayout title={categorie.name}>
+	<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+		<a href="/admin/categorieen" class="hover:text-accent hover:underline">Categorieen</a>
+		<span aria-hidden="true"> / </span>
+		<span>{categorie.name}</span>
+	</nav>
+	<div class="mt-2 flex flex-wrap items-start justify-between gap-4">
+		<h1 class="text-2xl font-semibold">{categorie.name}</h1>
+		<a href={`/admin/producten?categorie=${categorie.id}`} class={knop}>
+			{categorie.producten} {categorie.producten === 1 ? 'product' : 'producten'}
+			<Icon name="ph:arrow-right" class="size-4" aria-hidden="true" />
+		</a>
+	</div>
+
+	<div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+		<div class="max-w-2xl">
+			<CategorieFormulier action={actions.categorieen.bijwerken} nieuw={false} id={categorie.id} waarden={waarden} veldfouten={veldfouten} algemeen={algemeen} />
+		</div>
+
+		<div class="space-y-8">
+			<section class="rounded-card border border-border bg-surface p-5">
+				<h2 class="text-lg font-semibold">Foto</h2>
+				<p class="mt-1 text-sm text-text-muted">Voor de categoriekaart op de startpagina. Vierkant werkt het best.</p>
+				{fotoFout.algemeen && Object.keys(fotoFout.velden).length === 0 && <p role="alert" class="mt-3 text-sm text-danger">{fotoFout.algemeen}</p>}
+				{
+					categorie.imageUrl && (
+						<div class="mt-4 flex gap-4">
+							<div class="size-28 shrink-0 overflow-hidden rounded-control border border-border bg-surface-hover">
+								<ProductImage src={categorie.imageUrl} alt="" width={300} height={300} widths={[224]} sizes="112px" class="size-full object-cover" />
+							</div>
+							<div class="min-w-0 text-sm">
+								<p class="text-text-muted">Alt-tekst</p>
+								<p>{categorie.imageAlt}</p>
+								<form method="POST" action={actions.categorieen.fotoVerwijderen} class="mt-3">
+									<input type="hidden" name="id" value={categorie.id} />
+									<button type="submit" class="inline-flex min-h-9 items-center gap-1 rounded-control border border-danger/40 bg-surface px-2 text-xs font-medium text-danger hover:bg-danger-subtle">
+										<Icon name="ph:trash" class="size-4" aria-hidden="true" />
+										Foto verwijderen
+									</button>
+								</form>
+							</div>
+						</div>
+					)
+				}
+				<form method="POST" action={actions.categorieen.fotoUploaden} enctype="multipart/form-data" class="mt-5 space-y-3 border-t border-border pt-5" novalidate data-max-bytes={MAX_BESTAND}>
+					<input type="hidden" name="id" value={categorie.id} />
+					<h3 class="text-sm font-semibold">{categorie.imageUrl ? 'Foto vervangen' : 'Foto toevoegen'}</h3>
+					<div>
+						<label for="upload-bestand" class="block text-xs font-medium">Bestand (JPG, PNG of WebP, maximaal 4 MB)</label>
+						<input id="upload-bestand" type="file" name="bestand" accept="image/jpeg,image/png,image/webp" required class="mt-1 block w-full text-sm file:mr-3 file:min-h-10 file:rounded-control file:border file:border-border-strong file:bg-surface file:px-3 file:text-sm file:font-medium" />
+						<p id="upload-bestand-fout" class="mt-1 text-sm text-danger" hidden></p>
+						{fotoFout.velden.bestand && <p class="mt-1 text-sm text-danger">{fotoFout.velden.bestand[0]}</p>}
+					</div>
+					<div>
+						<label for="upload-alt" class="block text-xs font-medium">Alt-tekst</label>
+						<input id="upload-alt" name="alt" value={fotoUploaden?.error ? (formulier.velden.alt ?? '') : (categorie.imageAlt ?? '')} class={`${veld} mt-1 w-full`} />
+						{fotoFout.velden.alt && <p class="mt-1 text-sm text-danger">{fotoFout.velden.alt[0]}</p>}
+					</div>
+					<button type="submit" class={knop}>
+						<Icon name="ph:upload-simple" class="size-4" aria-hidden="true" />
+						Uploaden
+					</button>
+				</form>
+			</section>
+
+			<section class="rounded-card border border-border bg-surface p-5">
+				<h2 class="text-lg font-semibold">Verwijderen</h2>
+				{verwijderFout && <p role="alert" class="mt-3 text-sm text-danger">{verwijderFout}</p>}
+				{
+					categorie.producten > 0 ? (
+						<p class="mt-2 text-sm text-text-muted">
+							Er {categorie.producten === 1 ? 'hangt nog 1 product' : `hangen nog ${categorie.producten} producten`} aan deze categorie. Zet die eerst ergens anders, dan kan de categorie weg.
+						</p>
+					) : (
+						<form method="POST" action={actions.categorieen.verwijderen} class="mt-3" data-bevestig={`Categorie ${categorie.name} verwijderen?`}>
+							<input type="hidden" name="id" value={categorie.id} />
+							<button type="submit" class="inline-flex min-h-10 items-center gap-2 rounded-control border border-danger bg-surface px-3 text-sm font-medium text-danger hover:bg-danger-subtle">
+								<Icon name="ph:trash" class="size-4" aria-hidden="true" />
+								Categorie verwijderen
+							</button>
+						</form>
+					)
+				}
+			</section>
+		</div>
+	</div>
+
+	<script>
+		for (const form of document.querySelectorAll<HTMLFormElement>('form[data-bevestig]')) {
+			form.addEventListener('submit', (event) => {
+				if (!window.confirm(form.dataset.bevestig)) event.preventDefault();
+			});
+		}
+		const upload = document.querySelector<HTMLFormElement>('form[data-max-bytes]');
+		const bestand = document.getElementById('upload-bestand') as HTMLInputElement | null;
+		const melding = document.getElementById('upload-bestand-fout');
+		if (upload && bestand && melding) {
+			const max = Number(upload.dataset.maxBytes);
+			const controleer = () => {
+				const file = bestand.files?.[0];
+				const teGroot = Boolean(file && file.size > max);
+				melding.hidden = !teGroot;
+				melding.textContent = teGroot ? `Dit bestand is ${((file?.size ?? 0) / 1024 / 1024).toFixed(1)} MB. Maximaal 4 MB.` : '';
+				return !teGroot;
+			};
+			bestand.addEventListener('change', controleer);
+			upload.addEventListener('submit', (event) => {
+				if (!controleer()) event.preventDefault();
+			});
+		}
+	</script>
+</AdminLayout>

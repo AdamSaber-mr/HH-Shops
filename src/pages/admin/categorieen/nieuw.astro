@@ -1,0 +1,27 @@
+---
+import { actions } from 'astro:actions';
+import CategorieFormulier from '../../../components/admin/CategorieFormulier.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { zetFlash } from '../../../lib/admin/flash.ts';
+import { leesFormulier, veldfoutenUit } from '../../../lib/admin/formulier.ts';
+
+const result = Astro.getActionResult(actions.categorieen.aanmaken);
+if (result && !result.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Categorie aangemaakt. Voeg eventueel een foto toe.' });
+	return Astro.redirect(`/admin/categorieen/${result.data.id}`);
+}
+const { velden, algemeen } = veldfoutenUit(result?.error);
+const formulier = result?.error ? await leesFormulier(Astro.request) : { velden: {}, lijsten: {} };
+---
+
+<AdminLayout title="Nieuwe categorie">
+	<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+		<a href="/admin/categorieen" class="hover:text-accent hover:underline">Categorieen</a>
+		<span aria-hidden="true"> / </span>
+		<span>Nieuw</span>
+	</nav>
+	<h1 class="mt-2 text-2xl font-semibold">Nieuwe categorie</h1>
+	<div class="mt-6 max-w-2xl">
+		<CategorieFormulier action={actions.categorieen.aanmaken} nieuw waarden={formulier.velden} veldfouten={velden} algemeen={algemeen} />
+	</div>
+</AdminLayout>
