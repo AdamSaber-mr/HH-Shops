@@ -11,9 +11,12 @@ import sharp from 'sharp';
  *
  * Werkwijze:
  *  1. De achtergrondkleur is de mediaan van de randpixels.
- *  2. Alleen ingrijpen als de rand egaal is (kleine spreiding), licht is en
- *     niet al wit. Een foto met een echte achtergrond (kamer, tafel) heeft een
- *     grote spreiding en blijft ongemoeid; een witte foto ook.
+ *  2. Alleen ingrijpen als de rand egaal is, licht is en niet al wit. Egaal
+ *     betekent: negen van de tien randpixels wijken hooguit `MAX_SPREAD` af
+ *     van de mediaan. Niet het maximum, want een product dat de rand raakt
+ *     (een kabel, een kleerhanger) mag de foto niet diskwalificeren. Een foto
+ *     met een echte achtergrond (kamer, tafel, stof) heeft een veel grotere
+ *     afwijking en blijft ongemoeid; een witte foto ook.
  *  3. Elke pixel krijgt een gewicht op basis van zijn afstand tot de
  *     achtergrondkleur: binnen `FULL` volledig achtergrond, boven `NONE`
  *     product, daartussen lineair. Het verschil (wit min achtergrond) wordt
@@ -25,8 +28,10 @@ import sharp from 'sharp';
 const FULL = 12;
 /** Vanaf deze afstand is een pixel volledig product. */
 const NONE = 40;
-/** Boven deze spreiding op de rand is het geen egale achtergrond. */
-const MAX_SPREAD = 40;
+/** Boven deze afwijking (90e percentiel van de randpixels) is het geen egale achtergrond. */
+const MAX_SPREAD = 15;
+/** Het deel van de randpixels dat binnen MAX_SPREAD moet liggen. */
+const SPREAD_PERCENTILE = 0.9;
 /** Onder deze helderheid (0-255) is de achtergrond donker en blijft hij staan. */
 const MIN_LUMINANCE = 200;
 
@@ -38,9 +43,13 @@ export type AchtergrondResultaat = {
 	achtergrond: [number, number, number];
 };
 
-function median(values: number[]): number {
+function percentile(values: number[], p: number): number {
 	const sorted = [...values].sort((a, b) => a - b);
-	return sorted[Math.floor(sorted.length / 2)] ?? 0;
+	return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))] ?? 0;
+}
+
+function median(values: number[]): number {
+	return percentile(values, 0.5);
 }
 
 /**
@@ -71,14 +80,14 @@ export async function neutraliseerAchtergrond(input: Buffer): Promise<Achtergron
 		median(edgeOffsets.map((i) => data[i + k] ?? 0)),
 	) as [number, number, number];
 	const luminance = (bg[0] * 299 + bg[1] * 587 + bg[2] * 114) / 1000;
-	const spread = edgeOffsets.reduce((max, i) => {
-		const d = Math.max(
+	const deviations = edgeOffsets.map((i) =>
+		Math.max(
 			Math.abs((data[i] ?? 0) - bg[0]),
 			Math.abs((data[i + 1] ?? 0) - bg[1]),
 			Math.abs((data[i + 2] ?? 0) - bg[2]),
-		);
-		return d > max ? d : max;
-	}, 0);
+		),
+	);
+	const spread = percentile(deviations, SPREAD_PERCENTILE);
 	const isWhite = bg.every((v) => v >= 250);
 
 	if (isWhite || luminance < MIN_LUMINANCE || spread > MAX_SPREAD) {

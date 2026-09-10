@@ -45,6 +45,24 @@ describe('neutraliseerAchtergrond', () => {
 		expect(result.aangepast).toBe(false);
 	});
 
+	it('past ook aan als het product de rand raakt', async () => {
+		// Een zwarte strook die van het blok tot de onderrand loopt: een handvol
+		// randpixels wijkt af, de rest is egaal roze.
+		const strook = await sharp({
+			create: { width: 2, height: 12, channels: 3, background: '#000000' },
+		})
+			.png()
+			.toBuffer();
+		const input = await sharp(await foto('#ffedec'))
+			.composite([{ input: strook, left: 19, top: 28 }])
+			.png()
+			.toBuffer();
+		const result = await neutraliseerAchtergrond(input);
+		expect(result.aangepast).toBe(true);
+		expect(await pixel(result.buffer, 1, 1)).toEqual([255, 255, 255]);
+		expect(await pixel(result.buffer, 20, 38)).toEqual([0, 0, 0]);
+	});
+
 	it('laat een foto met een onrustige rand met rust', async () => {
 		// Twee helften in verschillende kleuren: geen egale achtergrond.
 		const left = await sharp({
