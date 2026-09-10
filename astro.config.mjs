@@ -93,7 +93,7 @@ export default defineConfig({
 					'heart',
 					'star-fill',
 					'quotes',
-					'headset',
+					'clock',
 					'arrow-right',
 					'envelope-simple',
 					'map-pin',

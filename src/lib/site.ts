@@ -7,17 +7,16 @@
  * klant. Ze staan er zodat het ontwerp compleet is, en moeten voor de
  * livegang vervangen of geschrapt worden.
  *
- * De oude site (hh-shops.nl, 10 september 2026) belooft: gratis verzending
- * vanaf 50 euro, voor 15:00 besteld morgen in huis, en betalen via iDEAL,
- * creditcard of achteraf met Klarna. Dat staat hier bewust nog niet in, tot
- * Adam bevestigt dat het voor de nieuwe shop ook geldt.
+ * De beloftes (gratis verzending vanaf 50 euro, voor 15:00 besteld morgen in
+ * huis, betalen via iDEAL, creditcard of Klarna) komen van de oude site en
+ * zijn op 10 september 2026 door Adam bevestigd voor de nieuwe shop.
  */
 
 export const site = {
 	name: 'H&H Shops',
 	tagline: 'Alles voor thuis, in één winkel.',
 	description:
-		'H&H Shops verkoopt huishoudelijke artikelen, kinderartikelen, cosmetica, tassen en schoeisel. Snel geleverd in heel Nederland.',
+		'H&H Shops verkoopt huishoudelijke artikelen, kinderartikelen, cosmetica, tassen en schoeisel. Voor 15:00 besteld, morgen in huis.',
 	/** Overgenomen van de oude site (hh-shops.nl). */
 	email: 'info@hh-shops.nl',
 	/** Overgenomen van de footer van de oude site. */
@@ -27,9 +26,8 @@ export const site = {
 } as const;
 
 /*
- * De vier kernpunten onder de hero. Kort en feitelijk; geen beloftes die de
- * klant niet waar kan maken. "Gratis verzending vanaf ..." en "Vandaag
- * besteld, morgen in huis" komen er pas in als dat echt zo is.
+ * De vier kernpunten onder de hero. Kort en feitelijk. De eerste drie zijn de
+ * beloftes van de oude site, bevestigd door Adam.
  */
 export interface Usp {
 	icon: string;
@@ -38,22 +36,34 @@ export interface Usp {
 }
 
 export const usps: readonly Usp[] = [
-	{ icon: 'ph:truck', title: 'Snel geleverd', text: 'Verzending door heel Nederland' },
-	{ icon: 'ph:lock-simple', title: 'Veilig betalen', text: 'Beveiligde afrekenomgeving' },
+	{
+		icon: 'ph:truck',
+		title: 'Gratis verzending vanaf € 50',
+		text: 'Daaronder betaal je verzendkosten',
+	},
+	{
+		icon: 'ph:clock',
+		title: 'Voor 15:00 besteld, morgen in huis',
+		text: 'Bezorgd door heel Nederland',
+	},
+	{
+		icon: 'ph:lock-simple',
+		title: 'Veilig betalen',
+		text: 'iDEAL, creditcard of achteraf met Klarna',
+	},
 	{
 		icon: 'ph:arrow-counter-clockwise',
 		title: 'Eenvoudig retourneren',
 		text: 'Niet goed? Stuur het terug',
 	},
-	{ icon: 'ph:headset', title: 'Persoonlijke hulp', text: 'Vragen? We helpen je graag' },
 ];
 
 /*
- * Betaalmethoden in de footer. INVULLEN: pas aan zodra de betaalprovider
- * gekozen is. Tekstlabels en geen logo's: die logo's hebben elk hun eigen
- * merkregels en komen pas als de methode echt beschikbaar is.
+ * Betaalmethoden in de footer, zoals op de oude site: iDEAL, creditcard en
+ * Klarna. Tekstlabels en geen logo's: die logo's hebben elk hun eigen
+ * merkregels en komen pas als de betaalprovider gekoppeld is.
  */
-export const paymentMethods: readonly string[] = ['iDEAL', 'Mastercard', 'Visa', 'PayPal'];
+export const paymentMethods: readonly string[] = ['iDEAL', 'Mastercard', 'Visa', 'Klarna'];
 
 export interface FooterGroup {
 	title: string;
