@@ -15,7 +15,8 @@ fase 4 is besproken (zie `docs/fase-4-afrekenen.md`).
   favorieten. Uitloggen kan vanuit het zijmenu.
 - **Favorieten**: het hartje op elke productkaart en op de productpagina.
   Zonder account in een cookie, met account in de database. Terug te vinden
-  op `/account/favorieten`, in hetzelfde raster als de winkel.
+  op `/favorieten` (ook voor gasten) en onder het account, in hetzelfde
+  raster als de winkel.
 - **Winkelmand** op `/winkelmand`: aantal aanpassen, verwijderen, subtotaal.
   Prijs, naam, foto en voorraad komen bij elke weergave uit de database; een
   artikel dat niet meer te koop is valt af met een melding, een aantal boven
@@ -24,8 +25,8 @@ fase 4 is besproken (zie `docs/fase-4-afrekenen.md`).
 - **Header**: een hartje en de winkelmand, elk met een groene teller die
   altijd zichtbaar is (ook bij nul), en de voornaam bij "Account". Een klik
   op het hartje opent een zijpaneel met de favorieten, ook voor gasten; het
-  paneel haalt zijn inhoud pas bij openen op van . Zonder
-  JavaScript is het hartje een link naar , de openbare
+  paneel haalt zijn inhoud pas bij openen op van `/favorieten/paneel`. Zonder
+  JavaScript is het hartje een link naar `/favorieten`, de openbare
   favorietenpagina.
 
 Alles werkt zonder JavaScript. Met JavaScript wisselt het hartje zonder de
@@ -44,8 +45,8 @@ pagina te herladen; de rest is gewone formulieren.
 | Samenvoegen bij inloggen | `src/lib/klanten/samenvoegen.ts` (zuiver, met tests) en `gast.ts` |
 | Adresvalidatie | `src/lib/klanten/adres.ts` |
 | Actions | `src/actions/klant.ts`, `winkelmand.ts`, `favorieten.ts` |
-| Componenten | `src/components/klant/` (Hartje, WinkelmandKnop, Formulierveld, Melding, AccountMenu, AccountPagina) |
-| Pagina's | `src/pages/account/*`, `src/pages/winkelmand.astro`, `src/pages/geen-toegang.astro` |
+| Componenten | `src/components/klant/` (Hartje, WinkelmandKnop, Teller, FavorietenPaneel, FavorietenLijst, Formulierveld, Melding, AccountMenu, AccountPagina); het gedeelde hartjesscript in `src/scripts/hartje.ts` |
+| Pagina's | `src/pages/account/*`, `src/pages/favorieten/` (pagina en paneel-partial), `src/pages/winkelmand.astro`, `src/pages/geen-toegang.astro` |
 
 **Een Better Auth voor klanten en beheerders.** Dezelfde tabel `auth_users`,
 kolom `role`: `klant` (elke zelfregistratie, via `defaultRole`) of `admin`
