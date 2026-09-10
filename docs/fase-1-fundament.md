@@ -241,6 +241,11 @@ Astro-welkomstscherm.
 
 In fase 3 wordt dit de echte startpagina.
 
+> **Bijgesteld in fase 2.** `scripts/seed-dev.ts` en `npm run db:seed` zijn weg. De import van
+> fase 2 heeft het zwemvest overgenomen, met dezelfde vier maten maar met artikelnummers uit het
+> register, en zet het hele assortiment neer. `scripts/check-constraints.ts` blijft en werkt
+> op het geimporteerde zwemvest.
+
 ## Stap 6, gereedschap
 
 **Biome** voor opmaak en controle, met een `biome.json` die aansluit op de

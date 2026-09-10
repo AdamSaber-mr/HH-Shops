@@ -20,7 +20,7 @@ export default defineConfig({
 
 		// LET OP: zodra `imagesConfig` gezet is, negeert de adapter
 		// `image.domains` en `image.remotePatterns` uit de Astro-config.
-		// Die horen dus hierbinnen. In fase 2 komt hier het Blob-domein bij.
+		// Die horen dus hierbinnen.
 		imagesConfig: {
 			// Elke gevraagde breedte wordt afgerond naar de dichtstbijzijnde
 			// waarde in deze lijst. De standaardlijst begint bij 640, waardoor
@@ -31,13 +31,18 @@ export default defineConfig({
 			formats: ['image/webp'],
 			minimumCacheTTL: 60 * 60 * 24 * 30,
 			domains: [],
-			// Productfoto's staan in Vercel Blob. Zonder dit patroon weigert de
-			// beeldoptimalisatie ze, want ze komen van een ander domein.
+			// Product- en categoriefoto's staan in Vercel Blob. Zonder deze patronen
+			// weigert de beeldoptimalisatie ze, want ze komen van een ander domein.
 			remotePatterns: [
 				{
 					protocol: 'https',
 					hostname: '**.public.blob.vercel-storage.com',
 					pathname: '/producten/**',
+				},
+				{
+					protocol: 'https',
+					hostname: '**.public.blob.vercel-storage.com',
+					pathname: '/categorieen/**',
 				},
 			],
 		},
@@ -53,6 +58,11 @@ export default defineConfig({
 				protocol: 'https',
 				hostname: '**.public.blob.vercel-storage.com',
 				pathname: '/producten/**',
+			},
+			{
+				protocol: 'https',
+				hostname: '**.public.blob.vercel-storage.com',
+				pathname: '/categorieen/**',
 			},
 		],
 	},

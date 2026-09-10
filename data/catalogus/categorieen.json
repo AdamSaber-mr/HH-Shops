@@ -1,0 +1,56 @@
+{
+	"huishoudelijke-artikelen": {
+		"slug": "huishoudelijke-artikelen",
+		"naam": "Huishoudelijke artikelen",
+		"positie": 10,
+		"alt": "Categorie huishoudelijke artikelen, met keukengerei en opbergspullen"
+	},
+	"kinder-artikelen": {
+		"slug": "kinder-artikelen",
+		"naam": "Kinderartikelen",
+		"positie": 20,
+		"alt": "Categorie kinderartikelen, met speelgoed en babyspullen"
+	},
+	"tassen-rugzakken-hondentassen-etc": {
+		"slug": "tassen",
+		"naam": "Tassen",
+		"positie": 30,
+		"alt": "Categorie tassen, met rugzakken en draagtassen"
+	},
+	"schoenen": {
+		"slug": "schoenen",
+		"naam": "Schoenen",
+		"positie": 40,
+		"alt": "Categorie schoenen, met veiligheidsschoenen in sneakermodel"
+	},
+	"sloffen": {
+		"slug": "sloffen",
+		"naam": "Sloffen",
+		"positie": 50,
+		"alt": "Categorie sloffen, met zachte pantoffels"
+	},
+	"slippers": {
+		"slug": "slippers",
+		"naam": "Slippers",
+		"positie": 60,
+		"alt": "Categorie slippers, met badslippers voor dames en heren"
+	},
+	"cosmetica-artikelen": {
+		"slug": "cosmetica",
+		"naam": "Cosmetica",
+		"positie": 70,
+		"alt": "Categorie cosmetica, met verzorgingsproducten"
+	},
+	"computer-artikelen": {
+		"slug": "computer-artikelen",
+		"naam": "Computerartikelen",
+		"positie": 80,
+		"alt": "Categorie computerartikelen, met muizen en muismatten"
+	},
+	"overige": {
+		"slug": "overige",
+		"naam": "Overige",
+		"positie": 90,
+		"alt": "Categorie overige artikelen, met een mix van producten"
+	}
+}

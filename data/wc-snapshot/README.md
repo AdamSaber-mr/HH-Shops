@@ -16,7 +16,7 @@ afhankelijk van of de oude site blijft draaien.
 | `product-variations.json` | De 9 variaties van de twee `variable`-producten, per stuk opgehaald |
 | `products-attributes.json` | Leeg. Bewijs dat er geen globale attributen bestaan |
 | `products-collection-data.json` | Prijsbereik en telling zoals de shop ze zelf rapporteert |
-| `images/` | 227 unieke afbeeldingsbestanden, origineel formaat, 30 MB |
+| `images/` | 227 unieke productfoto's, origineel formaat, 30 MB. Plus, sinds 10 september 2026, de 7 categoriegrafieken die niet al als productfoto meegingen, samen 10 MB |
 
 ## Wat de data laat zien
 
@@ -97,9 +97,13 @@ aanname bevestigt dat een deel van de foto's met AI gemaakt is.
 Zolang de oude site nog draait:
 
 ```
-curl -sS "https://hh-shops.nl/wp-json/wc/store/v1/products?per_page=100"
-curl -sS "https://hh-shops.nl/wp-json/wc/store/v1/products/categories?per_page=100"
+curl -sS "https://hh-shops.nl/wp-json/wc/store/v1/products?per_page=50&page=1"
+curl -sS "https://hh-shops.nl/wp-json/wc/store/v1/products?per_page=50&page=2"
+curl -sS "https://hh-shops.nl/wp-json/wc/store/v1/products/categories"
 ```
+
+Niet met `per_page=100`: sinds 10 september 2026 geeft de oude site daarop een
+"Database Error" (HTTP 500). Vijftig per pagina gaat wel.
 
 ```
 curl -sS "https://hh-shops.nl/wp-json/wc/store/v1/products/844"

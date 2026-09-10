@@ -388,9 +388,14 @@ export const legacySourceKind = pgEnum('legacy_source_kind', ['product', 'variat
  *    op het moment dat de import draait. Leggen we hem dan niet vast, dan is hij
  *    weg zodra WordPress uit gaat, en dat is precies wat er daarna gebeurt.
  *
- * Meerdere rijen mogen naar dezelfde variant wijzen. Dat is niet theoretisch:
- * maat 41 van de veiligheidsschoenen bestaat op de oude site twee keer, als los
- * product 441 en als variatie 847 van product 842.
+ * Meerdere rijen mogen naar dezelfde variant wijzen. Dat kwam in fase 2 niet
+ * voor: los product 441 en variatie 847 van product 842 leken allebei maat 41
+ * van dezelfde schoen, maar zijn volgens de klant twee verschillende schoenen.
+ * De mogelijkheid blijft, de beperking zou niets opleveren.
+ *
+ * Variaties krijgen geen eigen rij. Op de oude site hadden ze geen eigen pad,
+ * alleen `?attribute_maten=38` achter het pad van de ouder, en `path` laat
+ * geen vraagteken toe. De enumwaarde `variation` blijft daardoor ongebruikt.
  */
 export const legacyUrls = pgTable(
 	'legacy_urls',

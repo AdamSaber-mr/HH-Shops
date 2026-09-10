@@ -31,3 +31,6 @@ pnpm-debug.log*
 .env*
 # .env.example hoort wel in git: die documenteert welke sleutels nodig zijn.
 !.env.example
+
+# gegenereerd door npm run import:contactsheet
+data/catalogus/contactsheet.html

@@ -1,0 +1,83 @@
+[
+	{
+		"naam": "Zwemvest Hond met Handvat",
+		"slug": "zwemvest-hond-met-handvat",
+		"optie": "Maat",
+		"leidend": 532,
+		"leden": [
+			{ "id": 532, "waarde": "XXS" },
+			{ "id": 736, "waarde": "XS" },
+			{ "id": 737, "waarde": "S" },
+			{ "id": 533, "waarde": "M" }
+		]
+	},
+	{
+		"naam": "Werkschoenen, veiligheidsschoenen S1P",
+		"slug": "werkschoenen-veiligheidsschoenen",
+		"optie": "Maat",
+		"leidend": 842,
+		"leden": [
+			{ "id": 844, "waarde": "38" },
+			{ "id": 845, "waarde": "39" },
+			{ "id": 846, "waarde": "40" },
+			{ "id": 847, "waarde": "41" },
+			{ "id": 848, "waarde": "42" },
+			{ "id": 849, "waarde": "43" }
+		]
+	},
+	{
+		"naam": "Lichtgewicht veiligheidsschoenen, sneakermodel",
+		"slug": "veiligheidsschoenen-werkschoenen",
+		"optie": "Maat",
+		"leidend": 727,
+		"leden": [
+			{ "id": 727, "waarde": "36" },
+			{ "id": 728, "waarde": "37" },
+			{ "id": 441, "waarde": "41" }
+		]
+	},
+	{
+		"naam": "Waist Trainer Corset",
+		"slug": "waist-trainer-corset",
+		"optie": "Maat",
+		"leidend": 734,
+		"leden": [
+			{ "id": 733, "waarde": "S" },
+			{ "id": 734, "waarde": "M" },
+			{ "id": 729, "waarde": "L" },
+			{ "id": 735, "waarde": "XL" }
+		]
+	},
+	{
+		"naam": "Hond Draagtas",
+		"slug": "hond-draagtas",
+		"optie": "Maat",
+		"leidend": 738,
+		"leden": [{ "id": 738, "waarde": "S" }, { "id": 742, "waarde": "M" }]
+	},
+	{
+		"naam": "Fietsonderbroek Dames Heren met Zeem",
+		"slug": "fietsonderbroek-dames-heren-met-zeem",
+		"optie": "Maat",
+		"leidend": 373,
+		"leden": [{ "id": 373, "waarde": "XL" }, { "id": 525, "waarde": "XXL" }]
+	},
+	{
+		"naam": "Fluffy Pantoffels Dames en Heren",
+		"slug": "fluffy-pantoffels-dames-en-heren",
+		"optie": "Kleur",
+		"leidend": 866,
+		"leden": [{ "id": 866, "waarde": "Khaki" }, { "id": 869, "waarde": "Zwart" }]
+	},
+	{
+		"naam": "Motivatie Drinkfles 2 liter",
+		"slug": "motivatie-drinkfles-2l-fles-diverse-kleuren",
+		"optie": "Kleur",
+		"leidend": 123,
+		"leden": [
+			{ "id": 871, "waarde": "Blauw" },
+			{ "id": 872, "waarde": "Roze" },
+			{ "id": 873, "waarde": "Groen" }
+		]
+	}
+]

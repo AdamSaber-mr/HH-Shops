@@ -306,11 +306,21 @@ MB, en juist die krimpen het hardst.
 
 **Uploaden.** Naar Vercel Blob met `@vercel/blob`, `access: 'public'`,
 `addRandomSuffix: false`, onder `producten/<bestandsnaam-als-slug>.webp`.
-Categoriefoto's onder `categorieen/<slug>.webp`. Voor elke upload eerst een
-`head()`: bestaat het pad al, dan overslaan. Zo is een tweede run gratis en
-blijft de import werken als hij halverwege afbreekt. Het token
-`BLOB_READ_WRITE_TOKEN` komt in `.env` en `.env.example`, alleen voor scripts.
-De shop leest Blob via gewone URL's en heeft het token niet nodig.
+Categoriefoto's onder `categorieen/<slug>.webp`. Voor het uploaden haalt de
+import een keer op wat er al staat: bestaat het pad al, dan overslaan. Zo is
+een tweede run gratis en blijft de import werken als hij halverwege afbreekt.
+
+> **Bijgesteld.** Er is geen vast Blob-token nodig. Na `vercel link` en
+> `vercel env pull` staan `VERCEL_OIDC_TOKEN` en `BLOB_STORE_ID` in de lokale
+> omgeving, en de SDK gebruikt die twee samen als tijdelijk token, twaalf uur
+> geldig. Geen wachtwoord om te bewaren of te delen. Verlopen? Opnieuw
+> `vercel env pull`. Een vast `BLOB_READ_WRITE_TOKEN` werkt ook, zie
+> `.env.example`. De shop zelf leest Blob via gewone URL's en heeft geen van
+> beide nodig.
+
+De categoriegrafieken stonden niet in de snapshot, alleen de productfoto's.
+Ze zijn op 10 september alsnog opgehaald en aan `data/wc-snapshot/images/`
+toegevoegd, zeven stuks van samen 10 MB.
 
 > Let op: `astro.config.mjs` staat op twee plekken alleen `/producten/**` toe
 > als extern beeldpad. Voor de categoriefoto's moet `/categorieen/**` erbij, op
@@ -334,8 +344,11 @@ de contactsheet. Dat is sneller dan andersom en de klant ziet meteen welke
 foto's slecht zijn, wat weer input is voor klantvraag 2 over echte productfoto's.
 
 Een bestand met `overslaan: true` in `afbeeldingen.json` wordt niet geupload en
-nergens gekoppeld. Dat is voor de twee categoriegrafieken die als productfoto
-staan en voor wat we op de contactsheet verder nog tegenkomen.
+nergens gekoppeld. Dat is gebeurd met de categoriegrafiek van "Schoenen" die bij
+de werkschoenen als eerste foto stond, en met een merkbanner van een leverancier
+bij de billentrainer. De categoriegrafiek van "Slippers" bij de Geweo-slippers
+is wel meegegaan: het is de enige foto van dat product, en het zijn echt
+slippers.
 
 Dezelfde foto bij meerdere producten (42 verwijzingen) wordt een bestand in
 Blob en meerdere rijen in `product_images`. Het schema staat dat toe.
@@ -465,6 +478,25 @@ Puntsgewijs nalopen:
    deze fase en dus de moeite van een regel waard
 8. **Groen.** Biome, Vitest, de build, en GitHub Actions op de branch
 
+## Resultaat van de eerste run
+
+Gedraaid op 10 september 2026 tegen de `dev`-branch, twee keer achter elkaar.
+
+| Wat | Uitkomst |
+|---|---|
+| Eerste run | 9 categorieen, 83 producten, 101 varianten, 234 afbeeldingsrijen, 99 categoriekoppelingen, 103 oude paden. Het testproduct van fase 1 is overgenomen en zijn vier oude varianten zijn vervangen |
+| Tweede run | Nul wijzigingen |
+| Afbeeldingen | 233 bestanden, van 39,6 MB naar 6,4 MB. Grootste na verwerking 121 KB |
+| Controle | Som van voorraad (4724) en van prijzen (164.213 cent) over alle varianten gelijk aan de snapshot. Geen product zonder variant, foto of categorie. Geen URL meer naar hh-shops.nl |
+| Werkschoenen | Zes maten, vier uitverkocht, zoals de variaties op de oude site |
+
+Het rapport meldt 129 aandachtspunten. Verreweg de meeste zijn "korte
+beschrijving was een trefwoordenlijst, begin van de lange gebruikt": 60 van de
+94 oude korte beschrijvingen waren dat. De rest: prijzen die per maat
+verschillen bij het zwemvest en de fietsonderbroek (klopt, zo staat het op de
+oude site), de drie invulvoorraden, en de foto's die zijn overgeslagen of aan
+een variant gekoppeld.
+
 ## Open punten
 
 1. **Voorraad 998 en 999** bij de schoenenorganizers. Gaan er letterlijk zo in.
@@ -474,11 +506,23 @@ Puntsgewijs nalopen:
    Bijwerken naar twee pagina's van 50
 3. **Het lettertype.** Het plan zei Geist, en zo staat het in `main`. Adam heeft
    bij het bouwen van de startpagina op de branch `homepage` bewust voor Plus
-   Jakarta Sans gekozen. Het plan is daarop aangepast. Fase 2 raakt de UI niet,
-   maar wie `homepage` merget moet het fase 1-document op dat punt nalopen
+   Jakarta Sans gekozen. Het plan is daarop aangepast. Wie `homepage` merget
+   moet het fase 1-document op dat punt nalopen
 4. **Toegang.** De import draait tegen de `dev`-branch van Neon en Vercel Blob.
-   Beide staan in Adams accounts. Verbindingsreeksen en Blob-token gaan in de
-   lokale `.env`, niet via de chat
+   Beide staan in Adams accounts. De databasereeks staat in Vercel als
+   "Sensitive" en is daar niet meer uit te halen; hij komt uit het
+   Neon-dashboard en gaat in de lokale `.env`, niet via de chat. Blob werkt
+   zonder wachtwoord via `vercel env pull`
+5. **Een gat in het schema.** De controle op `product_images.alt` beweert
+   bestandsnamen als `Copilot_20260217_132555` te weigeren, maar de regex laat
+   namen met twee cijfergroepen door. De import controleert dat zelf strenger,
+   dus er is niets misgegaan, maar de belofte in `schema.ts` klopt niet. Een
+   kleine migratie voor fase 5, als de beheeromgeving zelf alt-teksten gaat
+   schrijven
+6. **De korte beschrijvingen verdienen een tweede blik.** Zestig zijn
+   automatisch afgeleid uit de lange tekst. Dat leest goed genoeg voor een
+   productkaart, maar het is geen copywriting. Een handgeschreven versie kan
+   per product in `producten.json`, en dan draait de import hem er zo in
 
 ## Beantwoord
 
