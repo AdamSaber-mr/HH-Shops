@@ -56,7 +56,10 @@ netjes; de database weigert het sowieso.
 - Sessies zeven dagen, in de database, geen cookiecache: uitloggen en
   verwijderen gelden meteen.
 - CSRF via de origin-controle van Astro op elke POST.
-- Registratie staat uit; accounts komen alleen uit het paneel of het script.
+- Beheerders hebben de rol admin; alleen die rol komt in het paneel en
+  mag de beheer-actions aanroepen. Klanten registreren zichzelf met de rol
+  klant (zie docs/klantaccounts.md) en krijgen op /admin een 403.
+  Beheerdersaccounts komen alleen uit het paneel of het script.
 
 ## Instellen
 
@@ -81,7 +84,7 @@ netjes; de database weigert het sowieso.
 - Wachtwoord vergeten: er is geen e-mailverzending. Een beheerder die zijn
   wachtwoord kwijt is, laat een collega zijn account verwijderen en opnieuw
   aanmaken, of gebruikt het script.
-- Rollen: iedereen mag alles. Bij meer dan een handvol beheerders is dat het
-  eerste om te heroverwegen.
+- Rollen binnen het beheer: elke beheerder mag alles. Bij meer dan een
+  handvol beheerders is dat het eerste om te heroverwegen.
 - Bestellingen: die tabel bestaat nog niet (fase 4).
 - Meerdere foto's tegelijk uploaden.
