@@ -26,6 +26,13 @@ if (!secret) {
 	process.exit(1);
 }
 
+if (!process.stdin.isTTY) {
+	console.error(
+		'Dit script vraagt om een wachtwoord en heeft daarvoor een echte terminal nodig. Draai het in PowerShell of de terminal van VS Code, niet via een chat of een pipe.',
+	);
+	process.exit(1);
+}
+
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 const password = (await rl.question('Wachtwoord (minstens 12 tekens): ')).trim();
 rl.close();
