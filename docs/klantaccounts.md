@@ -21,7 +21,12 @@ fase 4 is besproken (zie `docs/fase-4-afrekenen.md`).
   artikel dat niet meer te koop is valt af met een melding, een aantal boven
   de voorraad wordt verlaagd met een melding. Maximaal 10 per artikel en 20
   verschillende artikelen.
-- **Header**: de teller bij de winkelmand en de voornaam bij "Account".
+- **Header**: een hartje en de winkelmand, elk met een groene teller die
+  altijd zichtbaar is (ook bij nul), en de voornaam bij "Account". Een klik
+  op het hartje opent een zijpaneel met de favorieten, ook voor gasten; het
+  paneel haalt zijn inhoud pas bij openen op van . Zonder
+  JavaScript is het hartje een link naar , de openbare
+  favorietenpagina.
 
 Alles werkt zonder JavaScript. Met JavaScript wisselt het hartje zonder de
 pagina te herladen; de rest is gewone formulieren.
