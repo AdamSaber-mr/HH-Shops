@@ -15,9 +15,11 @@ import CategoryCard from './CategoryCard.astro';
  * src/lib/navigation.ts; de foto's staan in src/assets/categorieen, een per
  * slug.
  *
- * De sectie is smaller dan de rest van de pagina (1100 in plaats van 1400
- * pixels): op volle breedte vond Adam de grote kaart te groot. De kleine
- * kaarten zijn nu zo'n 245px, de grote zo'n 515px.
+ * De sectie is even breed als de productrijen (1400 pixels), zodat de kaarten
+ * uitlijnen met de producten eronder. Om het blok toch lager te houden zijn
+ * de kaarten 5:4 in plaats van vierkant; de foto's worden daarvoor 20%
+ * bijgesneden, zie CategoryCard. Het blok is zo'n 535px hoog in plaats van
+ * 668px.
  *
  * Op telefoon en tablet staat de grote kaart over de volle breedte bovenaan
  * en het blok van vier eronder.
@@ -40,10 +42,8 @@ const [featured, ...rest] = trendingCategories;
 if (!featured) throw new Error('trendingCategories is leeg');
 ---
 
-<!-- Bewust smaller dan de rest van de pagina (1100 in plaats van 1400 pixels):
-     op volle breedte werd de grote kaart te groot. -->
 <section
-	class="mx-auto max-w-[1100px] px-4 py-14 sm:px-6 lg:py-20"
+	class="mx-auto max-w-[1400px] px-4 py-14 sm:px-6 lg:py-20"
 	aria-labelledby="trending-titel"
 >
 	<div class="flex flex-wrap items-end justify-between gap-4">

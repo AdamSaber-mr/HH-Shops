@@ -5,8 +5,14 @@ import { Image } from 'astro:assets';
  * Een categoriekaart voor "Trending categorieen".
  *
  * De foto's van Adam zijn vierkant en hebben de naam van de categorie al in
- * beeld. De kaart is daarom ook vierkant en toont de foto in zijn geheel,
- * zonder eigen titel erover.
+ * beeld, dus de kaart zet er geen eigen titel over.
+ *
+ * De kaart is 5:4 en niet vierkant. Op de volle paginabreedte werd het blok
+ * met vierkante kaarten 668px hoog, en dat was Adam te veel scrollen. De foto
+ * wordt daarom 20% in de hoogte bijgesneden. De positie ligt op 32% van
+ * boven: de titel begint op zo'n 10% en blijft dan heel, onderaan valt alleen
+ * de rand van de podia weg. Verander de positie niet naar het midden, dan
+ * gaat de bovenkant van de titel eraf.
  *
  * Omdat de naam alleen in de pixels staat, krijgt de link een sr-only tekst
  * met de naam. Anders is het voor een schermlezer een link zonder naam.
@@ -25,17 +31,17 @@ interface Props {
 
 const { name, href, image, featured = false } = Astro.props;
 
-// De grote kaart is op desktop zo'n 515px breed, de kleine zo'n 245px.
+// De grote kaart is op desktop zo'n 665px breed, de kleine zo'n 320px.
 const sizes = featured
-	? '(min-width: 1100px) 515px, (min-width: 1024px) 48vw, calc(100vw - 32px)'
-	: '(min-width: 1100px) 245px, (min-width: 1024px) 23vw, 50vw';
+	? '(min-width: 1400px) 665px, (min-width: 1024px) 48vw, calc(100vw - 32px)'
+	: '(min-width: 1400px) 320px, (min-width: 1024px) 23vw, 50vw';
 const widths = featured ? [640, 900, 1202] : [320, 480, 640, 900];
 ---
 
 <a
 	href={href}
 	class:list={[
-		'group relative block aspect-square overflow-hidden rounded-card bg-surface-hover shadow-sm transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg',
+		'group relative block aspect-[5/4] overflow-hidden rounded-card bg-surface-hover shadow-sm transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg',
 		featured && 'col-span-2 row-span-2',
 	]}
 >
@@ -47,7 +53,7 @@ const widths = featured ? [640, 900, 1202] : [320, 480, 640, 900];
 		quality={72}
 		loading="lazy"
 		decoding="async"
-		class="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+		class="size-full object-cover object-[center_32%] transition-transform duration-500 group-hover:scale-[1.03]"
 	/>
 	<span class="sr-only">{name}</span>
 </a>
