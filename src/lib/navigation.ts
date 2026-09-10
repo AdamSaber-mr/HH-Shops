@@ -55,10 +55,9 @@ export const featuredCategories: readonly FeaturedCategory[] = [
 ];
 
 /*
- * De vier kaarten in "Trending categorieen": een rij van vier, even breed als
- * de productkaarten. Computerartikelen en cosmetica hebben ook een foto in
- * src/assets/categorieen en kunnen hier zo bij, maar zes kaarten werden op
- * drie per rij te groot en op zes per rij te klein.
+ * De zes kaarten in "Trending categorieen", op een rij. Bewust zes en geen
+ * vier: de rest van de startpagina staat op vier kolommen, en deze rij mag
+ * daaruit breken. Sloffen en slippers staan wel in het menu, maar niet hier.
  * De foto per kaart staat in src/assets/categorieen/<slug>.png.
  */
 const trendingSlugs = [
@@ -66,6 +65,8 @@ const trendingSlugs = [
 	'kinder-artikelen',
 	'tassen-rugzakken-hondentassen-etc',
 	'schoenen',
+	'cosmetica-artikelen',
+	'computer-artikelen',
 ] as const;
 
 export const trendingCategories: readonly FeaturedCategory[] = trendingSlugs.map((slug) => {
