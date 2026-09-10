@@ -1,0 +1,94 @@
+---
+import { Icon } from 'astro-icon/components';
+import { metFilters, type Paginering } from '../lib/admin/paginering.ts';
+
+/*
+ * Paginering onder een productraster: Vorige, de paginanummers, Volgende.
+ *
+ * Elke pagina is een eigen adres (?pagina=2), zodat je een pagina kunt delen
+ * en teruggaan met de browserknop werkt. Pagina 1 heeft geen parameter: dat
+ * doet metFilters, die het getal 1 uit de querystring haalt. De overige
+ * filters blijven staan.
+ *
+ * Bij veel pagina's worden alleen de eerste, de laatste en de buren van de
+ * huidige getoond, met puntjes ertussen.
+ */
+
+interface Props {
+	pad: string;
+	params: URLSearchParams;
+	paginering: Paginering;
+}
+
+const { pad, params, paginering } = Astro.props;
+const { pagina, paginas } = paginering;
+
+const link = (n: number) => metFilters(pad, params, { pagina: n });
+
+// Welke nummers tonen: 1, laatste, en huidige plus buren.
+const nummers: (number | 'gat')[] = [];
+for (let n = 1; n <= paginas; n++) {
+	if (n === 1 || n === paginas || Math.abs(n - pagina) <= 1) {
+		nummers.push(n);
+	} else if (nummers[nummers.length - 1] !== 'gat') {
+		nummers.push('gat');
+	}
+}
+
+const knop =
+	'inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-control border px-3 text-sm font-medium transition-colors';
+const knopRust = 'border-border-strong bg-surface text-text hover:bg-surface-hover';
+const knopHuidig = 'border-accent bg-accent text-white';
+const knopUit = 'cursor-not-allowed border-border bg-surface text-text-disabled';
+---
+
+{paginas > 1 && (
+	<nav aria-label="Paginering" class="mt-10 flex flex-wrap items-center justify-center gap-2">
+		{pagina > 1 ? (
+			<a href={link(pagina - 1)} class:list={[knop, knopRust]} rel="prev">
+				<Icon name="ph:caret-left" class="size-4" aria-hidden="true" />
+				Vorige
+			</a>
+		) : (
+			<span class:list={[knop, knopUit]} aria-disabled="true">
+				<Icon name="ph:caret-left" class="size-4" aria-hidden="true" />
+				Vorige
+			</span>
+		)}
+
+		<ul class="flex items-center gap-1">
+			{nummers.map((n) =>
+				n === 'gat' ? (
+					<li class="px-1 text-text-muted" aria-hidden="true">
+						…
+					</li>
+				) : (
+					<li>
+						{n === pagina ? (
+							<span class:list={[knop, knopHuidig]} aria-current="page">
+								{n}
+							</span>
+						) : (
+							<a href={link(n)} class:list={[knop, knopRust]}>
+								<span class="sr-only">Pagina </span>
+								{n}
+							</a>
+						)}
+					</li>
+				),
+			)}
+		</ul>
+
+		{pagina < paginas ? (
+			<a href={link(pagina + 1)} class:list={[knop, knopRust]} rel="next">
+				Volgende
+				<Icon name="ph:caret-right" class="size-4" aria-hidden="true" />
+			</a>
+		) : (
+			<span class:list={[knop, knopUit]} aria-disabled="true">
+				Volgende
+				<Icon name="ph:caret-right" class="size-4" aria-hidden="true" />
+			</span>
+		)}
+	</nav>
+)}

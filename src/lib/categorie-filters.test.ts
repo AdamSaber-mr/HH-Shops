@@ -4,8 +4,10 @@ import {
 	defaultVariant,
 	type FilterbaarProduct,
 	filterEnSorteer,
+	filterOpZoekterm,
 	heeftActieveFilters,
 	leesFilter,
+	zoekwoorden,
 } from './categorie-filters.ts';
 
 function product(
@@ -65,6 +67,11 @@ describe('leesFilter', () => {
 			'kleur',
 		]);
 		expect(f.opties).toEqual({ maat: ['M', 'L'], kleur: ['Roze'] });
+	});
+
+	it('gebruikt de meegegeven standaardsortering', () => {
+		expect(leesFilter(new URLSearchParams(), [], 'nieuwste').sorteer).toBe('nieuwste');
+		expect(leesFilter(new URLSearchParams('sorteer=naam'), [], 'nieuwste').sorteer).toBe('naam');
 	});
 
 	it('leest sortering, prijsklasse en voorraad', () => {
@@ -183,5 +190,34 @@ describe('filterEnSorteer', () => {
 			'Werkschoen',
 			'Zeepdispenser',
 		]);
+	});
+});
+
+describe('zoeken', () => {
+	const lijst = [
+		{ name: 'Draadloze stofzuiger', brand: 'Dyson', shortDescription: 'Licht en krachtig' },
+		{ name: 'Stofzuigerzakken', brand: null, shortDescription: null },
+		{ name: 'Koffiezetapparaat', brand: 'Philips', shortDescription: 'Voor filterkoffie' },
+	];
+
+	it('splitst een zoekterm in woorden, zonder hoofdletters en accenten', () => {
+		expect(zoekwoorden('  Café  DRAADLOOS ')).toEqual(['cafe', 'draadloos']);
+		expect(zoekwoorden('')).toEqual([]);
+		expect(zoekwoorden(null)).toEqual([]);
+	});
+
+	it('vindt producten waar alle woorden in naam, merk of beschrijving staan', () => {
+		expect(filterOpZoekterm(lijst, 'stofzuiger').map((p) => p.name)).toEqual([
+			'Draadloze stofzuiger',
+			'Stofzuigerzakken',
+		]);
+		expect(filterOpZoekterm(lijst, 'stofzuiger dyson').map((p) => p.name)).toEqual([
+			'Draadloze stofzuiger',
+		]);
+		expect(filterOpZoekterm(lijst, 'filterkoffie').map((p) => p.name)).toEqual([
+			'Koffiezetapparaat',
+		]);
+		expect(filterOpZoekterm(lijst, 'wasmachine')).toEqual([]);
+		expect(filterOpZoekterm(lijst, '')).toBe(lijst);
 	});
 });
