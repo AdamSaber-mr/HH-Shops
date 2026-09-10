@@ -1,4 +1,5 @@
 ---
+import tussenbanner from '../assets/tussenbanner.png';
 import Hero from '../components/Hero.astro';
 import ProductSection from '../components/ProductSection.astro';
 import PromoBanner from '../components/PromoBanner.astro';
@@ -90,6 +91,8 @@ const newest = [...entries]
 			title="Elke week nieuwe producten voor in en om het huis."
 			text="Handige spullen voor de keuken, speelgoed voor de kleintjes, tassen en schoenen voor onderweg. Kijk wat er deze week is bijgekomen."
 			cta={{ label: 'Bekijk wat nieuw is', href: '#nieuw-titel' }}
+			image={tussenbanner}
+			imageAlt="Rugzak, knuffelbeer, airfryer, koptelefoon en laptop op groene podia"
 		/>
 	</div>
 

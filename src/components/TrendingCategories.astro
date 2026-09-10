@@ -4,10 +4,24 @@ import { categoryHref, trendingCategories } from '../lib/navigation.ts';
 import CategoryCard from './CategoryCard.astro';
 
 /*
- * "Trending categorieen" op de startpagina: zes hoge kaarten naast elkaar op
- * desktop, drie op tablet, twee op telefoon. Welke zes en welke kleur staat in
- * src/lib/navigation.ts. De foto's volgen later, zie CategoryCard.
+ * "Trending categorieen" op de startpagina: zes vierkante foto's naast elkaar
+ * op desktop, drie op tablet, twee op telefoon. Welke zes staat in
+ * src/lib/navigation.ts; de foto's staan in src/assets/categorieen, een per
+ * slug.
+ *
+ * De glob koppelt slug aan bestand. Ontbreekt een foto, dan valt de build om
+ * met een duidelijke fout in plaats van een lege kaart op de site.
  */
+
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/categorieen/*.png', {
+	eager: true,
+});
+
+function imageFor(slug: string): ImageMetadata {
+	const entry = files[`../assets/categorieen/${slug}.png`];
+	if (!entry) throw new Error(`Geen categoriefoto voor "${slug}" in src/assets/categorieen`);
+	return entry.default;
+}
 ---
 
 <section
@@ -29,7 +43,11 @@ import CategoryCard from './CategoryCard.astro';
 
 	<div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
 		{trendingCategories.map((category) => (
-			<CategoryCard name={category.name} tint={category.tint} href={categoryHref(category.slug)} />
+			<CategoryCard
+				name={category.name}
+				href={categoryHref(category.slug)}
+				image={imageFor(category.slug)}
+			/>
 		))}
 	</div>
 </section>

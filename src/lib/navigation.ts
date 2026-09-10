@@ -57,31 +57,22 @@ export const featuredCategories: readonly FeaturedCategory[] = [
 /*
  * De zes kaarten in "Trending categorieen". Sloffen en slippers staan wel in
  * het menu, maar niet hier: zes kaarten passen op een rij, acht niet.
- *
- * `tint` is een complete Tailwind-klasse en geen losse kleurnaam. Tailwind
- * vindt alleen klassen die letterlijk in de broncode staan; een samengestelde
- * `bg-tint-${naam}` zou hij niet zien.
+ * De foto per kaart staat in src/assets/categorieen/<slug>.png.
  */
-export interface TrendingCategory extends FeaturedCategory {
-	tint: string;
-}
+const trendingSlugs = [
+	'huishoudelijke-artikelen',
+	'tassen-rugzakken-hondentassen-etc',
+	'kinder-artikelen',
+	'computer-artikelen',
+	'cosmetica-artikelen',
+	'schoenen',
+] as const;
 
-const trendingTints: Record<string, string> = {
-	'huishoudelijke-artikelen': 'bg-tint-sage',
-	'tassen-rugzakken-hondentassen-etc': 'bg-tint-orange',
-	'kinder-artikelen': 'bg-tint-rust',
-	'computer-artikelen': 'bg-tint-teal',
-	'cosmetica-artikelen': 'bg-tint-rose',
-	schoenen: 'bg-tint-amber',
-};
-
-export const trendingCategories: readonly TrendingCategory[] = Object.entries(trendingTints).map(
-	([slug, tint]) => {
-		const category = featuredCategories.find((c) => c.slug === slug);
-		if (!category) throw new Error(`Trending categorie "${slug}" staat niet in featuredCategories`);
-		return { ...category, tint };
-	},
-);
+export const trendingCategories: readonly FeaturedCategory[] = trendingSlugs.map((slug) => {
+	const category = featuredCategories.find((c) => c.slug === slug);
+	if (!category) throw new Error(`Trending categorie "${slug}" staat niet in featuredCategories`);
+	return category;
+});
 
 export function categoryHref(slug: string): string {
 	return `/categorie/${slug}`;

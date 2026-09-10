@@ -1,15 +1,18 @@
 ---
+import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 
 /*
- * De tussenbanner: een breed blok tussen de productsecties in, met een
- * boodschap en een knop.
+ * De tussenbanner: de foto van Adam op ware verhouding, met een boodschap en
+ * een knop erover.
  *
- * De afbeelding komt van Adam. Tot die tijd is de achtergrond bosgroen. Zodra
- * `image` gevuld is, ligt de foto achter de tekst met een donker verloop aan
- * de linkerkant, zodat de witte tekst leesbaar blijft. Maak de foto ongeveer
- * 3:1 (bijvoorbeeld 1800 x 600) met de rustige kant links, daar staat de
- * tekst.
+ * De foto wordt niet bijgesneden. Op desktop bepaalt de foto de hoogte van het
+ * blok en ligt de tekst links erover, op een donkergroen verloop over de
+ * linker 60%. De rechterkant van de foto blijft zoals hij is. Op telefoon en tablet is de foto te laag voor de tekst;
+ * daar staat de tekst op een groen vlak boven de foto.
+ *
+ * De foto komt uit src/assets en gaat via astro:assets, zodat de PNG van
+ * 1,7 MB als kleine WebP bij de bezoeker aankomt.
  */
 
 interface Props {
@@ -17,42 +20,35 @@ interface Props {
 	title: string;
 	text: string;
 	cta: { label: string; href: string };
-	image?: { url: string; alt: string; width: number; height: number };
+	image: ImageMetadata;
+	imageAlt: string;
 }
 
-const { eyebrow, title, text, cta, image } = Astro.props;
+const { eyebrow, title, text, cta, image, imageAlt } = Astro.props;
 ---
 
 <section class="mx-auto max-w-[1400px] px-4 sm:px-6" aria-labelledby="promo-titel">
-	<div class="relative overflow-hidden rounded-card bg-accent text-white">
-		{image && (
-			<>
-				<img
-					src={image.url}
-					alt={image.alt}
-					width={image.width}
-					height={image.height}
-					loading="lazy"
-					decoding="async"
-					class="absolute inset-0 size-full object-cover"
-				/>
-				<div
-					class="absolute inset-0 bg-gradient-to-r from-accent-hover via-accent-hover/70 to-transparent"
-					aria-hidden="true"
-				>
-				</div>
-			</>
-		)}
-
-		<!-- Zachte cirkels als de foto er nog niet is, zodat het vlak niet plat oogt. -->
-		{!image && (
-			<div class="pointer-events-none absolute inset-0" aria-hidden="true">
-				<div class="absolute -top-24 -right-24 size-96 rounded-full bg-white/5"></div>
-				<div class="absolute -right-10 -bottom-40 size-[28rem] rounded-full bg-white/5"></div>
+	<div class="relative overflow-hidden rounded-card bg-accent-hover text-white">
+		<!-- Desktop: de foto op ware verhouding, tekst erover -->
+		<div class="relative hidden lg:block">
+			<Image
+				src={image}
+				alt={imageAlt}
+				widths={[768, 1080, 1400, 2066]}
+				sizes="(min-width: 1400px) 1352px, calc(100vw - 48px)"
+				quality={72}
+				loading="lazy"
+				decoding="async"
+				class="block w-full"
+			/>
+			<div
+				class="absolute inset-y-0 left-0 w-3/5 bg-gradient-to-r from-accent-hover/90 via-accent-hover/60 to-transparent"
+				aria-hidden="true"
+			>
 			</div>
-		)}
+		</div>
 
-		<div class="relative max-w-xl px-6 py-12 sm:px-10 sm:py-16 lg:px-14 lg:py-20">
+		<div class="relative max-w-xl px-6 py-12 sm:px-10 sm:py-16 lg:absolute lg:inset-y-0 lg:left-0 lg:flex lg:flex-col lg:justify-center lg:px-14 lg:py-0">
 			{eyebrow && (
 				<p class="text-sm font-semibold tracking-wide text-white/80 uppercase">{eyebrow}</p>
 			)}
@@ -65,11 +61,23 @@ const { eyebrow, title, text, cta, image } = Astro.props;
 			<p class="mt-4 max-w-md text-base text-pretty text-white/85 sm:text-lg">{text}</p>
 			<a
 				href={cta.href}
-				class="mt-8 inline-flex min-h-12 items-center gap-2 rounded-control bg-white px-6 text-base font-medium text-accent transition-colors hover:bg-accent-subtle"
+				class="mt-8 inline-flex min-h-12 items-center gap-2 self-start rounded-control bg-white px-6 text-base font-medium text-accent transition-colors hover:bg-accent-subtle"
 			>
 				{cta.label}
 				<Icon name="ph:arrow-right" class="size-5" aria-hidden="true" />
 			</a>
 		</div>
+
+		<!-- Telefoon en tablet: de foto onder de tekst -->
+		<Image
+			src={image}
+			alt={imageAlt}
+			widths={[480, 768, 1080]}
+			sizes="calc(100vw - 32px)"
+			quality={72}
+			loading="lazy"
+			decoding="async"
+			class="block w-full lg:hidden"
+		/>
 	</div>
 </section>
