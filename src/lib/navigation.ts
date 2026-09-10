@@ -5,8 +5,11 @@
  * staan. De navbar, het mobiele menu en de sectie "Populaire categorieen" lezen
  * allemaal hieruit, zodat een naam maar op een plek hoeft te veranderen.
  *
- * De categorie-slugs zijn de negen uit data/catalogus/categorieen.json, minus
- * "overige". Zodra de categoriepagina's bestaan, wijzen de links vanzelf goed.
+ * LET OP: de slugs moeten gelijk zijn aan categories.slug in de database. Een
+ * slug die in het beheerpaneel wordt hernoemd, moet hier mee veranderen, en
+ * ook de bestandsnamen in src/assets/categorieen en src/assets/categorie-banners
+ * en de sleutel in categorie-teksten.ts. Anders geeft de link een 404. Dat is
+ * op 10 september 2026 gebeurd met "tassen" -> "tassen-en-rugzakken".
  */
 
 export interface NavLink {
@@ -39,8 +42,8 @@ export const featuredCategories: readonly FeaturedCategory[] = [
 		tagline: 'Speelgoed en spullen voor de kleintjes',
 	},
 	{
-		slug: 'tassen',
-		name: 'Tassen & rugzakken',
+		slug: 'tassen-en-rugzakken',
+		name: 'Tassen en rugzakken',
 		tagline: 'Handtassen, rugzakken en hondentassen',
 	},
 	{ slug: 'schoenen', name: 'Schoenen', tagline: 'Voor elke dag en elk seizoen' },
@@ -64,7 +67,7 @@ export const featuredCategories: readonly FeaturedCategory[] = [
 const trendingSlugs = [
 	'huishoudelijke-artikelen',
 	'kinder-artikelen',
-	'tassen',
+	'tassen-en-rugzakken',
 	'schoenen',
 	'cosmetica',
 ] as const;

@@ -33,7 +33,7 @@ export const categorieTeksten: Record<string, CategorieTekst> = {
 			'Speelgoed, babyspullen en slimme hulpjes voor ouders. Veilig, vrolijk en snel geleverd.',
 		knop: 'Bekijk de kinderartikelen',
 	},
-	tassen: {
+	'tassen-en-rugzakken': {
 		eyebrow: 'Tassen en rugzakken',
 		titel: 'Een tas voor elke dag en elk uitje.',
 		tekst: 'Handtassen, rugzakken en draagtassen voor je hond. Stevig gemaakt en ruim van binnen.',
