@@ -1,5 +1,7 @@
 ---
+import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
+import logo from '../assets/logo.png';
 import { categoryHref, featuredCategories } from '../lib/navigation.ts';
 import { footerGroups, paymentMethods, site } from '../lib/site.ts';
 
@@ -58,7 +60,14 @@ const year = new Date().getFullYear();
 	>
 		<div>
 			<a href="/" class="inline-block rounded-control" aria-label="H&H Shops, naar de startpagina">
-				<img src="/logo.png" alt="" width="2172" height="724" class="-my-3 -ml-3 h-16 w-auto" loading="lazy" />
+				<Image
+					src={logo}
+					alt=""
+					widths={[240, 480]}
+					sizes="192px"
+					loading="lazy"
+					class="-my-3 -ml-3 h-16 w-auto"
+				/>
 			</a>
 			<p class="mt-3 max-w-xs text-sm text-text-muted">{site.description}</p>
 			<ul class="mt-5 space-y-2 text-sm">

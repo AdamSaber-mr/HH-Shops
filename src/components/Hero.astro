@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import banner from '../assets/hero-banner.png';
 import Button from './Button.astro';
 
 /*
@@ -22,8 +24,9 @@ import Button from './Button.astro';
  * met een witte strook rechts.
  *
  * De banner is de grootste afbeelding van de pagina en bepaalt de LCP.
- * Daarom: fetchpriority="high", geen lazy loading, en breedte en hoogte erbij
- * zodat de browser de ruimte al reserveert voordat het bestand binnen is.
+ * Daarom: fetchpriority="high" en geen lazy loading. De foto komt uit
+ * src/assets en gaat via astro:assets, zodat de PNG van 1,7 MB als WebP in
+ * de juiste breedte aankomt; breedte en hoogte zet astro:assets er zelf bij.
  */
 
 interface Props {
@@ -42,14 +45,16 @@ const { title, text, primary, secondary } = Astro.props;
 >
 	<!-- Desktop: de banner vult de sectie, de tekst ligt erover -->
 	<div class="absolute inset-0 hidden lg:block" aria-hidden="true">
-		<img
-			src="/banner.png"
+		<Image
+			src={banner}
 			alt=""
-			width="1774"
-			height="887"
-			class="size-full object-cover object-[right_40%]"
+			widths={[1024, 1440, 1774]}
+			sizes="100vw"
+			quality={75}
+			loading="eager"
 			fetchpriority="high"
 			decoding="async"
+			class="size-full object-cover object-[right_40%]"
 		/>
 		<!-- Een zacht verloop links houdt de tekst leesbaar op brede schermen,
 		     waar de banner ver naar links wordt uitgerekt. -->
@@ -83,13 +88,15 @@ const { title, text, primary, secondary } = Astro.props;
 	</div>
 
 	<!-- Telefoon en tablet: de banner onder de tekst -->
-	<img
-		src="/banner.png"
+	<Image
+		src={banner}
 		alt="Speelgoed, tassen, schoenen, cosmetica en huishoudelijke artikelen op gele podia"
-		width="1774"
-		height="887"
-		class="block w-full lg:hidden"
+		widths={[480, 768, 1024]}
+		sizes="100vw"
+		quality={75}
+		loading="eager"
 		fetchpriority="high"
 		decoding="async"
+		class="block w-full lg:hidden"
 	/>
 </section>
