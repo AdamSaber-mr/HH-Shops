@@ -70,16 +70,17 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 				<span class="sr-only">Menu</span>
 			</button>
 
-			<!-- Logo. Het bestand heeft veel witruimte rondom, vandaar de negatieve marge. -->
-			<a href="/" class="-my-3 shrink-0 rounded-control" aria-label="H&H Shops, naar de startpagina">
+			<!-- Logo. Het bestand is strak bijgesneden (6px rand), dus het lijnt links
+			     uit met de rest van de pagina zonder negatieve marges. -->
+			<a href="/" class="shrink-0 rounded-control" aria-label="H&H Shops, naar de startpagina">
 				<Image
 					src={logo}
 					alt=""
-					widths={[240, 480]}
-					sizes="216px"
+					widths={[180, 360]}
+					sizes="175px"
 					loading="eager"
 					fetchpriority="high"
-					class="h-14 w-auto sm:h-[4.5rem]"
+					class="h-8 w-auto sm:h-10"
 				/>
 			</a>
 
