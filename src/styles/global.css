@@ -73,6 +73,13 @@
 	--color-sky: #a7e3fa;
 	--color-sky-deep: #4ca7ca;
 
+	/*
+	  Zandkleur van de categoriebanners (gemeten op de linkerrand van alle negen
+	  foto's in src/assets/categorie-banners). Op telefoon staat de tekst op dit
+	  vlak boven de foto en loopt het naadloos over. accent-hover erop haalt 9,4:1.
+	*/
+	--color-sand: #fdebd9;
+
 	/* Sterren in het reviewblok. Goud, want groene sterren leest niemand als sterren. */
 	--color-star: #f6b942;
 
