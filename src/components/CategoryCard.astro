@@ -19,20 +19,31 @@ interface Props {
 	name: string;
 	href: string;
 	image: ImageMetadata;
+	/** De grote kaart: twee kolommen en twee rijen in het raster. */
+	featured?: boolean;
 }
 
-const { name, href, image } = Astro.props;
+const { name, href, image, featured = false } = Astro.props;
+
+// De grote kaart is op desktop zo'n 670px breed, de kleine zo'n 320px.
+const sizes = featured
+	? '(min-width: 1400px) 670px, (min-width: 1024px) 48vw, calc(100vw - 32px)'
+	: '(min-width: 1400px) 320px, (min-width: 1024px) 23vw, 50vw';
+const widths = featured ? [640, 900, 1202] : [320, 480, 640, 900];
 ---
 
 <a
 	href={href}
-	class="group relative block aspect-square overflow-hidden rounded-card bg-surface-hover shadow-sm transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg"
+	class:list={[
+		'group relative block aspect-square overflow-hidden rounded-card bg-surface-hover shadow-sm transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg',
+		featured && 'col-span-2 row-span-2',
+	]}
 >
 	<Image
 		src={image}
 		alt=""
-		widths={[320, 480, 640, 900]}
-		sizes="(min-width: 1400px) 215px, (min-width: 1024px) 16vw, (min-width: 640px) 33vw, 50vw"
+		widths={widths}
+		sizes={sizes}
 		quality={72}
 		loading="lazy"
 		decoding="async"

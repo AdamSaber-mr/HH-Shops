@@ -4,11 +4,19 @@ import { categoryHref, trendingCategories } from '../lib/navigation.ts';
 import CategoryCard from './CategoryCard.astro';
 
 /*
- * "Trending categorieen" op de startpagina: zes vierkante foto's op een rij
- * op desktop, drie op tablet, twee op telefoon. Zes en geen vier, zodat deze
- * rij uit het vierkolomsraster van de rest van de pagina breekt. Welke zes staat in
+ * "Trending categorieen" op de startpagina: een grote kaart links en vier
+ * kleinere in een blok van twee bij twee rechts. De vier kleine zijn even
+ * breed als de productkaarten eronder; de grote is twee kaarten plus de
+ * tussenruimte, en daarmee precies even hoog als het blok ernaast.
+ *
+ * Zes op een rij bleek te klein (zo'n 215px per kaart) en drie per rij te
+ * groot (zo'n 435px). Dit is de tussenweg die Adam koos: vijf kaarten, een
+ * eruit springend. Welke vijf, en welke de grote is, staat in
  * src/lib/navigation.ts; de foto's staan in src/assets/categorieen, een per
  * slug.
+ *
+ * Op telefoon en tablet staat de grote kaart over de volle breedte bovenaan
+ * en het blok van vier eronder.
  *
  * De glob koppelt slug aan bestand. Ontbreekt een foto, dan valt de build om
  * met een duidelijke fout in plaats van een lege kaart op de site.
@@ -23,6 +31,9 @@ function imageFor(slug: string): ImageMetadata {
 	if (!entry) throw new Error(`Geen categoriefoto voor "${slug}" in src/assets/categorieen`);
 	return entry.default;
 }
+
+const [featured, ...rest] = trendingCategories;
+if (!featured) throw new Error('trendingCategories is leeg');
 ---
 
 <section
@@ -42,8 +53,14 @@ function imageFor(slug: string): ImageMetadata {
 		</a>
 	</div>
 
-	<div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
-		{trendingCategories.map((category) => (
+	<div class="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+		<CategoryCard
+			name={featured.name}
+			href={categoryHref(featured.slug)}
+			image={imageFor(featured.slug)}
+			featured
+		/>
+		{rest.map((category) => (
 			<CategoryCard
 				name={category.name}
 				href={categoryHref(category.slug)}
