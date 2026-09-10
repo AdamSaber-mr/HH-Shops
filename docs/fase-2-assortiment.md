@@ -491,6 +491,31 @@ Gedraaid op 10 september 2026 tegen de `dev`-branch, twee keer achter elkaar.
 | Werkschoenen | Zes maten, vier uitverkocht, zoals de variaties op de oude site |
 | Productie | Later op 10 september ook gedraaid tegen de Neon-branch `main`, met de reeks uit een lokaal `.env.production`. Zelfde uitkomst, tweede run nul wijzigingen. De storefront op hh-shops.vercel.app toont sindsdien het assortiment |
 
+### Tweede run: achtergrond naar wit, foto's onder v2
+
+Op de productkaart ligt de foto met `mix-blend-multiply` op een lichtgrijs
+vlak. Een witte achtergrond wordt dan grijs, maar de 76 foto's van de
+"Post-HH-Shops"-reeks hebben een ingebakken lichtroze achtergrond (#ffedec)
+en bleven roze. Daarom zit er sinds 10 september een stap voor het
+verkleinen in `src/lib/media.ts`: `neutraliseerAchtergrond` in
+`src/lib/achtergrond.ts` trekt een egale, lichte, niet-witte randkleur naar
+wit. Egaal betekent dat negen van de tien randpixels hooguit 15 afwijken van
+de mediaan; het maximum is bewust niet de maat, omdat een kabel of hanger
+die de rand raakt de foto anders diskwalificeert.
+
+Omdat Blob en de beeldoptimalisatie van Vercel een jaar cachen op URL,
+staan de nieuwe bestanden onder een versiesegment: `producten/v2/<naam>.webp`
+en `categorieen/v2/<naam>.webp` (`BLOB_VERSION` in `media.ts`). Uploads
+uit het beheerpaneel gaan ook onder v2.
+
+| Wat | Uitkomst |
+|---|---|
+| Nagelopen | Alle 234 snapshotfoto's: 92 aangepast, geen enkele ten onrechte. De 76 van de reeks, 6 categorietegels (perzik naar wit, de gekleurde mat blijft), 7 AI-foto's met roze rand, 5 andere met #ffeded, en 2 bijna-witte grijze (550x553, 550x666). Foto's met een echte achtergrond (kamer, stof, collage) blijven staan |
+| Dev | 231 bestanden geupload onder v2, 234 afbeeldingsrijen en 9 categorieen omgezet. Tweede run nul wijzigingen |
+| Productie | Zelfde, zonder uploads (Blob is gedeeld). Tweede run nul wijzigingen. hh-shops.vercel.app toont sindsdien de v2-URL's |
+| Controle | Hoeken van post-hh-shops-8 en -17 op 255/255/255 |
+| Opruimen | De 231 oude bestanden zonder versiesegment (plus een losse testupload) zijn uit Blob verwijderd nadat beide databases er niet meer naar verwezen |
+
 Het rapport meldt 129 aandachtspunten. Verreweg de meeste zijn "korte
 beschrijving was een trefwoordenlijst, begin van de lange gebruikt": 60 van de
 94 oude korte beschrijvingen waren dat. De rest: prijzen die per maat

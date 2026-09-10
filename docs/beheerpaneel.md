@@ -20,8 +20,10 @@ zelfde deploy. Alleen bereikbaar na inloggen.
   volgorde, optioneel aan een maat of kleur gekoppeld. Een eerste foto kan
   meteen mee bij het aanmaken; een bestaande foto is te vervangen door een
   nieuw bestand met behoud van plek en alt-tekst. Elke foto gaat door
-  dezelfde verwerking als de import: recht, op wit, maximaal 1200 pixels,
-  WebP.
+  dezelfde verwerking als de import: recht, een egale lichte achtergrond
+  naar wit, maximaal 1200 pixels, WebP. Bestanden komen in Blob onder
+  `producten/v2/`; het versiesegment gaat omhoog als de verwerking verandert
+  (`BLOB_VERSION` in `src/lib/media.ts`).
 - **Categorieen**: naam, adres, volgorde, beschrijving en foto. Verwijderen
   kan alleen als er geen producten meer aan hangen.
 - **Beheerders**: toevoegen en verwijderen. Iedereen die kan inloggen mag
