@@ -27,7 +27,6 @@
 
 	/* Vlakken */
 	--color-canvas: #fafaf9; /* paginaachtergrond */
-	--color-canvas-muted: #f3f2f0; /* een sectie die zich van de pagina moet onderscheiden */
 	--color-surface: #ffffff; /* kaarten en panelen */
 	--color-surface-hover: #f5f5f4; /* rij of kaart onder de muis */
 

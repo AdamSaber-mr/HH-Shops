@@ -78,14 +78,18 @@ const newest = [...entries]
 
 	<TrendingCategories />
 
-	<ProductSection
-		id="populair"
-		title="Populaire producten"
-		link={{ label: 'Alle producten', href: '/producten' }}
-		items={popular}
-	/>
+	<!-- Bewust geen scheidingslijnen en geen gekleurde vlakken tussen de secties:
+	     Adam heeft beide bekeken en vond alleen witruimte het mooist. -->
+	<div class="py-14 lg:py-20">
+		<ProductSection
+			id="populair"
+			title="Populaire producten"
+			link={{ label: 'Alle producten', href: '/producten' }}
+			items={popular}
+		/>
+	</div>
 
-	<div class="mt-14 lg:mt-20">
+	<div class="py-14 lg:py-20">
 		<PromoBanner
 			eyebrow="Van keuken tot kinderkamer"
 			title="Elke week nieuwe producten voor in en om het huis."
@@ -96,11 +100,9 @@ const newest = [...entries]
 		/>
 	</div>
 
-	<div class="mt-16 lg:mt-24">
-		<TrustBlock />
-	</div>
+	<TrustBlock />
 
-	<div class="mt-16 scroll-mt-32 lg:mt-24">
+	<div class="scroll-mt-32 pt-14 lg:pt-20">
 		<ProductSection
 			id="nieuw"
 			title="Nieuw binnen"

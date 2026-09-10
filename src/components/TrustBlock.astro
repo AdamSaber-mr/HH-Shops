@@ -6,12 +6,10 @@ import { ratingSource, reviews } from '../lib/reviews.ts';
  * Het vertrouwensblok: de score als grote, gecentreerde kop, daaronder de
  * recensies als kaarten op de lichte achtergrond.
  *
- * Het blok is een band over de volle breedte in een tint die net iets donkerder
- * is dan de pagina (canvas-muted), met een lijn erboven en eronder. Zo zie je
- * dat het een eigen sectie is, zonder dat het een gekleurd blok wordt: de
- * tussenbanner erboven is al groen, en twee gekleurde blokken achter elkaar
- * maakten de pagina onrustig (dat was het eerste ontwerp, en Adam vond het
- * niet netjes). De band heeft ruime verticale marge, want hij zit tussen de
+ * Bewust geen achtergrondtint en geen lijnen: Adam heeft een groene band, een
+ * lichte tint en scheidingslijnen allemaal bekeken en vond de kale pagina het
+ * mooist. De tussenbanner erboven is al groen; dat is het enige gekleurde
+ * blok. Het blok heeft ruime verticale marge, want het zit tussen de
  * tussenbanner en "Nieuw binnen" in.
  *
  * De recensies staan op desktop op vier kolommen, hetzelfde raster als de
@@ -38,7 +36,7 @@ const scoreStars = Math.round((ratingSource.score / ratingSource.max) * 5);
 const initial = (name: string) => name.trim().charAt(0).toUpperCase();
 ---
 
-<section class="border-y border-border bg-canvas-muted" aria-labelledby="reviews-titel">
+<section aria-labelledby="reviews-titel">
 	<div class="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 lg:py-24">
 	<div class="mx-auto max-w-2xl text-center">
 		<p class="text-sm font-semibold tracking-wide text-accent uppercase">Wat onze klanten zeggen</p>
