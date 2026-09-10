@@ -4,10 +4,9 @@ import { categoryHref, trendingCategories } from '../lib/navigation.ts';
 import CategoryCard from './CategoryCard.astro';
 
 /*
- * "Trending categorieen" op de startpagina: zes vierkante foto's, drie per
- * rij op desktop en twee op telefoon. Drie per rij en niet zes, zodat de
- * kaarten (zo'n 435px) groter zijn dan de productkaarten (zo'n 320px): de
- * categorieen zijn de hoofdingang van de winkel. Welke zes staat in
+ * "Trending categorieen" op de startpagina: vier vierkante foto's op een rij
+ * op desktop, twee per rij op telefoon. Dezelfde vier kolommen als de
+ * productrijen, zodat alles op de pagina op een raster staat. Welke vier staat in
  * src/lib/navigation.ts; de foto's staan in src/assets/categorieen, een per
  * slug.
  *
@@ -43,7 +42,7 @@ function imageFor(slug: string): ImageMetadata {
 		</a>
 	</div>
 
-	<div class="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
+	<div class="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
 		{trendingCategories.map((category) => (
 			<CategoryCard
 				name={category.name}

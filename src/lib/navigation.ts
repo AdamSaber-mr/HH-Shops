@@ -55,16 +55,16 @@ export const featuredCategories: readonly FeaturedCategory[] = [
 ];
 
 /*
- * De zes kaarten in "Trending categorieen". Sloffen en slippers staan wel in
- * het menu, maar niet hier: zes kaarten passen op een rij, acht niet.
+ * De vier kaarten in "Trending categorieen": een rij van vier, even breed als
+ * de productkaarten. Computerartikelen en cosmetica hebben ook een foto in
+ * src/assets/categorieen en kunnen hier zo bij, maar zes kaarten werden op
+ * drie per rij te groot en op zes per rij te klein.
  * De foto per kaart staat in src/assets/categorieen/<slug>.png.
  */
 const trendingSlugs = [
 	'huishoudelijke-artikelen',
-	'tassen-rugzakken-hondentassen-etc',
 	'kinder-artikelen',
-	'computer-artikelen',
-	'cosmetica-artikelen',
+	'tassen-rugzakken-hondentassen-etc',
 	'schoenen',
 ] as const;
 
