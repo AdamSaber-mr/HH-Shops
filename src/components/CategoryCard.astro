@@ -25,10 +25,10 @@ interface Props {
 
 const { name, href, image, featured = false } = Astro.props;
 
-// De grote kaart is op desktop zo'n 670px breed, de kleine zo'n 320px.
+// De grote kaart is op desktop zo'n 515px breed, de kleine zo'n 245px.
 const sizes = featured
-	? '(min-width: 1400px) 670px, (min-width: 1024px) 48vw, calc(100vw - 32px)'
-	: '(min-width: 1400px) 320px, (min-width: 1024px) 23vw, 50vw';
+	? '(min-width: 1100px) 515px, (min-width: 1024px) 48vw, calc(100vw - 32px)'
+	: '(min-width: 1100px) 245px, (min-width: 1024px) 23vw, 50vw';
 const widths = featured ? [640, 900, 1202] : [320, 480, 640, 900];
 ---
 
