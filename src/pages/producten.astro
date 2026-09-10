@@ -16,6 +16,7 @@ import {
 	leesFilter,
 	zoekwoorden,
 } from '../lib/categorie-filters.ts';
+import { leesFavorieten } from '../lib/klanten/favorieten.ts';
 
 /*
  * De productenpagina: alles op een plek, met zoeken, een categorierij,
@@ -94,6 +95,7 @@ const chip =
 	'inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-medium whitespace-nowrap transition-colors';
 const chipRust = 'border-border-strong bg-surface text-text hover:bg-surface-hover';
 const chipActief = 'border-accent bg-accent text-white';
+const favorieten = new Set(await leesFavorieten(Astro));
 ---
 
 <Layout
@@ -187,7 +189,7 @@ const chipActief = 'border-accent bg-accent text-white';
 			</div>
 		) : (
 			<>
-				<ProductGrid items={entries} eagerCount={4} class="mt-8" />
+				<ProductGrid items={entries} eagerCount={4} favorieten={favorieten} class="mt-8" />
 				<Paginering pad={pad} params={params} paginering={paginering} />
 			</>
 		)}
