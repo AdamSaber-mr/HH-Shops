@@ -1,0 +1,195 @@
+---
+import { Icon } from 'astro-icon/components';
+import Button from '../components/Button.astro';
+import FilterBar from '../components/FilterBar.astro';
+import Paginering from '../components/Paginering.astro';
+import ProductGrid from '../components/ProductGrid.astro';
+import Layout from '../layouts/Layout.astro';
+import { leesPagina, metFilters, pagineer } from '../lib/admin/paginering.ts';
+import { listActiveProducts, listCategories, listProductsInCategory } from '../lib/catalog.ts';
+import {
+	beschikbareOpties,
+	defaultVariant,
+	filterEnSorteer,
+	filterOpZoekterm,
+	heeftActieveFilters,
+	leesFilter,
+	zoekwoorden,
+} from '../lib/categorie-filters.ts';
+
+/*
+ * De productenpagina: alles op een plek, met zoeken, een categorierij,
+ * filters, sorteren en paginering.
+ *
+ * De zoekbalk in de kop komt hier ook uit (?q=...). Zo is er geen aparte
+ * zoekpagina en krijgen zoekresultaten dezelfde filters en sortering.
+ *
+ * Volgorde van uitrekenen: categorie (in SQL, via listProductsInCategory) ->
+ * zoekterm -> filters en sortering -> pagina. De beschikbare maten en kleuren
+ * komen uit de lijst na categorie en zoekterm, zodat je alleen opties ziet
+ * die in de huidige selectie voorkomen.
+ *
+ * Standaardsortering is "nieuwste eerst": dit is de bladerpagina, en nieuwe
+ * producten bovenaan laten zien dat de winkel leeft. Op de categoriepagina
+ * blijft het op naam.
+ */
+
+const PER_PAGINA = 16;
+const STANDAARD_SORTERING = 'nieuwste';
+const pad = '/producten';
+const params = Astro.url.searchParams;
+
+const q = (params.get('q') ?? '').trim();
+const categorieSlug = params.get('categorie');
+
+const [categorieen, producten] = await Promise.all([
+	listCategories(),
+	categorieSlug ? listProductsInCategory(categorieSlug) : listActiveProducts(),
+]);
+// Een categorie die niet bestaat, telt niet als filter.
+const categorie = categorieen.find((c) => c.slug === categorieSlug);
+
+const gezocht = filterOpZoekterm(producten, q);
+const opties = beschikbareOpties(gezocht);
+const filter = leesFilter(
+	params,
+	opties.map((o) => o.param),
+	STANDAARD_SORTERING,
+);
+const gefilterd = filterEnSorteer(gezocht, filter);
+
+const paginering = pagineer(leesPagina(params.get('pagina')), gefilterd.length, PER_PAGINA);
+const opPagina = gefilterd.slice(paginering.offset, paginering.offset + PER_PAGINA);
+
+const entries = opPagina
+	.map((product) => ({
+		product,
+		variant: defaultVariant(product.variants),
+		image: product.images[0],
+	}))
+	.filter(
+		(entry): entry is typeof entry & { variant: NonNullable<typeof entry.variant> } =>
+			Boolean(entry.variant && entry.image),
+	);
+
+const zoekt = zoekwoorden(q).length > 0;
+const gefilterdActief = heeftActieveFilters(filter) || Boolean(categorie);
+const noindex = zoekt || gefilterdActief || filter.sorteer !== STANDAARD_SORTERING;
+
+const aantal = (n: number) => (n === 1 ? '1 product' : `${n} producten`);
+const teller =
+	gefilterdActief || zoekt
+		? `${gefilterd.length} van ${aantal(producten.length)}`
+		: aantal(producten.length);
+
+const kop = zoekt ? `Resultaten voor "${q}"` : categorie ? categorie.name : 'Alle producten';
+const titel = zoekt ? `Zoeken: ${q}` : categorie ? `${categorie.name}, alle producten` : 'Alle producten';
+
+// Velden die de filterbalk moet vasthouden bij Toepassen.
+const vast: Record<string, string> = {};
+if (zoekt) vast.q = q;
+if (categorie) vast.categorie = categorie.slug;
+
+const chip =
+	'inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-medium whitespace-nowrap transition-colors';
+const chipRust = 'border-border-strong bg-surface text-text hover:bg-surface-hover';
+const chipActief = 'border-accent bg-accent text-white';
+---
+
+<Layout
+	title={titel}
+	description="Alle producten van H&H Shops: huishoudelijke artikelen, kinderartikelen, tassen, schoenen, cosmetica en meer. Voor 15:00 besteld, morgen in huis."
+	noindex={noindex}
+>
+	<div class="mx-auto max-w-[1400px] px-4 pt-5 sm:px-6">
+		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
+			<span aria-hidden="true" class="mx-2">/</span>
+			<span aria-current="page" class="text-text">Producten</span>
+		</nav>
+
+		<div class="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+			<h1 class="text-3xl font-bold tracking-tight sm:text-4xl">{kop}</h1>
+			<p class="text-text-muted">{teller}</p>
+		</div>
+		{zoekt && (
+			<p class="mt-2 text-text-muted">
+				Niet wat je zocht?{' '}
+				<a href={metFilters(pad, params, { q: null })} class="text-accent hover:underline">
+					Bekijk alle producten
+				</a>
+			</p>
+		)}
+
+		<!-- Categorierij: snelle ingang, schuift horizontaal op telefoon -->
+		<ul
+			class="-mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:thin] sm:-mx-6 sm:px-6"
+			aria-label="Categorie"
+		>
+			<li>
+				<a
+					href={metFilters(pad, params, { categorie: null })}
+					class:list={[chip, categorie ? chipRust : chipActief]}
+					aria-current={categorie ? undefined : 'true'}
+				>
+					Alles
+				</a>
+			</li>
+			{categorieen.map((c) => (
+				<li>
+					<a
+						href={metFilters(pad, params, {
+							categorie: categorie?.slug === c.slug ? null : c.slug,
+						})}
+						class:list={[chip, categorie?.slug === c.slug ? chipActief : chipRust]}
+						aria-current={categorie?.slug === c.slug ? 'true' : undefined}
+					>
+						{c.name}
+					</a>
+				</li>
+			))}
+		</ul>
+
+		<div class="mt-5">
+			<FilterBar
+				pad={pad}
+				params={params}
+				filter={filter}
+				opties={opties}
+				standaard={STANDAARD_SORTERING}
+				vast={vast}
+			/>
+		</div>
+
+		{gefilterd.length === 0 ? (
+			<div class="mt-8 rounded-card border border-border bg-surface p-8 text-center">
+				{zoekt ? (
+					<>
+						<p class="font-medium">Niets gevonden voor "{q}"</p>
+						<p class="mt-1 text-sm text-text-muted">
+							Controleer de spelling, probeer een korter woord, of blader door de categorieën.
+						</p>
+					</>
+				) : (
+					<>
+						<p class="font-medium">Geen producten met deze filters</p>
+						<p class="mt-1 text-sm text-text-muted">
+							Probeer een andere prijs of maat, of wis de filters.
+						</p>
+					</>
+				)}
+				<div class="mt-5 flex justify-center">
+					<Button href={pad} variant="secondary">
+						<Icon name="ph:x" class="size-4" aria-hidden="true" />
+						Alles wissen
+					</Button>
+				</div>
+			</div>
+		) : (
+			<>
+				<ProductGrid items={entries} eagerCount={4} class="mt-8" />
+				<Paginering pad={pad} params={params} paginering={paginering} />
+			</>
+		)}
+	</div>
+</Layout>

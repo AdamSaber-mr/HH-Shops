@@ -130,7 +130,7 @@ const { categorieen } = Astro.props;
 
 			<!-- Zoeken. Op telefoon staat dit veld als eigen rij onder de balk. -->
 			<search class="ml-auto hidden min-w-0 flex-1 md:block lg:max-w-md">
-			<form action="/zoeken" method="get">
+			<form action="/producten" method="get">
 				<label for="zoeken-desktop" class="sr-only">Zoek een product</label>
 				<div class="relative w-full">
 					<input
@@ -182,7 +182,7 @@ const { categorieen } = Astro.props;
 
 		<!-- Zoekveld op telefoon -->
 		<search class="px-4 pb-3 md:hidden">
-		<form action="/zoeken" method="get">
+		<form action="/producten" method="get">
 			<label for="zoeken-mobiel" class="sr-only">Zoek een product</label>
 			<div class="relative">
 				<input

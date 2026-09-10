@@ -98,6 +98,7 @@ export default defineConfig({
 					'x',
 					'check',
 					'caret-right',
+					'caret-left',
 					'caret-down',
 					'minus',
 					'plus',

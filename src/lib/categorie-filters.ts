@@ -85,8 +85,15 @@ function isSortering(value: string | null): value is Sortering {
  * Leest de filters uit de querystring. Onbekende waarden worden genegeerd, niet
  * geweigerd: een oude link met een maat die niet meer bestaat geeft gewoon de
  * hele categorie.
+ *
+ * `standaard` is de sortering als er niets in de URL staat: op naam op een
+ * categoriepagina, nieuwste eerst op de productenpagina.
  */
-export function leesFilter(params: URLSearchParams, optieParams: string[]): Filter {
+export function leesFilter(
+	params: URLSearchParams,
+	optieParams: string[],
+	standaard: Sortering = 'naam',
+): Filter {
 	const sorteer = params.get('sorteer');
 	const prijs = params.get('prijs');
 	const opties: Record<string, string[]> = {};
@@ -98,7 +105,7 @@ export function leesFilter(params: URLSearchParams, optieParams: string[]): Filt
 		opties[param] = [...new Set(gekozen)];
 	}
 	return {
-		sorteer: isSortering(sorteer) ? sorteer : 'naam',
+		sorteer: isSortering(sorteer) ? sorteer : standaard,
 		alleenVoorraad: params.get('voorraad') === '1',
 		prijs: PRIJSKLASSEN.some((k) => k.waarde === prijs) ? prijs : null,
 		opties,
@@ -200,4 +207,49 @@ export function filterEnSorteer<T extends FilterbaarProduct>(producten: T[], f: 
 
 export function sorteerLabel(s: Sortering): string {
 	return SORTERINGEN.find((x) => x.waarde === s)?.label ?? 'Naam';
+}
+
+/*
+ * Zoeken op de productenpagina.
+ *
+ * Eenvoudig en voorspelbaar: elk woord uit de zoekterm moet ergens in de
+ * naam, het merk of de korte beschrijving voorkomen, zonder onderscheid in
+ * hoofdletters en accenten. "stofzuiger draadloos" vindt dus alleen producten
+ * waar allebei de woorden in staan. Bij 83 producten is dit in JavaScript
+ * sneller dan een databaseronde; de trigram-index op products.name ligt klaar
+ * voor als de catalogus veel groter wordt of als typefouten mee moeten tellen.
+ */
+export interface Zoekbaar {
+	name: string;
+	brand?: string | null;
+	shortDescription?: string | null;
+}
+
+function normaliseer(s: string): string {
+	return s
+		.toLowerCase()
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '');
+}
+
+/** Maakt van een ruwe zoekterm een lijst woorden; leeg als er niets bruikbaars in zit. */
+export function zoekwoorden(q: string | null | undefined): string[] {
+	return normaliseer(q ?? '')
+		.split(/\s+/)
+		.map((w) => w.trim())
+		.filter((w) => w.length > 0)
+		.slice(0, 8);
+}
+
+/** Alleen de producten waar alle zoekwoorden in voorkomen. Lege zoekterm: alles. */
+export function filterOpZoekterm<T extends Zoekbaar>(
+	producten: T[],
+	q: string | null | undefined,
+): T[] {
+	const woorden = zoekwoorden(q);
+	if (woorden.length === 0) return producten;
+	return producten.filter((p) => {
+		const tekst = normaliseer([p.name, p.brand ?? '', p.shortDescription ?? ''].join(' '));
+		return woorden.every((w) => tekst.includes(w));
+	});
 }

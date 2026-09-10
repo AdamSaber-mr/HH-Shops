@@ -7,6 +7,7 @@ import {
 	type Optiegroep,
 	PRIJSKLASSEN,
 	SORTERINGEN,
+	type Sortering,
 	sorteerLabel,
 } from '../lib/categorie-filters.ts';
 import Button from './Button.astro';
@@ -24,7 +25,8 @@ import Button from './Button.astro';
  *    uit, de andere filters blijven staan.
  *  - Sorteren is een uitklapper met links, geen <select>: een select
  *    verstuurt zonder JavaScript niets bij een keuze.
- *  - Verborgen velden houden sortering en voorraad vast als iemand op
+ *  - Verborgen velden houden sortering, voorraad en de vaste velden
+ *    (zoekterm, categorie op de productenpagina) vast als iemand op
  *    Toepassen drukt.
  * De `name` op <details> zorgt dat er maar een paneel tegelijk open staat, in
  * browsers die dat kennen; in oudere browsers doet het niets.
@@ -41,9 +43,13 @@ interface Props {
 	params: URLSearchParams;
 	filter: Filter;
 	opties: Optiegroep[];
+	/** De sortering die niet in de URL hoeft; op de productenpagina "nieuwste". */
+	standaard?: Sortering;
+	/** Velden die mee moeten bij Toepassen maar geen filterknop zijn, zoals q en categorie. */
+	vast?: Record<string, string>;
 }
 
-const { pad, params, filter, opties } = Astro.props;
+const { pad, params, filter, opties, standaard = 'naam', vast = {} } = Astro.props;
 
 const actief = heeftActieveFilters(filter);
 const prijsKlasse = PRIJSKLASSEN.find((k) => k.waarde === filter.prijs);
@@ -58,7 +64,10 @@ const keuze = 'flex min-h-10 cursor-pointer items-center gap-2.5 rounded-control
 ---
 
 <form method="get" action={pad} class="flex flex-wrap items-center gap-2" aria-label="Filters">
-	{filter.sorteer !== 'naam' && <input type="hidden" name="sorteer" value={filter.sorteer} />}
+	{Object.entries(vast).map(([naam, waarde]) => (
+		<input type="hidden" name={naam} value={waarde} />
+	))}
+	{filter.sorteer !== standaard && <input type="hidden" name="sorteer" value={filter.sorteer} />}
 	{filter.alleenVoorraad && <input type="hidden" name="voorraad" value="1" />}
 
 	<!-- Prijs -->
@@ -177,7 +186,7 @@ const keuze = 'flex min-h-10 cursor-pointer items-center gap-2.5 rounded-control
 				return (
 					<li>
 						<a
-							href={metFilters(pad, params, { sorteer: s.waarde === 'naam' ? null : s.waarde })}
+							href={metFilters(pad, params, { sorteer: s.waarde === standaard ? null : s.waarde })}
 							class:list={[keuze, 'justify-between', huidig && 'font-semibold text-accent']}
 							aria-current={huidig ? 'true' : undefined}
 						>
