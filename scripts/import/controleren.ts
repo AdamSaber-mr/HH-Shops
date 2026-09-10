@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { altProblems, nameProblems } from '../../src/lib/tekst.ts';
 import { IMAGES_DIR } from './lezen.ts';
-import { altProblems, nameProblems } from './tekst.ts';
 import type { Doelmodel } from './types.ts';
 
 /*

@@ -1,4 +1,3 @@
-import { ensureRegister, imageFileName } from './lezen.ts';
 import {
 	cleanHtml,
 	cleanName,
@@ -6,7 +5,8 @@ import {
 	shortDescriptionFrom,
 	skuSuffix,
 	stockFromText,
-} from './tekst.ts';
+} from '../../src/lib/tekst.ts';
+import { ensureRegister, imageFileName } from './lezen.ts';
 import type {
 	Catalogus,
 	DoelAfbeelding,

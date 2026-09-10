@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { altProblems, cleanName } from '../../src/lib/tekst.ts';
 import { CATALOGUS_DIR, imageFileName, readCatalogus, readSnapshot } from './lezen.ts';
-import { altProblems, cleanName } from './tekst.ts';
 
 /*
  * Een pagina met elke unieke foto, de producten waar hij bij hoort en de

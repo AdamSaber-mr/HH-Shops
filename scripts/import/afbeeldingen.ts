@@ -1,50 +1,31 @@
 import { readFileSync } from 'node:fs';
-import { join, parse } from 'node:path';
+import { join } from 'node:path';
 import { list, put } from '@vercel/blob';
-import sharp from 'sharp';
+import { verwerkBuffer } from '../../src/lib/media.ts';
 import { IMAGES_DIR } from './lezen.ts';
-import { slugify } from './tekst.ts';
 import type { VerwerkteAfbeelding } from './types.ts';
 
+export { blobPathFor, formatBytes } from '../../src/lib/media.ts';
+
 /*
- * Afbeeldingen: verwerken met sharp, uploaden naar Vercel Blob.
+ * Afbeeldingen van de snapshot verwerken en uploaden naar Vercel Blob.
  *
- * Het pad in Blob is afgeleid van de oude bestandsnaam, zodat dezelfde foto bij
- * meerdere producten een keer wordt geupload en een tweede run niets opnieuw
- * doet. Bestaat het pad al, dan slaan we het over.
- *
- * Verwerken gebeurt altijd, ook als het bestand al in Blob staat: breedte en
- * hoogte komen uit het resultaat en die zijn verplicht in het schema.
+ * De pijplijn zelf staat in src/lib/media.ts en is dezelfde als die van het
+ * beheerpaneel. Hier zit alleen wat eigen is aan de import: lezen van schijf,
+ * en overslaan wat al in Blob staat, zodat een tweede run niets opnieuw doet.
  */
-
-export const MAX_EDGE = 1200;
-export const WEBP_QUALITY = 82;
-
-export function blobPathFor(
-	prefix: 'producten' | 'categorieen',
-	file: string,
-	slug?: string,
-): string {
-	const name = slug ?? slugify(parse(file).name);
-	return `${prefix}/${name}.webp`;
-}
 
 export async function verwerk(file: string, pathname: string): Promise<VerwerkteAfbeelding> {
 	const input = readFileSync(join(IMAGES_DIR, file));
-	const { data, info } = await sharp(input)
-		.rotate()
-		.flatten({ background: '#ffffff' })
-		.resize({ width: MAX_EDGE, height: MAX_EDGE, fit: 'inside', withoutEnlargement: true })
-		.webp({ quality: WEBP_QUALITY, effort: 5 })
-		.toBuffer({ resolveWithObject: true });
+	const beeld = await verwerkBuffer(input);
 	return {
 		file,
 		pathname,
-		buffer: data,
-		width: info.width,
-		height: info.height,
-		bytesIn: input.byteLength,
-		bytesOut: data.byteLength,
+		buffer: beeld.data,
+		width: beeld.width,
+		height: beeld.height,
+		bytesIn: beeld.bytesIn,
+		bytesOut: beeld.bytesOut,
 	};
 }
 
@@ -77,9 +58,4 @@ export async function zorgGeupload(
 	});
 	bestaand.set(image.pathname, result.url);
 	return { url: result.url, uploaded: true };
-}
-
-export function formatBytes(bytes: number): string {
-	if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-	return `${Math.round(bytes / 1024)} KB`;
 }
