@@ -4,6 +4,17 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, envField } from 'astro/config';
 import icon from 'astro-icon';
 
+/*
+ * De .env ook in process.env, voor `astro dev`. Vite zet niet-geprefixte
+ * variabelen alleen in import.meta.env, maar de Blob-SDK leest process.env.
+ * Op Vercel staan ze daar al; in CI is er geen .env en gebeurt er niets.
+ */
+try {
+	process.loadEnvFile('.env');
+} catch {
+	// Geen .env, bijvoorbeeld in CI of op Vercel.
+}
+
 // https://astro.build/config
 export default defineConfig({
 	// `site` staat er bewust nog niet. Zolang hh-shops.nl naar WordPress wijst,
@@ -115,6 +126,12 @@ export default defineConfig({
 			},
 		}),
 	],
+
+	// Foto-uploads in het beheerpaneel gaan als een action-body. Standaard is 1 MB;
+	// Vercel accepteert 4,5 MB per aanvraag, dus 4 MB laat ruimte voor de rest.
+	security: {
+		actionBodySizeLimit: 4 * 1024 * 1024,
+	},
 
 	vite: {
 		plugins: [tailwindcss()],

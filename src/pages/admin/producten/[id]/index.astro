@@ -8,14 +8,19 @@ import { getDb } from '../../../../db/client.ts';
 import AdminLayout from '../../../../layouts/AdminLayout.astro';
 import { zetFlash } from '../../../../lib/admin/flash.ts';
 import { leesFormulier, veldfoutenUit } from '../../../../lib/admin/formulier.ts';
+import { MAX_BESTAND } from '../../../../lib/admin/fotos.ts';
 import { haalProduct, lijstCategorieen } from '../../../../lib/admin/producten.ts';
 import { euroInvoer } from '../../../../lib/admin/validatie.ts';
-import { formatEuro } from '../../../../lib/price.ts';
 
 /*
  * De productpagina van het beheerpaneel: gegevens, varianten, foto's en
  * het archiveren. Elk blok is een eigen formulier, zodat alles zonder
  * JavaScript werkt en een fout in het ene blok het andere niet raakt.
+ *
+ * Invoervelden in een tabelrij horen bij een formulier dat ergens anders
+ * staat (het form-attribuut), omdat een formulier niet om tabelcellen heen
+ * kan. Elke rij heeft zo zijn eigen "opslaan", "omhoog", "omlaag" en
+ * "verwijderen".
  */
 
 const id = Number.parseInt(Astro.params.id ?? '', 10);
@@ -24,29 +29,44 @@ if (!Number.isFinite(id) || id <= 0) return new Response(null, { status: 404 });
 const db = getDb();
 const pad = `/admin/producten/${id}`;
 
-// Resultaten van de actions op deze pagina. Succes betekent redirect met melding.
+/* Resultaten van de actions op deze pagina. Succes betekent redirect met melding. */
+const geslaagd = (tekst: string, doel = pad) => {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst });
+	return Astro.redirect(doel);
+};
+
 const bijwerken = Astro.getActionResult(actions.producten.bijwerken);
-if (bijwerken && !bijwerken.error) {
-	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Wijzigingen opgeslagen.' });
-	return Astro.redirect(pad);
-}
+if (bijwerken && !bijwerken.error) return geslaagd('Wijzigingen opgeslagen.');
 const archiveren = Astro.getActionResult(actions.producten.archiveren);
-if (archiveren && !archiveren.error) {
-	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Product gearchiveerd. Het staat niet meer in de shop.' });
-	return Astro.redirect('/admin/producten');
-}
+if (archiveren && !archiveren.error) return geslaagd('Product gearchiveerd. Het staat niet meer in de shop.', '/admin/producten');
 const terugzetten = Astro.getActionResult(actions.producten.terugzetten);
-if (terugzetten && !terugzetten.error) {
-	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Product teruggezet als concept. Zet de status op actief als het weer in de shop mag.' });
-	return Astro.redirect(pad);
-}
+if (terugzetten && !terugzetten.error) return geslaagd('Product teruggezet als concept. Zet de status op actief als het weer in de shop mag.');
+
+const variantToevoegen = Astro.getActionResult(actions.varianten.toevoegen);
+if (variantToevoegen && !variantToevoegen.error) return geslaagd(`Variant ${variantToevoegen.data.sku} toegevoegd.`, `${pad}#varianten`);
+const variantBijwerken = Astro.getActionResult(actions.varianten.bijwerken);
+if (variantBijwerken && !variantBijwerken.error) return geslaagd(`Variant ${variantBijwerken.data.sku} opgeslagen.`, `${pad}#varianten`);
+const variantVerwijderen = Astro.getActionResult(actions.varianten.verwijderen);
+if (variantVerwijderen && !variantVerwijderen.error) return geslaagd(`Variant ${variantVerwijderen.data.sku} verwijderd.`, `${pad}#varianten`);
+const variantVerplaatsen = Astro.getActionResult(actions.varianten.verplaatsen);
+if (variantVerplaatsen && !variantVerplaatsen.error) return Astro.redirect(`${pad}#varianten`);
+
+const fotoUploaden = Astro.getActionResult(actions.fotos.uploaden);
+if (fotoUploaden && !fotoUploaden.error) return geslaagd(`Foto toegevoegd (${Math.round(fotoUploaden.data.bytes / 1024)} KB als WebP).`, `${pad}#fotos`);
+const fotoBijwerken = Astro.getActionResult(actions.fotos.bijwerken);
+if (fotoBijwerken && !fotoBijwerken.error) return geslaagd('Foto opgeslagen.', `${pad}#fotos`);
+const fotoVerwijderen = Astro.getActionResult(actions.fotos.verwijderen);
+if (fotoVerwijderen && !fotoVerwijderen.error) return geslaagd('Foto verwijderd.', `${pad}#fotos`);
+const fotoVerplaatsen = Astro.getActionResult(actions.fotos.verplaatsen);
+if (fotoVerplaatsen && !fotoVerplaatsen.error) return Astro.redirect(`${pad}#fotos`);
+
 const statusFout = archiveren?.error?.message ?? terugzetten?.error?.message ?? null;
 
 const product = await haalProduct(db, id);
 if (!product) return new Response(null, { status: 404 });
 const categorieen = await lijstCategorieen(db);
 
-// Na een mislukte opslag: de ingevulde waarden, anders die uit de database.
+/* Na een mislukte opslag: de ingevulde waarden, anders die uit de database. */
 const { velden: veldfouten, algemeen } = veldfoutenUit(bijwerken?.error);
 let waarden: Record<string, string>;
 let categorieIds: number[];
@@ -69,9 +89,31 @@ if (bijwerken?.error) {
 	categorieIds = product.categories.map((pc) => pc.categoryId);
 }
 
+/* Fouten uit de varianten- en fotoblokken, met de rij waar het om ging. */
+const variantFout = veldfoutenUit(variantBijwerken?.error ?? variantVerwijderen?.error ?? variantVerplaatsen?.error);
+const nieuweVariantFout = veldfoutenUit(variantToevoegen?.error);
+const fotoFout = veldfoutenUit(fotoBijwerken?.error ?? fotoVerwijderen?.error ?? fotoVerplaatsen?.error);
+const uploadFout = veldfoutenUit(fotoUploaden?.error);
+const ingevuld =
+	variantToevoegen?.error || variantBijwerken?.error || fotoUploaden?.error || fotoBijwerken?.error
+		? await leesFormulier(Astro.request)
+		: { velden: {}, lijsten: {} };
+const foutieveVariant = variantBijwerken?.error ? Number(ingevuld.velden.variantId) : null;
+const foutieveFoto = fotoBijwerken?.error ? Number(ingevuld.velden.fotoId) : null;
+
 const optieNaam = product.optionNames[0];
-const knopSecundair =
+const knop =
 	'inline-flex min-h-10 items-center gap-2 rounded-control border border-border-strong bg-surface px-3 text-sm font-medium text-text hover:bg-surface-hover';
+const knopKlein =
+	'inline-flex size-9 items-center justify-center rounded-control border border-border-strong bg-surface text-text hover:bg-surface-hover';
+const knopGevaar =
+	'inline-flex min-h-9 items-center gap-1 rounded-control border border-danger/40 bg-surface px-2 text-xs font-medium text-danger hover:bg-danger-subtle';
+const veld = 'min-h-10 rounded-control border border-border-strong bg-surface px-2 text-sm';
+const fouttekst = 'mt-1 text-sm text-danger';
+
+/** Waarde van een rij: na een fout wat er ingevuld was, anders uit de database. */
+const rijWaarde = (variantId: number, naam: string, standaard: string) =>
+	foutieveVariant === variantId ? (ingevuld.velden[naam] ?? '') : standaard;
 ---
 
 <AdminLayout title={product.name}>
@@ -88,12 +130,12 @@ const knopSecundair =
 				<Statuslabel status={product.status} />
 				<span>{product.variants.length} {product.variants.length === 1 ? 'variant' : 'varianten'}</span>
 				<span aria-hidden="true">·</span>
-				<span>{product.images.length} {product.images.length === 1 ? 'foto' : 'foto\'s'}</span>
+				<span>{product.images.length} {product.images.length === 1 ? 'foto' : "foto's"}</span>
 			</p>
 		</div>
 		{
 			product.status === 'active' && (
-				<a href={`/product/${product.slug}`} target="_blank" rel="noopener" class={knopSecundair}>
+				<a href={`/product/${product.slug}`} target="_blank" rel="noopener" class={knop}>
 					Bekijk in de shop
 					<Icon name="ph:arrow-right" class="size-4" aria-hidden="true" />
 				</a>
@@ -109,7 +151,7 @@ const knopSecundair =
 		)
 	}
 
-	<div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+	<div class="mt-8 grid gap-8 xl:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
 		<div class="min-w-0">
 			<ProductFormulier
 				action={actions.producten.bijwerken}
@@ -127,58 +169,286 @@ const knopSecundair =
 			<section id="varianten" class="rounded-card border border-border bg-surface p-5">
 				<h2 class="text-lg font-semibold">Varianten</h2>
 				<p class="mt-1 text-sm text-text-muted">
-					{optieNaam ? `Per ${optieNaam.toLowerCase()} een eigen prijs en voorraad.` : 'Dit product heeft geen maten of kleuren.'}
+					{optieNaam ? `Per ${optieNaam.toLowerCase()} een eigen prijs en voorraad. Prijzen inclusief btw.` : 'Dit product heeft geen maten of kleuren. Kies die bij Gegevens om varianten toe te voegen.'}
 				</p>
+				{
+					variantFout.algemeen && !foutieveVariant && (
+						<p role="alert" class="mt-3 rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">
+							{variantFout.algemeen}
+						</p>
+					)
+				}
+
 				<div class="mt-4 overflow-x-auto">
-					<table class="w-full text-sm">
+					<table class="w-full min-w-[34rem] text-sm">
 						<caption class="sr-only">Varianten van {product.name}</caption>
 						<thead class="text-left text-xs text-text-muted uppercase tracking-wide">
 							<tr>
-								<th scope="col" class="py-2 pr-3">Artikelnummer</th>
-								{optieNaam && <th scope="col" class="py-2 pr-3">{optieNaam}</th>}
-								<th scope="col" class="py-2 pr-3 text-right">Prijs</th>
-								<th scope="col" class="py-2 text-right">Voorraad</th>
+								<th scope="col" class="py-2 pr-2">Nummer</th>
+								{optieNaam && <th scope="col" class="py-2 pr-2">{optieNaam}</th>}
+								<th scope="col" class="py-2 pr-2">Prijs</th>
+								<th scope="col" class="py-2 pr-2">Van</th>
+								<th scope="col" class="py-2 pr-2">Btw</th>
+								<th scope="col" class="py-2 pr-2">Voorraad</th>
+								<th scope="col" class="py-2 pr-2">Actief</th>
+								<th scope="col" class="py-2"><span class="sr-only">Acties</span></th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-border">
 							{
-								product.variants.map((v) => (
-									<tr class:list={[!v.isActive && 'text-text-muted']}>
-										<td class="py-2 pr-3 font-mono text-xs">{v.sku}</td>
-										{optieNaam && <td class="py-2 pr-3">{v.options[optieNaam] ?? ''}</td>}
-										<td class="py-2 pr-3 text-right whitespace-nowrap">{formatEuro(v.priceCents)}</td>
-										<td class:list={['py-2 text-right', v.stockQuantity === 0 && 'text-danger']}>
-											{v.stockQuantity === 0 ? 'Uitverkocht' : v.stockQuantity}
-										</td>
-									</tr>
-								))
+								product.variants.map((v, index) => {
+									const fid = `variant-${v.id}`;
+									const fout = foutieveVariant === v.id;
+									return (
+										<>
+											<tr class:list={[fout && 'bg-danger-subtle/40']}>
+												<td class="py-2 pr-2 font-mono text-xs whitespace-nowrap">{v.sku}</td>
+												{optieNaam && (
+													<td class="py-2 pr-2">
+														<label class="sr-only" for={`${fid}-waarde`}>{optieNaam} van {v.sku}</label>
+														<input form={fid} id={`${fid}-waarde`} name="waarde" value={rijWaarde(v.id, 'waarde', v.options[optieNaam] ?? '')} class={`${veld} w-20`} />
+													</td>
+												)}
+												<td class="py-2 pr-2">
+													<label class="sr-only" for={`${fid}-prijs`}>Prijs van {v.sku}</label>
+													<input form={fid} id={`${fid}-prijs`} name="prijs" inputmode="decimal" value={rijWaarde(v.id, 'prijs', euroInvoer(v.priceCents))} class={`${veld} w-20 text-right`} />
+												</td>
+												<td class="py-2 pr-2">
+													<label class="sr-only" for={`${fid}-van`}>Van-prijs van {v.sku}</label>
+													<input form={fid} id={`${fid}-van`} name="vanPrijs" inputmode="decimal" value={rijWaarde(v.id, 'vanPrijs', v.compareAtPriceCents === null ? '' : euroInvoer(v.compareAtPriceCents))} placeholder="Geen" class={`${veld} w-20 text-right`} />
+												</td>
+												<td class="py-2 pr-2">
+													<label class="sr-only" for={`${fid}-btw`}>Btw van {v.sku}</label>
+													<select form={fid} id={`${fid}-btw`} name="btw" class={`${veld} w-16`}>
+														{['21', '9', '0'].map((btw) => (
+															<option value={btw} selected={rijWaarde(v.id, 'btw', String(v.vatRate)) === btw}>{btw}%</option>
+														))}
+													</select>
+												</td>
+												<td class="py-2 pr-2">
+													<label class="sr-only" for={`${fid}-voorraad`}>Voorraad van {v.sku}</label>
+													<input form={fid} id={`${fid}-voorraad`} name="voorraad" inputmode="numeric" value={rijWaarde(v.id, 'voorraad', String(v.stockQuantity))} class={`${veld} w-16 text-right`} />
+												</td>
+												<td class="py-2 pr-2 text-center">
+													<label class="sr-only" for={`${fid}-actief`}>Actief</label>
+													<input form={fid} id={`${fid}-actief`} type="checkbox" name="actief" value="true" checked={fout ? ingevuld.velden.actief === 'true' : v.isActive} class="size-4 accent-accent" />
+												</td>
+												<td class="py-2">
+													<div class="flex items-center justify-end gap-1">
+														<form id={fid} method="POST" action={`${actions.varianten.bijwerken}`}>
+															<input type="hidden" name="variantId" value={v.id} />
+															<button type="submit" class={knopKlein} title="Opslaan">
+																<Icon name="ph:check" class="size-4" aria-hidden="true" />
+																<span class="sr-only">Opslaan</span>
+															</button>
+														</form>
+														<form method="POST" action={`${actions.varianten.verplaatsen}`}>
+															<input type="hidden" name="variantId" value={v.id} />
+															<input type="hidden" name="richting" value="omhoog" />
+															<button type="submit" class={knopKlein} disabled={index === 0} title="Omhoog">
+																<Icon name="ph:arrow-up" class="size-4" aria-hidden="true" />
+																<span class="sr-only">Omhoog</span>
+															</button>
+														</form>
+														<form method="POST" action={`${actions.varianten.verplaatsen}`}>
+															<input type="hidden" name="variantId" value={v.id} />
+															<input type="hidden" name="richting" value="omlaag" />
+															<button type="submit" class={knopKlein} disabled={index === product.variants.length - 1} title="Omlaag">
+																<Icon name="ph:arrow-down" class="size-4" aria-hidden="true" />
+																<span class="sr-only">Omlaag</span>
+															</button>
+														</form>
+														{product.variants.length > 1 && (
+															<form method="POST" action={`${actions.varianten.verwijderen}`} data-bevestig={`Variant ${v.sku} verwijderen?`}>
+																<input type="hidden" name="variantId" value={v.id} />
+																<button type="submit" class={`${knopKlein} border-danger/40 text-danger hover:bg-danger-subtle`} title="Verwijderen">
+																	<Icon name="ph:trash" class="size-4" aria-hidden="true" />
+																	<span class="sr-only">Verwijderen</span>
+																</button>
+															</form>
+														)}
+													</div>
+												</td>
+											</tr>
+											{fout && (
+												<tr>
+													<td colspan={optieNaam ? 8 : 7} class="pb-3 text-sm text-danger">
+														{Object.values(variantFout.velden).flat().filter(Boolean).join(' ') || variantFout.algemeen}
+													</td>
+												</tr>
+											)}
+										</>
+									);
+								})
 							}
 						</tbody>
 					</table>
 				</div>
-				<p class="mt-3 text-xs text-text-muted">Varianten bewerken komt in de volgende stap. Prijs en voorraad van producten met een variant pas je aan in de lijst.</p>
-				<span class="hidden">{euroInvoer(0)}</span>
+
+				{
+					(optieNaam || product.variants.length === 0) && (
+						<form method="POST" action={`${actions.varianten.toevoegen}`} class="mt-5 border-t border-border pt-5" novalidate>
+							<input type="hidden" name="productId" value={product.id} />
+							<h3 class="text-sm font-semibold">{optieNaam ? `Nieuwe ${optieNaam.toLowerCase()}` : 'Nieuwe variant'}</h3>
+							{nieuweVariantFout.algemeen && Object.keys(nieuweVariantFout.velden).length === 0 && (
+								<p role="alert" class="mt-2 text-sm text-danger">{nieuweVariantFout.algemeen}</p>
+							)}
+							<div class="mt-3 grid gap-3 sm:grid-cols-4">
+								{optieNaam && (
+									<div>
+										<label for="nieuw-waarde" class="block text-xs font-medium">{optieNaam}</label>
+										<input id="nieuw-waarde" name="waarde" value={variantToevoegen?.error ? (ingevuld.velden.waarde ?? '') : ''} class={`${veld} mt-1 w-full`} />
+										{nieuweVariantFout.velden.waarde && <p class={fouttekst}>{nieuweVariantFout.velden.waarde[0]}</p>}
+									</div>
+								)}
+								<div>
+									<label for="nieuw-prijs" class="block text-xs font-medium">Prijs</label>
+									<input id="nieuw-prijs" name="prijs" inputmode="decimal" placeholder="14,95" value={variantToevoegen?.error ? (ingevuld.velden.prijs ?? '') : ''} class={`${veld} mt-1 w-full`} />
+									{nieuweVariantFout.velden.prijs && <p class={fouttekst}>{nieuweVariantFout.velden.prijs[0]}</p>}
+								</div>
+								<div>
+									<label for="nieuw-voorraad" class="block text-xs font-medium">Voorraad</label>
+									<input id="nieuw-voorraad" name="voorraad" inputmode="numeric" value={variantToevoegen?.error ? (ingevuld.velden.voorraad ?? '') : '0'} class={`${veld} mt-1 w-full`} />
+									{nieuweVariantFout.velden.voorraad && <p class={fouttekst}>{nieuweVariantFout.velden.voorraad[0]}</p>}
+								</div>
+								<div class="flex items-end">
+									<input type="hidden" name="btw" value="21" />
+									<input type="hidden" name="actief" value="true" />
+									<button type="submit" class={`${knop} w-full justify-center`}>
+										<Icon name="ph:plus" class="size-4" aria-hidden="true" />
+										Toevoegen
+									</button>
+								</div>
+							</div>
+						</form>
+					)
+				}
 			</section>
 
 			<section id="fotos" class="rounded-card border border-border bg-surface p-5">
 				<h2 class="text-lg font-semibold">Foto's</h2>
+				<p class="mt-1 text-sm text-text-muted">De eerste foto is de hoofdfoto. Elke foto heeft een alt-tekst: wat is er te zien, voor wie de foto niet ziet.</p>
+				{
+					fotoFout.algemeen && !foutieveFoto && (
+						<p role="alert" class="mt-3 rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">
+							{fotoFout.algemeen}
+						</p>
+					)
+				}
+
 				{
 					product.images.length === 0 ? (
-						<p class="mt-1 text-sm text-text-muted">Nog geen foto's. Zonder foto valt het product op in de shop, en niet op een goede manier.</p>
+						<p class="mt-4 rounded-control border border-dashed border-border-strong px-4 py-6 text-center text-sm text-text-muted">
+							Nog geen foto's. Zonder foto valt het product op in de shop, en niet op een goede manier.
+						</p>
 					) : (
-						<ul class="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
-							{product.images.map((img, index) => (
-								<li class="overflow-hidden rounded-control border border-border bg-surface-hover">
-									<ProductImage src={img.url} alt={img.alt} width={img.width} height={img.height} widths={[240]} sizes="120px" class="aspect-square w-full object-contain" />
-									<p class="truncate px-2 py-1 text-xs text-text-muted" title={img.alt}>
-										{index === 0 ? 'Hoofdfoto' : `Foto ${index + 1}`}
-									</p>
-								</li>
-							))}
+						<ul class="mt-4 space-y-4">
+							{product.images.map((img, index) => {
+								const fid = `foto-${img.id}`;
+								const fout = foutieveFoto === img.id;
+								const variantVan = fout ? (ingevuld.velden.variantId ?? '') : String(img.variantId ?? '');
+								return (
+									<li class:list={['flex gap-4 rounded-control border p-3', fout ? 'border-danger bg-danger-subtle/40' : 'border-border']}>
+										<div class="size-24 shrink-0 overflow-hidden rounded-control border border-border bg-surface-hover">
+											<ProductImage src={img.url} alt="" width={img.width} height={img.height} widths={[192]} sizes="96px" class="size-full object-contain" />
+										</div>
+										<div class="min-w-0 flex-1">
+											<p class="text-xs font-medium text-text-muted">
+												{index === 0 ? 'Hoofdfoto' : `Foto ${index + 1}`} · {img.width} x {img.height}
+											</p>
+											<label for={`${fid}-alt`} class="sr-only">Alt-tekst van foto {index + 1}</label>
+											<textarea form={fid} id={`${fid}-alt`} name="alt" rows="2" class={`${veld} mt-1 w-full py-1.5`} set:text={fout ? (ingevuld.velden.alt ?? '') : img.alt} />
+											{fout && fotoFout.velden.alt && <p class={fouttekst}>{fotoFout.velden.alt[0]}</p>}
+											<div class="mt-2 flex flex-wrap items-center gap-2">
+												{optieNaam && product.variants.length > 0 && (
+													<>
+														<label for={`${fid}-variant`} class="sr-only">Hoort bij</label>
+														<select form={fid} id={`${fid}-variant`} name="variantId" class={`${veld} text-xs`}>
+															<option value="" selected={variantVan === ''}>Hele product</option>
+															{product.variants.map((v) => (
+																<option value={v.id} selected={variantVan === String(v.id)}>
+																	Alleen {v.options[optieNaam] ?? v.sku}
+																</option>
+															))}
+														</select>
+													</>
+												)}
+												<form id={fid} method="POST" action={`${actions.fotos.bijwerken}`}>
+													<input type="hidden" name="fotoId" value={img.id} />
+													<button type="submit" class={knopKlein} title="Opslaan">
+														<Icon name="ph:check" class="size-4" aria-hidden="true" />
+														<span class="sr-only">Opslaan</span>
+													</button>
+												</form>
+												<form method="POST" action={`${actions.fotos.verplaatsen}`}>
+													<input type="hidden" name="fotoId" value={img.id} />
+													<input type="hidden" name="richting" value="omhoog" />
+													<button type="submit" class={knopKlein} disabled={index === 0} title="Omhoog">
+														<Icon name="ph:arrow-up" class="size-4" aria-hidden="true" />
+														<span class="sr-only">Omhoog</span>
+													</button>
+												</form>
+												<form method="POST" action={`${actions.fotos.verplaatsen}`}>
+													<input type="hidden" name="fotoId" value={img.id} />
+													<input type="hidden" name="richting" value="omlaag" />
+													<button type="submit" class={knopKlein} disabled={index === product.images.length - 1} title="Omlaag">
+														<Icon name="ph:arrow-down" class="size-4" aria-hidden="true" />
+														<span class="sr-only">Omlaag</span>
+													</button>
+												</form>
+												<form method="POST" action={`${actions.fotos.verwijderen}`} data-bevestig="Deze foto verwijderen?">
+													<input type="hidden" name="fotoId" value={img.id} />
+													<button type="submit" class={knopGevaar}>
+														<Icon name="ph:trash" class="size-4" aria-hidden="true" />
+														Verwijderen
+													</button>
+												</form>
+											</div>
+										</div>
+									</li>
+								);
+							})}
 						</ul>
 					)
 				}
-				<p class="mt-3 text-xs text-text-muted">Foto's uploaden en herordenen komt in een volgende stap.</p>
+
+				<form method="POST" action={`${actions.fotos.uploaden}`} enctype="multipart/form-data" class="mt-5 border-t border-border pt-5" novalidate data-max-bytes={MAX_BESTAND}>
+					<input type="hidden" name="productId" value={product.id} />
+					<h3 class="text-sm font-semibold">Foto toevoegen</h3>
+					{uploadFout.algemeen && Object.keys(uploadFout.velden).length === 0 && (
+						<p role="alert" class="mt-2 text-sm text-danger">{uploadFout.algemeen}</p>
+					)}
+					<div class="mt-3 space-y-3">
+						<div>
+							<label for="upload-bestand" class="block text-xs font-medium">Bestand (JPG, PNG of WebP, maximaal 4 MB)</label>
+							<input id="upload-bestand" type="file" name="bestand" accept="image/jpeg,image/png,image/webp" required class="mt-1 block w-full text-sm file:mr-3 file:min-h-10 file:rounded-control file:border file:border-border-strong file:bg-surface file:px-3 file:text-sm file:font-medium" />
+							<p id="upload-bestand-fout" class={fouttekst} hidden></p>
+							{uploadFout.velden.bestand && <p class={fouttekst}>{uploadFout.velden.bestand[0]}</p>}
+						</div>
+						<div>
+							<label for="upload-alt" class="block text-xs font-medium">Alt-tekst</label>
+							<input id="upload-alt" name="alt" value={fotoUploaden?.error ? (ingevuld.velden.alt ?? '') : ''} placeholder="Bijvoorbeeld: zwarte rugzak van voren, met twee ritsvakken" class={`${veld} mt-1 w-full`} />
+							{uploadFout.velden.alt && <p class={fouttekst}>{uploadFout.velden.alt[0]}</p>}
+						</div>
+						<div class="flex flex-wrap items-end gap-3">
+							{optieNaam && product.variants.length > 0 && (
+								<div>
+									<label for="upload-variant" class="block text-xs font-medium">Hoort bij</label>
+									<select id="upload-variant" name="variantId" class={`${veld} mt-1`}>
+										<option value="">Hele product</option>
+										{product.variants.map((v) => (
+											<option value={v.id}>Alleen {v.options[optieNaam] ?? v.sku}</option>
+										))}
+									</select>
+								</div>
+							)}
+							<button type="submit" class={knop}>
+								<Icon name="ph:upload-simple" class="size-4" aria-hidden="true" />
+								Uploaden
+							</button>
+						</div>
+					</div>
+				</form>
 			</section>
 
 			<section class="rounded-card border border-border bg-surface p-5">
@@ -187,17 +457,19 @@ const knopSecundair =
 					product.status === 'archived' ? (
 						<div class="mt-3 space-y-3">
 							<p class="text-sm text-text-muted">Dit product staat niet in de shop. Je kunt het terugzetten als concept, of definitief verwijderen.</p>
-							<form method="POST" action={actions.producten.terugzetten} class="flex flex-wrap gap-3">
-								<input type="hidden" name="id" value={product.id} />
-								<button type="submit" class={knopSecundair}>
-									<Icon name="ph:arrow-counter-clockwise" class="size-4" aria-hidden="true" />
-									Terugzetten als concept
-								</button>
+							<div class="flex flex-wrap gap-3">
+								<form method="POST" action={actions.producten.terugzetten}>
+									<input type="hidden" name="id" value={product.id} />
+									<button type="submit" class={knop}>
+										<Icon name="ph:arrow-counter-clockwise" class="size-4" aria-hidden="true" />
+										Terugzetten als concept
+									</button>
+								</form>
 								<a href={`${pad}/verwijderen`} class="inline-flex min-h-10 items-center gap-2 rounded-control border border-danger bg-surface px-3 text-sm font-medium text-danger hover:bg-danger-subtle">
 									<Icon name="ph:trash" class="size-4" aria-hidden="true" />
 									Definitief verwijderen
 								</a>
-							</form>
+							</div>
 						</div>
 					) : (
 						<div class="mt-3 space-y-3">
@@ -207,7 +479,7 @@ const knopSecundair =
 							</p>
 							<form method="POST" action={actions.producten.archiveren}>
 								<input type="hidden" name="id" value={product.id} />
-								<button type="submit" class={knopSecundair}>
+								<button type="submit" class={knop}>
 									<Icon name="ph:archive" class="size-4" aria-hidden="true" />
 									Archiveren
 								</button>
@@ -218,4 +490,31 @@ const knopSecundair =
 			</section>
 		</div>
 	</div>
+
+	<script>
+		// Kleine verbeteringen die zonder JavaScript gewoon wegvallen:
+		// een bevestiging voor verwijderen, en een vroege melding bij een te groot bestand.
+		for (const form of document.querySelectorAll<HTMLFormElement>('form[data-bevestig]')) {
+			form.addEventListener('submit', (event) => {
+				if (!window.confirm(form.dataset.bevestig)) event.preventDefault();
+			});
+		}
+		const upload = document.querySelector<HTMLFormElement>('form[data-max-bytes]');
+		const bestand = document.getElementById('upload-bestand') as HTMLInputElement | null;
+		const melding = document.getElementById('upload-bestand-fout');
+		if (upload && bestand && melding) {
+			const max = Number(upload.dataset.maxBytes);
+			const controleer = () => {
+				const file = bestand.files?.[0];
+				const teGroot = Boolean(file && file.size > max);
+				melding.hidden = !teGroot;
+				melding.textContent = teGroot ? `Dit bestand is ${((file?.size ?? 0) / 1024 / 1024).toFixed(1)} MB. Maximaal 4 MB.` : '';
+				return !teGroot;
+			};
+			bestand.addEventListener('change', controleer);
+			upload.addEventListener('submit', (event) => {
+				if (!controleer()) event.preventDefault();
+			});
+		}
+	</script>
 </AdminLayout>

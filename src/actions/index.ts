@@ -1,4 +1,5 @@
 import { auth } from './auth.ts';
+import { fotosActions } from './fotos.ts';
 import { productenActions } from './producten.ts';
 import { variantenActions } from './varianten.ts';
 
@@ -10,4 +11,5 @@ export const server = {
 	auth,
 	producten: productenActions,
 	varianten: variantenActions,
+	fotos: fotosActions,
 };

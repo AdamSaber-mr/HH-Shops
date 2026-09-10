@@ -27,12 +27,16 @@ export type ProductInvoer = {
 	categorieIds: number[];
 };
 
+/*
+ * Geen parameter-property in de constructor: Node strip-only TypeScript kent
+ * die syntax niet, en de scripts draaien rechtstreeks op Node.
+ */
 export class InvoerFout extends Error {
-	constructor(
-		public veld: string,
-		message: string,
-	) {
+	veld: string;
+
+	constructor(veld: string, message: string) {
 		super(message);
+		this.veld = veld;
 	}
 }
 
