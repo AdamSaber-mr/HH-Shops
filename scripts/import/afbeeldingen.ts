@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join, parse } from 'node:path';
 import { list, put } from '@vercel/blob';
 import sharp from 'sharp';
+import { neutraliseerAchtergrond } from './achtergrond.ts';
 import { IMAGES_DIR } from './lezen.ts';
 import { slugify } from './tekst.ts';
 import type { VerwerkteAfbeelding } from './types.ts';
@@ -15,10 +16,21 @@ import type { VerwerkteAfbeelding } from './types.ts';
  *
  * Verwerken gebeurt altijd, ook als het bestand al in Blob staat: breedte en
  * hoogte komen uit het resultaat en die zijn verplicht in het schema.
+ *
+ * Voor het verkleinen gaat elke foto door neutraliseerAchtergrond: een
+ * ingebakken lichtroze achtergrond (76 foto's van de oude site) wordt wit,
+ * zodat alle productkaarten dezelfde grijze tegel krijgen. Zie achtergrond.ts.
+ *
+ * Het Blob-pad heeft een versiesegment (BLOB_VERSION). Blob en de Vercel-
+ * beeldoptimalisatie cachen een jaar op URL; een foto op hetzelfde pad
+ * overschrijven zou dus nog maanden de oude versie tonen. Een nieuwe versie
+ * betekent een nieuw pad, en `schrijf` ruilt dan de URL's in de database om.
  */
 
 export const MAX_EDGE = 1200;
 export const WEBP_QUALITY = 82;
+/** Ophogen als de verwerking verandert en alle foto's opnieuw moeten. */
+export const BLOB_VERSION = 'v2';
 
 export function blobPathFor(
 	prefix: 'producten' | 'categorieen',
@@ -26,12 +38,13 @@ export function blobPathFor(
 	slug?: string,
 ): string {
 	const name = slug ?? slugify(parse(file).name);
-	return `${prefix}/${name}.webp`;
+	return `${prefix}/${BLOB_VERSION}/${name}.webp`;
 }
 
 export async function verwerk(file: string, pathname: string): Promise<VerwerkteAfbeelding> {
 	const input = readFileSync(join(IMAGES_DIR, file));
-	const { data, info } = await sharp(input)
+	const { buffer: neutraal } = await neutraliseerAchtergrond(input);
+	const { data, info } = await sharp(neutraal)
 		.rotate()
 		.flatten({ background: '#ffffff' })
 		.resize({ width: MAX_EDGE, height: MAX_EDGE, fit: 'inside', withoutEnlargement: true })
