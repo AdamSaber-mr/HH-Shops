@@ -8,6 +8,7 @@ import TrustBlock from '../components/TrustBlock.astro';
 import UspBar from '../components/UspBar.astro';
 import Layout from '../layouts/Layout.astro';
 import { defaultVariant, listActiveProducts } from '../lib/catalog.ts';
+import { leesFavorieten } from '../lib/klanten/favorieten.ts';
 
 /*
  * De startpagina, van boven naar beneden:
@@ -43,6 +44,7 @@ const entries = (await listActiveProducts())
 			Boolean(entry.variant && entry.image),
 	);
 
+const favorieten = new Set(await leesFavorieten(Astro));
 const available = (entry: (typeof entries)[number]) => entry.variant.stockQuantity > 0;
 
 const popular = [...entries]
@@ -88,6 +90,7 @@ const newest = [...entries]
 			title="Populaire producten"
 			link={{ label: 'Alle producten', href: '/producten' }}
 			items={popular}
+			favorieten={favorieten}
 		/>
 	</div>
 
@@ -110,6 +113,7 @@ const newest = [...entries]
 			title="Nieuw binnen"
 			link={{ label: 'Alle producten', href: '/producten' }}
 			items={newest}
+			favorieten={favorieten}
 		/>
 	</div>
 </Layout>

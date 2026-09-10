@@ -13,6 +13,7 @@ import {
 	leesFilter,
 } from '../../lib/categorie-filters.ts';
 import { tekstVoor } from '../../lib/categorie-teksten.ts';
+import { leesFavorieten } from '../../lib/klanten/favorieten.ts';
 
 /*
  * De categoriepagina: banner, filterbalk, kop met teller en het raster.
@@ -50,6 +51,7 @@ const entries = gefilterd
 		(entry): entry is typeof entry & { variant: NonNullable<typeof entry.variant> } =>
 			Boolean(entry.variant && entry.image),
 	);
+const favorieten = new Set(await leesFavorieten(Astro));
 
 const tekst = tekstVoor(category.slug, category.name);
 const pad = `/categorie/${category.slug}`;
@@ -114,7 +116,7 @@ const teller = gefilterdActief
 				</div>
 			</div>
 		) : (
-			<ProductGrid items={entries} eagerCount={4} class="mt-6" />
+			<ProductGrid items={entries} eagerCount={4} favorieten={favorieten} class="mt-6" />
 		)}
 	</section>
 </Layout>
