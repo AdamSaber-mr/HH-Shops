@@ -79,8 +79,10 @@ const newest = [...entries]
 	<TrendingCategories />
 
 	<!-- Bewust geen scheidingslijnen en geen gekleurde vlakken tussen de secties:
-	     Adam heeft beide bekeken en vond alleen witruimte het mooist. -->
-	<div class="py-14 lg:py-20">
+	     Adam heeft beide bekeken en vond alleen witruimte het mooist. Elke sectie
+	     heeft alleen ruimte aan de bovenkant (pt-12 lg:pt-16), zodat de afstand
+	     tussen twee secties overal precies een keer die ruimte is. -->
+	<div class="pt-12 lg:pt-16">
 		<ProductSection
 			id="populair"
 			title="Populaire producten"
@@ -89,7 +91,7 @@ const newest = [...entries]
 		/>
 	</div>
 
-	<div class="py-14 lg:py-20">
+	<div class="pt-12 lg:pt-16">
 		<PromoBanner
 			eyebrow="Van keuken tot kinderkamer"
 			title="Elke week nieuwe producten voor in en om het huis."
@@ -102,7 +104,7 @@ const newest = [...entries]
 
 	<TrustBlock />
 
-	<div class="scroll-mt-32 pt-14 lg:pt-20">
+	<div class="scroll-mt-32 pt-12 lg:pt-16">
 		<ProductSection
 			id="nieuw"
 			title="Nieuw binnen"

@@ -9,8 +9,7 @@ import { ratingSource, reviews } from '../lib/reviews.ts';
  * Bewust geen achtergrondtint en geen lijnen: Adam heeft een groene band, een
  * lichte tint en scheidingslijnen allemaal bekeken en vond de kale pagina het
  * mooist. De tussenbanner erboven is al groen; dat is het enige gekleurde
- * blok. Het blok heeft ruime verticale marge, want het zit tussen de
- * tussenbanner en "Nieuw binnen" in.
+ * blok. De ruimte erboven is dezelfde als bij elke sectie (pt-12 lg:pt-16).
  *
  * De recensies staan op desktop op vier kolommen, hetzelfde raster als de
  * productrijen. De teksten zijn kort, op twee kolommen werden de kaarten leeg.
@@ -37,7 +36,7 @@ const initial = (name: string) => name.trim().charAt(0).toUpperCase();
 ---
 
 <section aria-labelledby="reviews-titel">
-	<div class="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 lg:py-24">
+	<div class="mx-auto max-w-[1400px] px-4 pt-12 sm:px-6 lg:pt-16">
 	<div class="mx-auto max-w-2xl text-center">
 		<p class="text-sm font-semibold tracking-wide text-accent uppercase">Wat onze klanten zeggen</p>
 		<h2 id="reviews-titel" class="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
