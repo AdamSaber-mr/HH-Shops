@@ -7,12 +7,11 @@ import { Image } from 'astro:assets';
  * De foto's van Adam zijn vierkant en hebben de naam van de categorie al in
  * beeld, dus de kaart zet er geen eigen titel over.
  *
- * De kaart is 5:4 en niet vierkant. Op de volle paginabreedte werd het blok
- * met vierkante kaarten 668px hoog, en dat was Adam te veel scrollen. De foto
- * wordt daarom 20% in de hoogte bijgesneden. De positie ligt op 32% van
- * boven: de titel begint op zo'n 10% en blijft dan heel, onderaan valt alleen
- * de rand van de podia weg. Verander de positie niet naar het midden, dan
- * gaat de bovenkant van de titel eraf.
+ * De kaart is 5:4, en de foto's van Adam zijn dat ook (1402 x 1122), dus de
+ * foto komt in zijn geheel in beeld. Alleen huishoudelijke-artikelen is iets
+ * breder (1491 x 1055); daar valt links en rechts zo'n 6% af, en dat is
+ * alleen achtergrond en een stukje plant. Nieuwe foto's: 5:4 aanleveren,
+ * zonder ronde hoeken of witte rand, de kaart rondt zelf af.
  *
  * Omdat de naam alleen in de pixels staat, krijgt de link een sr-only tekst
  * met de naam. Anders is het voor een schermlezer een link zonder naam.
@@ -53,7 +52,7 @@ const widths = featured ? [640, 900, 1202] : [320, 480, 640, 900];
 		quality={72}
 		loading="lazy"
 		decoding="async"
-		class="size-full object-cover object-[center_32%] transition-transform duration-500 group-hover:scale-[1.03]"
+		class="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
 	/>
 	<span class="sr-only">{name}</span>
 </a>

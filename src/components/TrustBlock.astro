@@ -3,13 +3,15 @@ import { Icon } from 'astro-icon/components';
 import { ratingSource, reviews } from '../lib/reviews.ts';
 
 /*
- * Het vertrouwensblok: een bosgroene band over de volle breedte, met links een
- * witte kaart met de gemiddelde beoordeling en rechts de recensies als witte
- * kaarten. De groene band is bewust: de rest van de pagina is wit, en dit is
- * het enige blok dat daaruit breekt.
+ * Het vertrouwensblok: de score als grote, gecentreerde kop, daaronder de
+ * recensies als kaarten op de lichte achtergrond.
  *
- * Op telefoon en tablet schuiven de recensies horizontaal met scroll-snap,
- * zonder JavaScript. Op desktop staan ze in een raster van twee bij twee.
+ * Bewust geen gekleurde band: de tussenbanner erboven is al groen, en twee
+ * gekleurde blokken achter elkaar maakten de pagina onrustig (dat was het
+ * eerste ontwerp, en Adam vond het niet netjes).
+ *
+ * De recensies staan op desktop op vier kolommen, hetzelfde raster als de
+ * productrijen. De teksten zijn kort, op twee kolommen werden de kaarten leeg.
  *
  * De inhoud komt uit src/lib/reviews.ts: echte recensies van de oude site,
  * met bol.com als bron. Het blok werkt met elke bron en elke schaal (10 op
@@ -18,10 +20,6 @@ import { ratingSource, reviews } from '../lib/reviews.ts';
  *
  * Sterren zijn nooit de enige drager van de score: de score staat er ook als
  * getal, en elke recensie heeft een sr-only regel met het aantal sterren.
- *
- * Er is een reserve-ontwerp afgesproken als dit niet bevalt: score als grote
- * centrale kop, reviews eronder in een raster van twee bij twee, alles op de
- * lichte achtergrond.
  */
 
 const stars = [1, 2, 3, 4, 5] as const;
@@ -29,115 +27,76 @@ const scoreLabel = ratingSource.score.toLocaleString('nl-NL', {
 	minimumFractionDigits: 1,
 	maximumFractionDigits: 1,
 });
-// Voor de sterren naast de score: de score omgerekend naar een schaal van 5.
+// Voor de sterren onder de kop: de score omgerekend naar een schaal van 5.
 const scoreStars = Math.round((ratingSource.score / ratingSource.max) * 5);
 
 /** De beginletter voor het avatar-rondje. */
 const initial = (name: string) => name.trim().charAt(0).toUpperCase();
 ---
 
-<section class="bg-accent text-white" aria-labelledby="reviews-titel">
-	<div class="mx-auto max-w-[1400px] px-4 py-14 sm:px-6 lg:py-20">
-		<div class="flex flex-wrap items-end justify-between gap-4">
-			<div>
-				<p class="text-sm font-semibold tracking-wide text-white/75 uppercase">
-					Wat onze klanten zeggen
-				</p>
-				<h2 id="reviews-titel" class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-					Klanten over H&amp;H Shops
-				</h2>
+<section class="mx-auto max-w-[1400px] px-4 sm:px-6" aria-labelledby="reviews-titel">
+	<div class="mx-auto max-w-2xl text-center">
+		<p class="text-sm font-semibold tracking-wide text-accent uppercase">Wat onze klanten zeggen</p>
+		<h2 id="reviews-titel" class="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+			Klanten geven ons een{' '}
+			<span class="text-accent">{scoreLabel}</span>
+		</h2>
+		<div class="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+			<div class="flex gap-1 text-star" aria-hidden="true">
+				{stars.map((n) => (
+					<Icon name="ph:star-fill" class={`size-6 ${n <= scoreStars ? '' : 'opacity-25'}`} />
+				))}
 			</div>
-			{ratingSource.url && (
-				<a
-					href={ratingSource.url}
-					rel="noopener"
-					target="_blank"
-					class="inline-flex min-h-11 items-center gap-1.5 rounded-control text-sm font-medium text-white hover:underline"
-				>
-					Bekijk alle reviews op {ratingSource.name}
-					<Icon name="ph:arrow-right" class="size-4" aria-hidden="true" />
-					<span class="sr-only">(opent in een nieuw venster)</span>
-				</a>
-			)}
+			<p class="text-text-muted">
+				<span class="sr-only">{scoreLabel} van de {ratingSource.max}, </span>
+				gemiddelde beoordeling van klanten op{' '}
+				<span class="font-semibold text-text">{ratingSource.name}</span>
+			</p>
 		</div>
-
-		<div class="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.4fr)] lg:gap-8">
-			<!-- Score -->
-			<div
-				class="flex flex-col justify-between rounded-card bg-surface p-6 text-text sm:p-8"
+		{ratingSource.url && (
+			<a
+				href={ratingSource.url}
+				rel="noopener"
+				target="_blank"
+				class="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-control text-sm font-medium text-accent hover:underline"
 			>
-				<div>
-					<p class="text-sm font-semibold tracking-wide text-text-muted uppercase">
-						Gemiddelde beoordeling
-					</p>
-					<p class="mt-3 flex items-baseline gap-1.5">
-						<span class="text-6xl font-bold tracking-tight text-accent sm:text-7xl">{scoreLabel}</span>
-						<span class="text-xl text-text-muted">/ {ratingSource.max}</span>
-					</p>
-					<div class="mt-3 flex gap-1 text-star" aria-hidden="true">
+				Bekijk alle reviews op {ratingSource.name}
+				<Icon name="ph:arrow-right" class="size-4" aria-hidden="true" />
+				<span class="sr-only">(opent in een nieuw venster)</span>
+			</a>
+		)}
+	</div>
+
+	<ul class="mt-10 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4" aria-label="Recensies">
+		{reviews.map((review) => (
+			<li class="flex flex-col rounded-card border border-border bg-surface p-6">
+				<div class="flex items-center justify-between">
+					<Icon name="ph:quotes" class="size-7 text-accent/30" aria-hidden="true" />
+					<div class="flex gap-0.5 text-star" aria-hidden="true">
 						{stars.map((n) => (
-							<Icon name="ph:star-fill" class={`size-6 ${n <= scoreStars ? '' : 'opacity-25'}`} />
+							<Icon name="ph:star-fill" class={`size-4 ${n <= review.rating ? '' : 'opacity-25'}`} />
 						))}
 					</div>
-					<p class="sr-only">{scoreLabel} van de {ratingSource.max}</p>
+					<span class="sr-only">{review.rating} van de 5 sterren</span>
 				</div>
-				<!-- Wat klanten het vaakst noemen. Dit zijn geen verzonnen punten: elk
-				     ervan staat letterlijk in de recensies hiernaast. Pas dit aan als de
-				     recensies veranderen. -->
-				<ul class="mt-8 space-y-2.5 text-sm">
-					{['Op tijd geleverd', 'Netjes verpakt', 'Precies zoals beschreven'].map((point) => (
-						<li class="flex items-center gap-2.5">
-							<span
-								class="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent"
-								aria-hidden="true"
-							>
-								<Icon name="ph:check" class="size-3.5" />
-							</span>
-							{point}
-						</li>
-					))}
-				</ul>
-
-				<p class="mt-8 text-sm text-text-muted">
-					Gebaseerd op beoordelingen van klanten op{' '}
-					<span class="font-semibold text-text">{ratingSource.name}</span>
-				</p>
-			</div>
-
-			<!-- Recensies: horizontaal schuiven op telefoon, raster op desktop -->
-			<ul
-				class="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0"
-				aria-label="Recensies"
-			>
-				{reviews.map((review) => (
-					<li
-						class="flex w-[82vw] shrink-0 snap-start flex-col rounded-card bg-surface p-6 text-text sm:w-[46%] lg:w-auto"
+				<blockquote class="mt-4 flex-1 text-base leading-relaxed text-pretty">
+					<p>{review.text}</p>
+				</blockquote>
+				<div class="mt-6 flex items-center gap-3 border-t border-border pt-4">
+					<span
+						class="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-sm font-semibold text-accent"
+						aria-hidden="true"
 					>
-						<Icon name="ph:quotes" class="size-8 text-accent/30" aria-hidden="true" />
-						<blockquote class="mt-3 flex-1 text-base leading-relaxed text-pretty">
-							<p>{review.text}</p>
-						</blockquote>
-						<div class="mt-6 flex items-center gap-3">
-							<span
-								class="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-base font-semibold text-accent"
-								aria-hidden="true"
-							>
-								{initial(review.author)}
-							</span>
-							<div class="min-w-0">
-								<p class="text-sm font-semibold">{review.author}</p>
-								<div class="mt-0.5 flex gap-0.5 text-star" aria-hidden="true">
-									{stars.map((n) => (
-										<Icon name="ph:star-fill" class={`size-3.5 ${n <= review.rating ? '' : 'opacity-25'}`} />
-									))}
-								</div>
-								<span class="sr-only">{review.rating} van de 5 sterren</span>
-								{review.date && <p class="text-xs text-text-muted">{review.date}</p>}
-							</div>
-						</div>
-					</li>
-				))}
-			</ul>
-		</div>
-	</div>
+						{initial(review.author)}
+					</span>
+					<div class="min-w-0">
+						<p class="text-sm font-semibold">{review.author}</p>
+						<p class="text-xs text-text-muted">
+							{review.date ?? `Klant via ${ratingSource.name}`}
+						</p>
+					</div>
+				</div>
+			</li>
+		))}
+	</ul>
 </section>
