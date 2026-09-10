@@ -1,61 +1,58 @@
 ---
+import { Image } from 'astro:assets';
+
 /*
- * Een categoriekaart voor "Trending categorieen": een hoog, staand kleurvlak
- * met de naam bovenin, zoals in het voorbeeld van Adam.
+ * Een categoriekaart voor "Populaire categorieen".
  *
- * De foto komt later. Tot die tijd is de kaart alleen het kleurvlak, met de
- * beginletter groot en zacht onderin zodat de kaart niet leeg oogt. Zodra de
- * foto er is, ligt die over het vlak heen; de beginletter verdwijnt dan.
+ * De foto's van Adam zijn vierkant en hebben de naam van de categorie al in
+ * beeld, dus de kaart zet er geen eigen titel over.
  *
- * De titel staat altijd op een donker verloop bovenaan. Dat is niet voor nu,
- * maar voor straks: op een lichte foto is witte tekst zonder dat verloop niet
- * te lezen.
+ * De kaart is 5:4, en de foto's van Adam zijn dat ook (1402 x 1122), dus de
+ * foto komt in zijn geheel in beeld. Alleen huishoudelijke-artikelen is iets
+ * breder (1491 x 1055); daar valt links en rechts zo'n 6% af, en dat is
+ * alleen achtergrond en een stukje plant. Nieuwe foto's: 5:4 aanleveren,
+ * zonder ronde hoeken of witte rand, de kaart rondt zelf af.
+ *
+ * Omdat de naam alleen in de pixels staat, krijgt de link een sr-only tekst
+ * met de naam. Anders is het voor een schermlezer een link zonder naam.
+ *
+ * De foto komt uit src/assets en gaat via astro:assets, zodat de 1,7 MB grote
+ * PNG als kleine WebP bij de bezoeker aankomt.
  */
 
 interface Props {
 	name: string;
 	href: string;
-	/** Een complete Tailwind-klasse, bijvoorbeeld "bg-tint-sage". */
-	tint: string;
-	image?: { url: string; alt: string; width: number; height: number };
+	image: ImageMetadata;
+	/** De grote kaart: twee kolommen en twee rijen in het raster. */
+	featured?: boolean;
 }
 
-const { name, href, tint, image } = Astro.props;
+const { name, href, image, featured = false } = Astro.props;
+
+// De grote kaart is op desktop zo'n 665px breed, de kleine zo'n 320px.
+const sizes = featured
+	? '(min-width: 1400px) 665px, (min-width: 1024px) 48vw, calc(100vw - 32px)'
+	: '(min-width: 1400px) 320px, (min-width: 1024px) 23vw, 50vw';
+const widths = featured ? [640, 900, 1202] : [320, 480, 640, 900];
 ---
 
 <a
 	href={href}
-	class={`group relative block aspect-[3/4] overflow-hidden rounded-card ${tint} shadow-sm transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg`}
+	class:list={[
+		'group relative block aspect-[5/4] overflow-hidden rounded-card bg-surface-hover shadow-sm transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg',
+		featured && 'col-span-2 row-span-2',
+	]}
 >
-	{image ? (
-		<img
-			src={image.url}
-			alt={image.alt}
-			width={image.width}
-			height={image.height}
-			loading="lazy"
-			decoding="async"
-			class="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
-		/>
-	) : (
-		<span
-			class="absolute -right-3 -bottom-8 text-[9rem] leading-none font-bold text-white/20 select-none"
-			aria-hidden="true"
-		>
-			{name.charAt(0)}
-		</span>
-	)}
-
-	<!-- Donker verloop bovenaan, zodat de titel ook op een foto leesbaar blijft. -->
-	<span
-		class="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-black/45 to-transparent"
-		aria-hidden="true"
-	>
-	</span>
-
-	<span
-		class="absolute inset-x-2 top-5 text-center text-base leading-tight font-bold text-balance hyphens-auto text-white drop-shadow-sm sm:text-lg xl:text-xl"
-	>
-		{name}
-	</span>
+	<Image
+		src={image}
+		alt=""
+		widths={widths}
+		sizes={sizes}
+		quality={72}
+		loading="lazy"
+		decoding="async"
+		class="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+	/>
+	<span class="sr-only">{name}</span>
 </a>

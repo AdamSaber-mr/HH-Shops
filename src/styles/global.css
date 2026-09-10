@@ -73,19 +73,8 @@
 	--color-sky: #a7e3fa;
 	--color-sky-deep: #4ca7ca;
 
-	/*
-	  Tinten voor de categoriekaarten op de startpagina. Elke kaart krijgt een
-	  eigen kleurvlak, zoals in het voorbeeld van Adam. Zodra de categoriefoto's
-	  er zijn, liggen die over dit vlak heen en is de tint alleen nog wat je
-	  ziet terwijl de foto laadt. De titel staat op een donker verloop, dus de
-	  tint zelf hoeft geen contrast met wit te halen.
-	*/
-	--color-tint-sage: #5f9a7e;
-	--color-tint-orange: #f28c28; /* het oranje uit het logo */
-	--color-tint-rust: #b8433a;
-	--color-tint-teal: #2f9e6b;
-	--color-tint-rose: #e9a3b4;
-	--color-tint-amber: #f6b942;
+	/* Sterren in het reviewblok. Goud, want groene sterren leest niemand als sterren. */
+	--color-star: #f6b942;
 
 	/* Fout en uitverkocht. */
 	--color-danger: #b91c1c; /* 6,2:1 */

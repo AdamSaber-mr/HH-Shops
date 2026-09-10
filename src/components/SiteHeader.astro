@@ -1,5 +1,7 @@
 ---
+import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
+import logo from '../assets/logo.png';
 import { categoryHref, featuredCategories, mainNavigation } from '../lib/navigation.ts';
 
 /*
@@ -54,13 +56,14 @@ import { categoryHref, featuredCategories, mainNavigation } from '../lib/navigat
 
 			<!-- Logo. Het bestand heeft veel witruimte rondom, vandaar de negatieve marge. -->
 			<a href="/" class="-my-3 shrink-0 rounded-control" aria-label="H&H Shops, naar de startpagina">
-				<img
-					src="/logo.png"
+				<Image
+					src={logo}
 					alt=""
-					width="2172"
-					height="724"
-					class="h-16 w-auto sm:h-[4.5rem]"
+					widths={[240, 480]}
+					sizes="216px"
+					loading="eager"
 					fetchpriority="high"
+					class="h-16 w-auto sm:h-[4.5rem]"
 				/>
 			</a>
 

@@ -4,19 +4,49 @@ import { categoryHref, trendingCategories } from '../lib/navigation.ts';
 import CategoryCard from './CategoryCard.astro';
 
 /*
- * "Trending categorieen" op de startpagina: zes hoge kaarten naast elkaar op
- * desktop, drie op tablet, twee op telefoon. Welke zes en welke kleur staat in
- * src/lib/navigation.ts. De foto's volgen later, zie CategoryCard.
+ * "Populaire categorieen" op de startpagina: een grote kaart links en vier
+ * kleinere in een blok van twee bij twee rechts. De vier kleine zijn even
+ * breed als de productkaarten eronder; de grote is twee kaarten plus de
+ * tussenruimte, en daarmee precies even hoog als het blok ernaast.
+ *
+ * Zes op een rij bleek te klein (zo'n 215px per kaart) en drie per rij te
+ * groot (zo'n 435px). Dit is de tussenweg die Adam koos: vijf kaarten, een
+ * eruit springend. Welke vijf, en welke de grote is, staat in
+ * src/lib/navigation.ts; de foto's staan in src/assets/categorieen, een per
+ * slug.
+ *
+ * De sectie is even breed als de productrijen (1400 pixels), zodat de kaarten
+ * uitlijnen met de producten eronder. De kaarten zijn 5:4 en de foto's ook,
+ * zie CategoryCard. Het blok is zo'n 535px hoog.
+ *
+ * Op telefoon en tablet staat de grote kaart over de volle breedte bovenaan
+ * en het blok van vier eronder.
+ *
+ * De glob koppelt slug aan bestand. Ontbreekt een foto, dan valt de build om
+ * met een duidelijke fout in plaats van een lege kaart op de site.
  */
+
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/categorieen/*.png', {
+	eager: true,
+});
+
+function imageFor(slug: string): ImageMetadata {
+	const entry = files[`../assets/categorieen/${slug}.png`];
+	if (!entry) throw new Error(`Geen categoriefoto voor "${slug}" in src/assets/categorieen`);
+	return entry.default;
+}
+
+const [featured, ...rest] = trendingCategories;
+if (!featured) throw new Error('trendingCategories is leeg');
 ---
 
 <section
-	class="mx-auto max-w-[1400px] px-4 py-14 sm:px-6 lg:py-20"
+	class="mx-auto max-w-[1400px] px-4 pt-12 sm:px-6 lg:pt-16"
 	aria-labelledby="trending-titel"
 >
 	<div class="flex flex-wrap items-end justify-between gap-4">
 		<h2 id="trending-titel" class="text-2xl font-bold tracking-tight sm:text-3xl">
-			Trending categorieën
+			Populaire categorieën
 		</h2>
 		<a
 			href="/categorieen"
@@ -27,9 +57,19 @@ import CategoryCard from './CategoryCard.astro';
 		</a>
 	</div>
 
-	<div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
-		{trendingCategories.map((category) => (
-			<CategoryCard name={category.name} tint={category.tint} href={categoryHref(category.slug)} />
+	<div class="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+		<CategoryCard
+			name={featured.name}
+			href={categoryHref(featured.slug)}
+			image={imageFor(featured.slug)}
+			featured
+		/>
+		{rest.map((category) => (
+			<CategoryCard
+				name={category.name}
+				href={categoryHref(category.slug)}
+				image={imageFor(category.slug)}
+			/>
 		))}
 	</div>
 </section>

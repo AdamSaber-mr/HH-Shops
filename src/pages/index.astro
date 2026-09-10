@@ -1,4 +1,5 @@
 ---
+import tussenbanner from '../assets/tussenbanner.png';
 import Hero from '../components/Hero.astro';
 import ProductSection from '../components/ProductSection.astro';
 import PromoBanner from '../components/PromoBanner.astro';
@@ -13,7 +14,7 @@ import { defaultVariant, listActiveProducts } from '../lib/catalog.ts';
  *
  *  1. Hero met de banner
  *  2. USP-balk: vier kernpunten
- *  3. Trending categorieen
+ *  3. Populaire categorieen
  *  4. Populaire producten (4)
  *  5. Tussenbanner
  *  6. Vertrouwensblok: beoordeling op bol.com en recensies van de oude site
@@ -77,27 +78,33 @@ const newest = [...entries]
 
 	<TrendingCategories />
 
-	<ProductSection
-		id="populair"
-		title="Populaire producten"
-		link={{ label: 'Alle producten', href: '/producten' }}
-		items={popular}
-	/>
+	<!-- Bewust geen scheidingslijnen en geen gekleurde vlakken tussen de secties:
+	     Adam heeft beide bekeken en vond alleen witruimte het mooist. Elke sectie
+	     heeft alleen ruimte aan de bovenkant (pt-12 lg:pt-16), zodat de afstand
+	     tussen twee secties overal precies een keer die ruimte is. -->
+	<div class="pt-12 lg:pt-16">
+		<ProductSection
+			id="populair"
+			title="Populaire producten"
+			link={{ label: 'Alle producten', href: '/producten' }}
+			items={popular}
+		/>
+	</div>
 
-	<div class="mt-14 lg:mt-20">
+	<div class="pt-12 lg:pt-16">
 		<PromoBanner
 			eyebrow="Van keuken tot kinderkamer"
 			title="Elke week nieuwe producten voor in en om het huis."
 			text="Handige spullen voor de keuken, speelgoed voor de kleintjes, tassen en schoenen voor onderweg. Kijk wat er deze week is bijgekomen."
 			cta={{ label: 'Bekijk wat nieuw is', href: '#nieuw-titel' }}
+			image={tussenbanner}
+			imageAlt="Rugzak, knuffelbeer, airfryer, koptelefoon en laptop op groene podia"
 		/>
 	</div>
 
-	<div class="mt-14 lg:mt-20">
-		<TrustBlock />
-	</div>
+	<TrustBlock />
 
-	<div class="mt-14 scroll-mt-32 lg:mt-20">
+	<div class="scroll-mt-32 pt-12 lg:pt-16">
 		<ProductSection
 			id="nieuw"
 			title="Nieuw binnen"

@@ -1,5 +1,6 @@
 import { parse } from 'node:path';
 import sharp from 'sharp';
+import { neutraliseerAchtergrond } from './achtergrond.ts';
 import { slugify } from './tekst.ts';
 
 /*
@@ -13,6 +14,15 @@ import { slugify } from './tekst.ts';
 
 export const MAX_EDGE = 1200;
 export const WEBP_QUALITY = 82;
+/**
+ * Ophogen als de verwerking verandert en alle foto's opnieuw moeten. Blob en de
+ * beeldoptimalisatie van Vercel cachen een jaar op URL; overschrijven op
+ * hetzelfde pad zou dus nog maanden de oude versie tonen. Een nieuwe versie is
+ * een nieuw pad, en de import ruilt dan de URL's in de database om.
+ *
+ * v2: achtergrond naar wit (zie achtergrond.ts).
+ */
+export const BLOB_VERSION = 'v2';
 
 export type VerwerktBeeld = {
 	data: Buffer;
@@ -23,7 +33,9 @@ export type VerwerktBeeld = {
 };
 
 export async function verwerkBuffer(input: Buffer): Promise<VerwerktBeeld> {
-	const { data, info } = await sharp(input)
+	// Eerst een egale lichte achtergrond naar wit, dan pas verkleinen.
+	const { buffer: neutraal } = await neutraliseerAchtergrond(input);
+	const { data, info } = await sharp(neutraal)
 		.rotate()
 		.flatten({ background: '#ffffff' })
 		.resize({ width: MAX_EDGE, height: MAX_EDGE, fit: 'inside', withoutEnlargement: true })
@@ -45,7 +57,7 @@ export function blobPathFor(
 	slug?: string,
 ): string {
 	const name = slug ?? slugify(parse(file).name);
-	return `${prefix}/${name}.webp`;
+	return `${prefix}/${BLOB_VERSION}/${name}.webp`;
 }
 
 export function formatBytes(bytes: number): string {
