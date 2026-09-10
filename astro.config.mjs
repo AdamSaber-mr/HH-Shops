@@ -140,7 +140,27 @@ export default defineConfig({
 			// bestaat. Node 24 kan dat lokaal (require van ESM), de Node-runtime van
 			// Vercel niet: daar gaf het een 500 op elke action. Meebundelen in de
 			// serverbundel haalt dat require tijdens het draaien weg.
-			noExternal: ['sanitize-html', 'htmlparser2'],
+			// De hele boom, anders blijft er een require van een van de
+			// afhankelijkheden over die Vercel niet meeneemt in de functie.
+			noExternal: [
+				'dayjs',
+				'deepmerge',
+				'dom-serializer',
+				'domelementtype',
+				'domhandler',
+				'domutils',
+				'entities',
+				'escape-string-regexp',
+				'htmlparser2',
+				'is-plain-object',
+				'launder',
+				'nanoid',
+				'parse-srcset',
+				'picocolors',
+				'postcss',
+				'sanitize-html',
+				'source-map-js',
+			],
 		},
 	},
 
