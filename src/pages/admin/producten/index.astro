@@ -1,0 +1,268 @@
+---
+import { actions, isInputError } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+import Paginering from '../../../components/admin/Paginering.astro';
+import Statuslabel from '../../../components/admin/Statuslabel.astro';
+import Button from '../../../components/Button.astro';
+import ProductImage from '../../../components/ProductImage.astro';
+import { getDb } from '../../../db/client.ts';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { zetFlash } from '../../../lib/admin/flash.ts';
+import { leesPagina, metFilters, PER_PAGINA, pagineer } from '../../../lib/admin/paginering.ts';
+import { leesLijstfilter, lijstCategorieen, zoekProducten } from '../../../lib/admin/producten.ts';
+import { euroInvoer } from '../../../lib/admin/validatie.ts';
+import { formatEuro } from '../../../lib/price.ts';
+
+/*
+ * De productenlijst: zoeken, filteren, sorteren, bladeren, en voorraad en
+ * prijs meteen aanpassen bij producten met een variant. Alles met gewone
+ * formulieren en links.
+ */
+
+const PAD = '/admin/producten';
+const params = Astro.url.searchParams;
+
+// Snel bewerken: na succes terug naar dezelfde lijst, met dezelfde filters.
+const snel = Astro.getActionResult(actions.varianten.snelBijwerken);
+if (snel && !snel.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: `Opgeslagen: ${snel.data.sku}.` });
+	return Astro.redirect(snel.data.terug);
+}
+const snelFout = snel?.error
+	? isInputError(snel.error)
+		? Object.values(snel.error.fields).flat().filter(Boolean).join(' ')
+		: snel.error.message
+	: null;
+const snelVariantId = snel?.error ? (await Astro.request.clone().formData().catch(() => null))?.get('variantId') : null;
+
+const db = getDb();
+const pagina = leesPagina(params.get('pagina'));
+const filter = leesLijstfilter(params, (pagina - 1) * PER_PAGINA, PER_PAGINA);
+const [{ rijen, totaal }, categorieen] = await Promise.all([zoekProducten(db, filter), lijstCategorieen(db)]);
+const paginering = pagineer(pagina, totaal);
+const huidigeUrl = Astro.url.pathname + Astro.url.search;
+const heeftFilters = filter.q !== '' || filter.status !== '' || filter.categorieId !== null || filter.alleenUitverkocht;
+
+const sorteerLink = (kolom: typeof filter.sorteer) => {
+	const richting = filter.sorteer === kolom && filter.richting === 'asc' ? 'desc' : 'asc';
+	return metFilters(PAD, params, { sorteer: kolom === 'naam' ? '' : kolom, richting: richting === 'asc' ? '' : richting });
+};
+const sorteerLabel = (kolom: typeof filter.sorteer) =>
+	filter.sorteer === kolom ? (filter.richting === 'asc' ? 'ascending' : 'descending') : undefined;
+
+const datum = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
+const veld = 'min-h-11 rounded-control border border-border-strong bg-surface px-3 text-sm';
+---
+
+<AdminLayout title="Producten">
+	<div class="flex flex-wrap items-end justify-between gap-4">
+		<div>
+			<h1 class="text-2xl font-semibold">Producten</h1>
+			<p class="mt-1 text-sm text-text-muted">Zoek, filter, en pas voorraad en prijs direct aan.</p>
+		</div>
+		<Button href="/admin/producten/nieuw">
+			<Icon name="ph:plus" class="size-4" aria-hidden="true" />
+			Nieuw product
+		</Button>
+	</div>
+
+	<form method="GET" action={PAD} class="mt-6 grid gap-3 rounded-card border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-[1fr_auto_auto_auto_auto]">
+		<div>
+			<label for="q" class="sr-only">Zoeken op naam</label>
+			<input id="q" name="q" type="search" value={filter.q} placeholder="Zoek op naam" class={`${veld} w-full`} />
+		</div>
+		<div>
+			<label for="status" class="sr-only">Status</label>
+			<select id="status" name="status" class={`${veld} w-full`}>
+				<option value="" selected={filter.status === ''}>Actief en concept</option>
+				<option value="active" selected={filter.status === 'active'}>Alleen actief</option>
+				<option value="draft" selected={filter.status === 'draft'}>Alleen concept</option>
+				<option value="archived" selected={filter.status === 'archived'}>Gearchiveerd</option>
+				<option value="alle" selected={filter.status === 'alle'}>Alles</option>
+			</select>
+		</div>
+		<div>
+			<label for="categorie" class="sr-only">Categorie</label>
+			<select id="categorie" name="categorie" class={`${veld} w-full`}>
+				<option value="">Alle categorieen</option>
+				{categorieen.map((c) => (
+					<option value={c.id} selected={filter.categorieId === c.id}>
+						{c.name}
+					</option>
+				))}
+			</select>
+		</div>
+		<label class="flex min-h-11 items-center gap-2 text-sm">
+			<input type="checkbox" name="voorraad" value="uitverkocht" checked={filter.alleenUitverkocht} class="size-4 accent-accent" />
+			Alleen uitverkocht
+		</label>
+		<div class="flex gap-2">
+			<Button type="submit" variant="secondary">
+				<Icon name="ph:funnel" class="size-4" aria-hidden="true" />
+				Filter
+			</Button>
+			{heeftFilters && <Button href={PAD} variant="secondary">Wissen</Button>}
+		</div>
+	</form>
+
+	{
+		snelFout && (
+			<p role="alert" class="mt-4 rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">
+				{snelFout}
+			</p>
+		)
+	}
+
+	{
+		rijen.length === 0 ? (
+			<div class="mt-6 rounded-card border border-border bg-surface px-6 py-12 text-center">
+				<p class="font-medium">{heeftFilters ? 'Geen producten gevonden.' : 'Nog geen producten.'}</p>
+				<p class="mt-1 text-sm text-text-muted">
+					{heeftFilters ? 'Probeer een andere zoekterm of wis de filters.' : 'Voeg het eerste product toe.'}
+				</p>
+				<div class="mt-4">
+					{heeftFilters ? (
+						<Button href={PAD} variant="secondary">
+							Filters wissen
+						</Button>
+					) : (
+						<Button href="/admin/producten/nieuw">Nieuw product</Button>
+					)}
+				</div>
+			</div>
+		) : (
+			<div class="mt-6 overflow-x-auto rounded-card border border-border bg-surface">
+				<table class="w-full min-w-[56rem] text-sm">
+					<caption class="sr-only">Producten, {totaal} in totaal</caption>
+					<thead class="border-b border-border text-left text-xs text-text-muted uppercase tracking-wide">
+						<tr>
+							<th scope="col" class="px-4 py-3" aria-sort={sorteerLabel('naam')}>
+								<a href={sorteerLink('naam')} class="hover:text-text">Product</a>
+							</th>
+							<th scope="col" class="px-4 py-3">Status</th>
+							<th scope="col" class="px-4 py-3 text-right" aria-sort={sorteerLabel('prijs')}>
+								<a href={sorteerLink('prijs')} class="hover:text-text">Prijs</a>
+							</th>
+							<th scope="col" class="px-4 py-3 text-right" aria-sort={sorteerLabel('voorraad')}>
+								<a href={sorteerLink('voorraad')} class="hover:text-text">Voorraad</a>
+							</th>
+							<th scope="col" class="px-4 py-3" aria-sort={sorteerLabel('bijgewerkt')}>
+								<a href={sorteerLink('bijgewerkt')} class="hover:text-text">Bijgewerkt</a>
+							</th>
+							<th scope="col" class="px-4 py-3">
+								<span class="sr-only">Acties</span>
+							</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-border">
+						{rijen.map((r) => {
+							const bewerkbaar = r.enigeVariantId !== null;
+							const formId = `snel-${r.id}`;
+							return (
+								<tr class:list={[String(snelVariantId) === String(r.enigeVariantId) && 'bg-danger-subtle/40']}>
+									<td class="px-4 py-3">
+										<div class="flex items-center gap-3">
+											<div class="size-12 shrink-0 overflow-hidden rounded-control border border-border bg-surface-hover">
+												{r.foto ? (
+													<ProductImage
+														src={r.foto.url}
+														alt=""
+														width={r.foto.width}
+														height={r.foto.height}
+														widths={[96]}
+														sizes="48px"
+														class="size-full object-contain"
+													/>
+												) : (
+													<Icon name="ph:image" class="m-3 size-6 text-text-disabled" aria-hidden="true" />
+												)}
+											</div>
+											<div class="min-w-0">
+												<a href={`/admin/producten/${r.id}`} class="font-medium text-text hover:text-accent hover:underline">
+													{r.name}
+												</a>
+												<p class="truncate text-xs text-text-muted">
+													{r.categorieen || 'Geen categorie'}
+													{r.varianten > 1 && ` · ${r.varianten} varianten`}
+												</p>
+											</div>
+										</div>
+									</td>
+									<td class="px-4 py-3">
+										<Statuslabel status={r.status} />
+									</td>
+									<td class="px-4 py-3 text-right whitespace-nowrap">
+										{bewerkbaar ? (
+											<label class="sr-only" for={`${formId}-prijs`}>
+												Prijs van {r.name}
+											</label>
+										) : null}
+										{bewerkbaar && r.laagstePrijs !== null ? (
+											<input
+												form={formId}
+												id={`${formId}-prijs`}
+												name="prijs"
+												type="text"
+												inputmode="decimal"
+												value={euroInvoer(r.laagstePrijs)}
+												class={`${veld} w-24 text-right`}
+											/>
+										) : (
+											<span>{r.laagstePrijs === null ? 'Geen' : `vanaf ${formatEuro(r.laagstePrijs)}`}</span>
+										)}
+									</td>
+									<td class="px-4 py-3 text-right whitespace-nowrap">
+										{bewerkbaar ? (
+											<>
+												<label class="sr-only" for={`${formId}-voorraad`}>
+													Voorraad van {r.name}
+												</label>
+												<input
+													form={formId}
+													id={`${formId}-voorraad`}
+													name="voorraad"
+													type="text"
+													inputmode="numeric"
+													value={r.voorraad}
+													class={`${veld} w-20 text-right`}
+												/>
+											</>
+										) : (
+											<span class:list={[r.voorraad === 0 && 'text-danger']}>{r.voorraad === 0 ? 'Uitverkocht' : r.voorraad}</span>
+										)}
+									</td>
+									<td class="px-4 py-3 whitespace-nowrap text-text-muted">{datum.format(r.updatedAt)}</td>
+									<td class="px-4 py-3 text-right whitespace-nowrap">
+										{bewerkbaar ? (
+											<form id={formId} method="POST" action={actions.varianten.snelBijwerken} class="inline">
+												<input type="hidden" name="variantId" value={r.enigeVariantId} />
+												<input type="hidden" name="terug" value={huidigeUrl} />
+												<button
+													type="submit"
+													class="inline-flex min-h-10 items-center gap-1 rounded-control border border-border-strong bg-surface px-3 text-sm font-medium hover:bg-surface-hover"
+												>
+													<Icon name="ph:check" class="size-4" aria-hidden="true" />
+													Opslaan
+												</button>
+											</form>
+										) : (
+											<a
+												href={`/admin/producten/${r.id}#varianten`}
+												class="inline-flex min-h-10 items-center gap-1 rounded-control border border-border-strong bg-surface px-3 text-sm font-medium hover:bg-surface-hover"
+											>
+												<Icon name="ph:pencil-simple" class="size-4" aria-hidden="true" />
+												Varianten
+											</a>
+										)}
+									</td>
+								</tr>
+							);
+						})}
+					</tbody>
+				</table>
+			</div>
+		)
+	}
+
+	<Paginering paginering={paginering} pad={PAD} params={params} eenheid="producten" />
+</AdminLayout>

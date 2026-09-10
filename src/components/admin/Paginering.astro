@@ -1,0 +1,75 @@
+---
+import { metFilters, type Paginering, paginaVenster } from '../../lib/admin/paginering.ts';
+
+/*
+ * Vorige, volgende en de paginanummers, met behoud van de filters. Gewone
+ * links, dus werkt overal.
+ */
+
+interface Props {
+	paginering: Paginering;
+	pad: string;
+	params: URLSearchParams;
+	/** Wat er geteld wordt, in meervoud: "producten". */
+	eenheid: string;
+}
+
+const { paginering: p, pad, params, eenheid } = Astro.props;
+const link = (pagina: number) => metFilters(pad, params, { pagina });
+const knop =
+	'inline-flex min-h-10 min-w-10 items-center justify-center rounded-control border border-border-strong bg-surface px-3 text-sm font-medium text-text hover:bg-surface-hover';
+const uit = 'inline-flex min-h-10 min-w-10 items-center justify-center rounded-control border border-border px-3 text-sm text-text-disabled';
+---
+
+<nav aria-label="Paginering" class="mt-6 flex flex-wrap items-center justify-between gap-4">
+	<p class="text-sm text-text-muted">
+		{p.totaal === 0 ? `Geen ${eenheid}` : `${p.van} tot ${p.tot} van ${p.totaal} ${eenheid}`}
+	</p>
+	{
+		p.paginas > 1 && (
+			<ul class="flex flex-wrap items-center gap-1">
+				<li>
+					{p.pagina > 1 ? (
+						<a href={link(p.pagina - 1)} class={knop} rel="prev">
+							Vorige
+						</a>
+					) : (
+						<span class={uit} aria-disabled="true">
+							Vorige
+						</span>
+					)}
+				</li>
+				{paginaVenster(p.pagina, p.paginas).map((n) =>
+					n === null ? (
+						<li aria-hidden="true" class="px-1 text-text-muted">
+							...
+						</li>
+					) : (
+						<li>
+							{n === p.pagina ? (
+								<span aria-current="page" class={`${knop} bg-accent-subtle text-accent border-accent/30`}>
+									{n}
+								</span>
+							) : (
+								<a href={link(n)} class={knop}>
+									{n}
+								</a>
+							)}
+						</li>
+					),
+				)}
+				<li>
+					{p.pagina < p.paginas ? (
+						<a href={link(p.pagina + 1)} class={knop} rel="next">
+							Volgende
+						</a>
+					) : (
+						<span class={uit} aria-disabled="true">
+							Volgende
+						</span>
+					)}
+				</li>
+			</ul>
+		)
+	}
+</nav>

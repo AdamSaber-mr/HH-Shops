@@ -1,4 +1,5 @@
 import { auth } from './auth.ts';
+import { variantenActions } from './varianten.ts';
 
 /*
  * Alle actions van het beheerpaneel. Elke groep leeft in een eigen bestand;
@@ -6,4 +7,5 @@ import { auth } from './auth.ts';
  */
 export const server = {
 	auth,
+	varianten: variantenActions,
 };

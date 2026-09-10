@@ -1,0 +1,33 @@
+---
+import type { ProductStatus } from '../../lib/admin/producten.ts';
+
+/*
+ * De status van een product als label. Altijd met tekst; de kleur is een
+ * hulpmiddel en nooit de enige drager.
+ */
+
+interface Props {
+	status: ProductStatus;
+	class?: string;
+}
+
+const { status, class: extraClass = '' } = Astro.props;
+
+const labels: Record<ProductStatus, { tekst: string; klassen: string }> = {
+	active: { tekst: 'Actief', klassen: 'bg-accent-subtle text-accent' },
+	draft: { tekst: 'Concept', klassen: 'border border-border-strong bg-surface text-text' },
+	archived: { tekst: 'Gearchiveerd', klassen: 'bg-surface-hover text-text-muted' },
+};
+
+const label = labels[status];
+---
+
+<span
+	class:list={[
+		'inline-flex items-center rounded-control px-2 py-0.5 text-xs font-medium whitespace-nowrap',
+		label.klassen,
+		extraClass,
+	]}
+>
+	{label.tekst}
+</span>
