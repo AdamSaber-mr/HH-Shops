@@ -4,7 +4,7 @@ import { categoryHref, trendingCategories } from '../lib/navigation.ts';
 import CategoryCard from './CategoryCard.astro';
 
 /*
- * "Trending categorieen" op de startpagina: een grote kaart links en vier
+ * "Populaire categorieen" op de startpagina: een grote kaart links en vier
  * kleinere in een blok van twee bij twee rechts. De vier kleine zijn even
  * breed als de productkaarten eronder; de grote is twee kaarten plus de
  * tussenruimte, en daarmee precies even hoog als het blok ernaast.
@@ -46,7 +46,7 @@ if (!featured) throw new Error('trendingCategories is leeg');
 >
 	<div class="flex flex-wrap items-end justify-between gap-4">
 		<h2 id="trending-titel" class="text-2xl font-bold tracking-tight sm:text-3xl">
-			Trending categorieën
+			Populaire categorieën
 		</h2>
 		<a
 			href="/categorieen"

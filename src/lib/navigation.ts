@@ -2,7 +2,7 @@
  * De vaste navigatie van de site.
  *
  * Dit is de enige plek waar de hoofdmenu-items en de uitgelichte categorieen
- * staan. De navbar, het mobiele menu en de sectie "Trending categorieen" lezen
+ * staan. De navbar, het mobiele menu en de sectie "Populaire categorieen" lezen
  * allemaal hieruit, zodat een naam maar op een plek hoeft te veranderen.
  *
  * De categorie-slugs zijn de negen uit data/catalogus/categorieen.json, minus
@@ -55,7 +55,7 @@ export const featuredCategories: readonly FeaturedCategory[] = [
 ];
 
 /*
- * De vijf kaarten in "Trending categorieen". De eerste is de grote kaart
+ * De vijf kaarten in "Populaire categorieen". De eerste is de grote kaart
  * links, de andere vier staan in een blok van twee bij twee rechts.
  * Computerartikelen heeft ook een foto in src/assets/categorieen en kan hier
  * zo weer bij; sloffen en slippers staan wel in het menu, maar niet hier.
@@ -71,7 +71,7 @@ const trendingSlugs = [
 
 export const trendingCategories: readonly FeaturedCategory[] = trendingSlugs.map((slug) => {
 	const category = featuredCategories.find((c) => c.slug === slug);
-	if (!category) throw new Error(`Trending categorie "${slug}" staat niet in featuredCategories`);
+	if (!category) throw new Error(`Populaire categorie "${slug}" staat niet in featuredCategories`);
 	return category;
 });
 
