@@ -1,0 +1,40 @@
+---
+import { actions } from 'astro:actions';
+import ProductFormulier from '../../../components/admin/ProductFormulier.astro';
+import { getDb } from '../../../db/client.ts';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { zetFlash } from '../../../lib/admin/flash.ts';
+import { leesFormulier, veldfoutenUit } from '../../../lib/admin/formulier.ts';
+import { lijstCategorieen } from '../../../lib/admin/producten.ts';
+
+const result = Astro.getActionResult(actions.producten.aanmaken);
+if (result && !result.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Product aangemaakt. Voeg nu foto\'s en eventueel varianten toe.' });
+	return Astro.redirect(`/admin/producten/${result.data.id}`);
+}
+
+const { velden, algemeen } = veldfoutenUit(result?.error);
+const formulier = result?.error ? await leesFormulier(Astro.request) : { velden: {}, lijsten: {} };
+const categorieIds = (formulier.lijsten.categorieIds ?? []).map(Number);
+const categorieen = await lijstCategorieen(getDb());
+---
+
+<AdminLayout title="Nieuw product">
+	<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+		<a href="/admin/producten" class="hover:text-accent hover:underline">Producten</a>
+		<span aria-hidden="true"> / </span>
+		<span>Nieuw product</span>
+	</nav>
+	<h1 class="mt-2 text-2xl font-semibold">Nieuw product</h1>
+	<div class="mt-6 max-w-3xl">
+		<ProductFormulier
+			action={actions.producten.aanmaken}
+			nieuw
+			waarden={formulier.velden}
+			categorieIds={categorieIds}
+			categorieen={categorieen}
+			veldfouten={velden}
+			algemeen={algemeen}
+		/>
+	</div>
+</AdminLayout>

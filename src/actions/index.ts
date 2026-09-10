@@ -1,4 +1,5 @@
 import { auth } from './auth.ts';
+import { productenActions } from './producten.ts';
 import { variantenActions } from './varianten.ts';
 
 /*
@@ -7,5 +8,6 @@ import { variantenActions } from './varianten.ts';
  */
 export const server = {
 	auth,
+	producten: productenActions,
 	varianten: variantenActions,
 };

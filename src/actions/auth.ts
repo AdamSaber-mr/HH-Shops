@@ -3,7 +3,7 @@ import { z } from 'astro/zod';
 import { getAuth } from '../auth/server.ts';
 import { veiligPad } from '../lib/admin/flash.ts';
 import { pasSetCookiesToe } from '../lib/cookies.ts';
-import { clientIp } from './_helpers.ts';
+import { clientIp, tekst } from './_helpers.ts';
 
 /*
  * Inloggen en uitloggen.
@@ -18,10 +18,20 @@ import { clientIp } from './_helpers.ts';
 export const auth = {
 	inloggen: defineAction({
 		accept: 'form',
-		input: z.object({
-			email: z.email('Vul een geldig e-mailadres in.').trim().toLowerCase(),
-			wachtwoord: z.string().min(1, 'Vul je wachtwoord in.'),
-			naar: z.string().optional(),
+		input: z.object({ email: tekst(), wachtwoord: tekst(), naar: tekst() }).transform((v, ctx) => {
+			const email = (v.email ?? '').trim().toLowerCase();
+			if (!z.email().safeParse(email).success) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['email'],
+					message: 'Vul een geldig e-mailadres in.',
+				});
+			}
+			const wachtwoord = v.wachtwoord ?? '';
+			if (wachtwoord === '') {
+				ctx.addIssue({ code: 'custom', path: ['wachtwoord'], message: 'Vul je wachtwoord in.' });
+			}
+			return { email, wachtwoord, naar: v.naar };
 		}),
 		handler: async ({ email, wachtwoord, naar }, context) => {
 			const origin = context.url.origin;

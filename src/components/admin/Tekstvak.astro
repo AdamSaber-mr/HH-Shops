@@ -1,0 +1,56 @@
+---
+/*
+ * Een tekstvak met label, hint en foutmelding. Voor beschrijvingen.
+ */
+
+interface Props {
+	naam: string;
+	label: string;
+	waarde?: string;
+	hint?: string;
+	fout?: string[] | undefined;
+	verplicht?: boolean;
+	rijen?: number;
+	maxlength?: number;
+	class?: string;
+}
+
+const {
+	naam,
+	label,
+	waarde = '',
+	hint,
+	fout,
+	verplicht = false,
+	rijen = 6,
+	maxlength,
+	class: extraClass = '',
+} = Astro.props;
+
+const id = `veld-${naam}`;
+const foutTekst = fout?.[0];
+const beschrijving = [hint ? `${id}-hint` : null, foutTekst ? `${id}-fout` : null].filter(Boolean).join(' ') || undefined;
+---
+
+<div class={extraClass}>
+	<label for={id} class="block text-sm font-medium">
+		{label}
+		{verplicht && <span class="text-text-muted font-normal"> (verplicht)</span>}
+	</label>
+	{hint && <p id={`${id}-hint`} class="mt-0.5 text-xs text-text-muted">{hint}</p>}
+	<textarea
+		id={id}
+		name={naam}
+		rows={rijen}
+		maxlength={maxlength}
+		required={verplicht}
+		aria-invalid={foutTekst ? 'true' : undefined}
+		aria-describedby={beschrijving}
+		class:list={[
+			'mt-1.5 block w-full rounded-control border bg-surface px-3 py-2 text-base leading-relaxed',
+			foutTekst ? 'border-danger' : 'border-border-strong',
+		]}
+		set:text={waarde}
+	/>
+	{foutTekst && <p id={`${id}-fout`} class="mt-1 text-sm text-danger">{foutTekst}</p>}
+</div>

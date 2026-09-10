@@ -1,0 +1,108 @@
+---
+import { actions } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+import Veld from '../../../../components/admin/Veld.astro';
+import Button from '../../../../components/Button.astro';
+import { getDb } from '../../../../db/client.ts';
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import { zetFlash } from '../../../../lib/admin/flash.ts';
+import { veldfoutenUit } from '../../../../lib/admin/formulier.ts';
+import { haalProduct } from '../../../../lib/admin/producten.ts';
+
+/*
+ * De laatste stap voor definitief verwijderen. Bewust een aparte pagina met
+ * een woord dat je moet typen: hier gaat iets onherroepelijk weg, inclusief
+ * de oude links die fase 6 nodig heeft voor doorverwijzingen.
+ */
+
+const id = Number.parseInt(Astro.params.id ?? '', 10);
+if (!Number.isFinite(id) || id <= 0) return new Response(null, { status: 404 });
+
+const result = Astro.getActionResult(actions.producten.verwijderen);
+if (result && !result.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Product definitief verwijderd.' });
+	return Astro.redirect('/admin/producten?status=archived');
+}
+const { velden: veldfouten, algemeen } = veldfoutenUit(result?.error);
+
+const product = await haalProduct(getDb(), id);
+if (!product) return new Response(null, { status: 404 });
+const pad = `/admin/producten/${id}`;
+---
+
+<AdminLayout title={`Verwijderen: ${product.name}`}>
+	<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+		<a href="/admin/producten" class="hover:text-accent hover:underline">Producten</a>
+		<span aria-hidden="true"> / </span>
+		<a href={pad} class="hover:text-accent hover:underline">{product.name}</a>
+		<span aria-hidden="true"> / </span>
+		<span>Verwijderen</span>
+	</nav>
+	<h1 class="mt-2 text-2xl font-semibold">Definitief verwijderen</h1>
+
+	<div class="mt-6 max-w-2xl space-y-6">
+		{
+			product.status !== 'archived' ? (
+				<div class="rounded-card border border-border bg-surface p-5">
+					<p>Dit product is niet gearchiveerd. Archiveer het eerst; definitief verwijderen kan alleen vanuit het archief.</p>
+					<div class="mt-4">
+						<Button href={pad} variant="secondary">
+							Terug naar het product
+						</Button>
+					</div>
+				</div>
+			) : (
+				<>
+					<div class="rounded-card border border-danger/40 bg-danger-subtle p-5 text-sm">
+						<p class="flex items-start gap-2 font-medium text-danger">
+							<Icon name="ph:warning-circle" class="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+							Dit is niet terug te draaien.
+						</p>
+						<ul class="mt-3 list-disc space-y-1 pl-9">
+							<li>
+								Het product, {product.variants.length} {product.variants.length === 1 ? 'variant' : 'varianten'} en {product.images.length}{' '}
+								{product.images.length === 1 ? 'foto' : 'foto\'s'} verdwijnen.
+							</li>
+							{product.legacyUrls.length > 0 && (
+								<li>
+									{product.legacyUrls.length} {product.legacyUrls.length === 1 ? 'oude link' : 'oude links'} van de vorige website{' '}
+									{product.legacyUrls.length === 1 ? 'verliest' : 'verliezen'} hun doel. Bezoekers en Google die daar nog op komen, krijgen dan een
+									foutpagina.
+								</li>
+							)}
+						</ul>
+						{product.legacyUrls.length > 0 && (
+							<ul class="mt-3 space-y-1 pl-9 font-mono text-xs text-text-muted">
+								{product.legacyUrls.map((l) => (
+									<li>{l.path}</li>
+								))}
+							</ul>
+						)}
+					</div>
+
+					<form method="POST" action={actions.producten.verwijderen} class="rounded-card border border-border bg-surface p-5 space-y-5" novalidate>
+						<input type="hidden" name="id" value={product.id} />
+						{algemeen && !veldfouten.bevestiging && (
+							<p role="alert" class="rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">
+								{algemeen}
+							</p>
+						)}
+						<Veld naam="bevestiging" label="Typ VERWIJDER om te bevestigen" fout={veldfouten.bevestiging} autocomplete="off" />
+						<div class="flex flex-wrap gap-3">
+							<button
+								type="submit"
+								class="inline-flex min-h-11 items-center gap-2 rounded-control bg-danger px-4 text-sm font-medium text-white hover:bg-danger/90"
+							>
+								<Icon name="ph:trash" class="size-4" aria-hidden="true" />
+								Definitief verwijderen
+							</button>
+							<Button href={pad} variant="secondary">
+								Annuleren
+							</Button>
+						</div>
+					</form>
+				</>
+			)
+		}
+	</div>
+</AdminLayout>

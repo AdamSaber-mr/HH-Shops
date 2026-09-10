@@ -1,0 +1,66 @@
+---
+/*
+ * Een invoerveld met label, hint en foutmelding, netjes aan elkaar geknoopt
+ * voor schermlezers. Voor tekst, getallen, e-mail en wachtwoorden.
+ */
+
+interface Props {
+	naam: string;
+	label: string;
+	type?: 'text' | 'email' | 'password' | 'search' | 'url';
+	waarde?: string;
+	hint?: string;
+	fout?: string[] | undefined;
+	verplicht?: boolean;
+	placeholder?: string;
+	inputmode?: 'text' | 'decimal' | 'numeric' | 'email';
+	autocomplete?: string;
+	maxlength?: number;
+	class?: string;
+}
+
+const {
+	naam,
+	label,
+	type = 'text',
+	waarde = '',
+	hint,
+	fout,
+	verplicht = false,
+	placeholder,
+	inputmode,
+	autocomplete,
+	maxlength,
+	class: extraClass = '',
+} = Astro.props;
+
+const id = `veld-${naam}`;
+const foutTekst = fout?.[0];
+const beschrijving = [hint ? `${id}-hint` : null, foutTekst ? `${id}-fout` : null].filter(Boolean).join(' ') || undefined;
+---
+
+<div class={extraClass}>
+	<label for={id} class="block text-sm font-medium">
+		{label}
+		{verplicht && <span class="text-text-muted font-normal"> (verplicht)</span>}
+	</label>
+	{hint && <p id={`${id}-hint`} class="mt-0.5 text-xs text-text-muted">{hint}</p>}
+	<input
+		id={id}
+		name={naam}
+		type={type}
+		value={waarde}
+		placeholder={placeholder}
+		inputmode={inputmode}
+		autocomplete={autocomplete}
+		maxlength={maxlength}
+		required={verplicht}
+		aria-invalid={foutTekst ? 'true' : undefined}
+		aria-describedby={beschrijving}
+		class:list={[
+			'mt-1.5 block min-h-11 w-full rounded-control border bg-surface px-3 text-base',
+			foutTekst ? 'border-danger' : 'border-border-strong',
+		]}
+	/>
+	{foutTekst && <p id={`${id}-fout`} class="mt-1 text-sm text-danger">{foutTekst}</p>}
+</div>

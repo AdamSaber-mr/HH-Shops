@@ -37,6 +37,13 @@ export type Lijstrij = {
 	categorieen: string;
 };
 
+/*
+ * Voor gecorreleerde subquery's. Drizzle schrijft `${products.id}` in een
+ * selectveld als kaal `"id"`, en binnen een subquery op product_variants wijst
+ * dat naar de verkeerde tabel. Vandaar de tabelnaam er expliciet bij.
+ */
+const PID = sql.raw('"products"."id"');
+
 const STATUSSEN: ProductStatus[] = ['draft', 'active', 'archived'];
 export function isProductStatus(value: string): value is ProductStatus {
 	return (STATUSSEN as string[]).includes(value);
@@ -78,12 +85,12 @@ function waarClausule(f: Lijstfilter): SQL | undefined {
 	}
 	if (f.categorieId !== null) {
 		delen.push(
-			sql`exists (select 1 from product_categories pc where pc.product_id = ${products.id} and pc.category_id = ${f.categorieId})`,
+			sql`exists (select 1 from product_categories pc where pc.product_id = ${PID} and pc.category_id = ${f.categorieId})`,
 		);
 	}
 	if (f.alleenUitverkocht) {
 		delen.push(
-			sql`not exists (select 1 from product_variants v where v.product_id = ${products.id} and v.stock_quantity > 0)`,
+			sql`not exists (select 1 from product_variants v where v.product_id = ${PID} and v.stock_quantity > 0)`,
 		);
 	}
 	return delen.length > 0 ? and(...delen) : undefined;
@@ -95,11 +102,11 @@ export async function zoekProducten(
 ): Promise<{ rijen: Lijstrij[]; totaal: number }> {
 	const waar = waarClausule(f);
 
-	const voorraad = sql<number>`coalesce((select sum(v.stock_quantity) from product_variants v where v.product_id = ${products.id}), 0)::int`;
+	const voorraad = sql<number>`coalesce((select sum(v.stock_quantity) from product_variants v where v.product_id = ${PID}), 0)::int`;
 	const laagstePrijs = sql<
 		number | null
-	>`(select min(v.price_cents) from product_variants v where v.product_id = ${products.id})`;
-	const varianten = sql<number>`(select count(*) from product_variants v where v.product_id = ${products.id})::int`;
+	>`(select min(v.price_cents) from product_variants v where v.product_id = ${PID})`;
+	const varianten = sql<number>`(select count(*) from product_variants v where v.product_id = ${PID})::int`;
 
 	const sorteerOp: Record<Sortering, SQL> = {
 		naam: sql`${products.name}`,
@@ -123,22 +130,22 @@ export async function zoekProducten(
 				varianten,
 				enigeVariantId: sql<
 					number | null
-				>`(select v.id from product_variants v where v.product_id = ${products.id} order by v.position limit 1)`,
+				>`(select v.id from product_variants v where v.product_id = ${PID} order by v.position limit 1)`,
 				voorraad,
 				laagstePrijs,
 				fotoUrl: sql<
 					string | null
-				>`(select i.url from product_images i where i.product_id = ${products.id} order by i.position limit 1)`,
+				>`(select i.url from product_images i where i.product_id = ${PID} order by i.position limit 1)`,
 				fotoAlt: sql<
 					string | null
-				>`(select i.alt from product_images i where i.product_id = ${products.id} order by i.position limit 1)`,
+				>`(select i.alt from product_images i where i.product_id = ${PID} order by i.position limit 1)`,
 				fotoWidth: sql<
 					number | null
-				>`(select i.width from product_images i where i.product_id = ${products.id} order by i.position limit 1)`,
+				>`(select i.width from product_images i where i.product_id = ${PID} order by i.position limit 1)`,
 				fotoHeight: sql<
 					number | null
-				>`(select i.height from product_images i where i.product_id = ${products.id} order by i.position limit 1)`,
-				categorieen: sql<string>`coalesce((select string_agg(c.name, ', ' order by pc.position) from product_categories pc join categories c on c.id = pc.category_id where pc.product_id = ${products.id}), '')`,
+				>`(select i.height from product_images i where i.product_id = ${PID} order by i.position limit 1)`,
+				categorieen: sql<string>`coalesce((select string_agg(c.name, ', ' order by pc.position) from product_categories pc join categories c on c.id = pc.category_id where pc.product_id = ${PID}), '')`,
 			})
 			.from(products)
 			.where(waar)

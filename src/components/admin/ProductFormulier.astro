@@ -1,0 +1,144 @@
+---
+import type { Veldfouten } from '../../lib/admin/formulier.ts';
+import Button from '../Button.astro';
+import Keuzelijst from './Keuzelijst.astro';
+import Tekstvak from './Tekstvak.astro';
+import Veld from './Veld.astro';
+
+/*
+ * Het productformulier, gedeeld door "nieuw" en "bewerken". Bij een nieuw
+ * product komen prijs en voorraad van de eerste variant erbij, zodat een
+ * product nooit zonder variant bestaat.
+ */
+
+interface Props {
+	action: string;
+	nieuw: boolean;
+	id?: number;
+	waarden: Record<string, string>;
+	categorieIds: number[];
+	categorieen: { id: number; name: string }[];
+	veldfouten: Veldfouten;
+	algemeen: string | null;
+}
+
+const { action, nieuw, id, waarden, categorieIds, categorieen, veldfouten, algemeen } = Astro.props;
+const w = (naam: string, standaard = '') => waarden[naam] ?? standaard;
+const optieNaam = w('optieNaam');
+---
+
+<form method="POST" action={action} class="space-y-8" novalidate>
+	{id !== undefined && <input type="hidden" name="id" value={id} />}
+
+	{
+		algemeen && (
+			<p role="alert" class="rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">
+				{algemeen}
+			</p>
+		)
+	}
+
+	<section class="rounded-card border border-border bg-surface p-5 sm:p-6">
+		<h2 class="text-lg font-semibold">Gegevens</h2>
+		<div class="mt-4 grid gap-5 sm:grid-cols-2">
+			<Veld naam="naam" label="Naam" waarde={w('naam')} verplicht fout={veldfouten.naam} class="sm:col-span-2" hint="Zoals klanten het product zien. Geen streepjes als scheidingsteken, gebruik een komma." />
+			<Veld naam="slug" label="Adres in de shop" waarde={w('slug')} fout={veldfouten.slug} hint="Leeg laten om hem uit de naam af te leiden. Alleen kleine letters, cijfers en streepjes." />
+			<Keuzelijst
+				naam="status"
+				label="Status"
+				waarde={w('status', 'draft')}
+				fout={veldfouten.status}
+				opties={[
+					{ waarde: 'draft', label: 'Concept, niet zichtbaar in de shop' },
+					{ waarde: 'active', label: 'Actief, zichtbaar in de shop' },
+					{ waarde: 'archived', label: 'Gearchiveerd' },
+				]}
+			/>
+			<Veld naam="merk" label="Merk" waarde={w('merk')} fout={veldfouten.merk} hint="Alleen als het product een merknaam draagt." />
+			<Keuzelijst
+				naam="optieNaam"
+				label="Varianten"
+				waarde={optieNaam}
+				fout={veldfouten.optieNaam}
+				hint="Heeft dit product maten of kleuren? Dan krijgt elke maat of kleur een eigen variant met eigen prijs en voorraad."
+				opties={[
+					{ waarde: '', label: 'Geen varianten' },
+					{ waarde: 'Maat', label: 'Maten' },
+					{ waarde: 'Kleur', label: 'Kleuren' },
+				]}
+			/>
+		</div>
+	</section>
+
+	<section class="rounded-card border border-border bg-surface p-5 sm:p-6">
+		<h2 class="text-lg font-semibold">Teksten</h2>
+		<div class="mt-4 space-y-5">
+			<Tekstvak
+				naam="korteBeschrijving"
+				label="Korte beschrijving"
+				waarde={w('korteBeschrijving')}
+				fout={veldfouten.korteBeschrijving}
+				rijen={3}
+				maxlength={600}
+				hint="Een of twee zinnen voor op de productkaart. Platte tekst, maximaal 600 tekens."
+			/>
+			<Tekstvak
+				naam="beschrijving"
+				label="Beschrijving"
+				waarde={w('beschrijving')}
+				fout={veldfouten.beschrijving}
+				verplicht
+				rijen={12}
+				hint="De volledige tekst op de productpagina. Alinea's, opsommingen en tussenkopjes blijven bewaard; de rest van de opmaak wordt opgeschoond."
+			/>
+		</div>
+	</section>
+
+	<section class="rounded-card border border-border bg-surface p-5 sm:p-6">
+		<h2 class="text-lg font-semibold">Categorieen</h2>
+		<p class="mt-1 text-sm text-text-muted">Een product mag in meerdere categorieen staan.</p>
+		{veldfouten.categorieIds && <p class="mt-2 text-sm text-danger">{veldfouten.categorieIds[0]}</p>}
+		<ul class="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+			{
+				categorieen.map((c) => (
+					<li>
+						<label class="flex min-h-11 items-center gap-3 rounded-control border border-border px-3 text-sm hover:bg-surface-hover">
+							<input type="checkbox" name="categorieIds" value={c.id} checked={categorieIds.includes(c.id)} class="size-4 accent-accent" />
+							{c.name}
+						</label>
+					</li>
+				))
+			}
+		</ul>
+	</section>
+
+	{
+		nieuw && (
+			<section class="rounded-card border border-border bg-surface p-5 sm:p-6">
+				<h2 class="text-lg font-semibold">Eerste variant</h2>
+				<p class="mt-1 text-sm text-text-muted">
+					Het artikelnummer wordt automatisch toegekend. Meer maten of kleuren voeg je toe na het opslaan.
+				</p>
+				<div class="mt-4 grid gap-5 sm:grid-cols-3">
+					<Veld naam="prijs" label="Prijs in euro" waarde={w('prijs')} verplicht fout={veldfouten.prijs} inputmode="decimal" placeholder="14,95" hint="Inclusief btw." />
+					<Veld naam="voorraad" label="Voorraad" waarde={w('voorraad', '0')} verplicht fout={veldfouten.voorraad} inputmode="numeric" />
+					<Veld naam="waarde" label="Maat of kleur" waarde={w('waarde')} fout={veldfouten.waarde} hint="Alleen als het product varianten heeft, bijvoorbeeld M of Zwart." />
+				</div>
+			</section>
+		)
+	}
+
+	<section class="rounded-card border border-border bg-surface p-5 sm:p-6">
+		<h2 class="text-lg font-semibold">Vindbaarheid</h2>
+		<p class="mt-1 text-sm text-text-muted">Optioneel. Zonder deze velden gebruikt de shop de naam en de korte beschrijving.</p>
+		<div class="mt-4 space-y-5">
+			<Veld naam="seoTitel" label="Titel in Google" waarde={w('seoTitel')} fout={veldfouten.seoTitel} maxlength={120} hint="Maximaal 120 tekens." />
+			<Tekstvak naam="seoBeschrijving" label="Beschrijving in Google" waarde={w('seoBeschrijving')} fout={veldfouten.seoBeschrijving} rijen={2} maxlength={320} hint="Maximaal 320 tekens." />
+		</div>
+	</section>
+
+	<div class="flex flex-wrap items-center gap-3">
+		<Button type="submit">{nieuw ? 'Product aanmaken' : 'Wijzigingen opslaan'}</Button>
+		<Button href={nieuw ? '/admin/producten' : `/admin/producten/${id}`} variant="secondary">Annuleren</Button>
+	</div>
+</form>

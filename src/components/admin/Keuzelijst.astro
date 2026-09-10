@@ -1,0 +1,39 @@
+---
+/*
+ * Een keuzelijst met label, hint en foutmelding.
+ */
+
+interface Props {
+	naam: string;
+	label: string;
+	opties: { waarde: string; label: string }[];
+	waarde?: string;
+	hint?: string;
+	fout?: string[] | undefined;
+	class?: string;
+}
+
+const { naam, label, opties, waarde = '', hint, fout, class: extraClass = '' } = Astro.props;
+
+const id = `veld-${naam}`;
+const foutTekst = fout?.[0];
+const beschrijving = [hint ? `${id}-hint` : null, foutTekst ? `${id}-fout` : null].filter(Boolean).join(' ') || undefined;
+---
+
+<div class={extraClass}>
+	<label for={id} class="block text-sm font-medium">{label}</label>
+	{hint && <p id={`${id}-hint`} class="mt-0.5 text-xs text-text-muted">{hint}</p>}
+	<select
+		id={id}
+		name={naam}
+		aria-invalid={foutTekst ? 'true' : undefined}
+		aria-describedby={beschrijving}
+		class:list={[
+			'mt-1.5 block min-h-11 w-full rounded-control border bg-surface px-3 text-base',
+			foutTekst ? 'border-danger' : 'border-border-strong',
+		]}
+	>
+		{opties.map((o) => <option value={o.waarde} selected={o.waarde === waarde}>{o.label}</option>)}
+	</select>
+	{foutTekst && <p id={`${id}-fout`} class="mt-1 text-sm text-danger">{foutTekst}</p>}
+</div>
