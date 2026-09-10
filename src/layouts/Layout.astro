@@ -5,6 +5,7 @@ import '@fontsource-variable/geist';
 import '../styles/global.css';
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
+import { listCategories } from '../lib/catalog.ts';
 
 interface Props {
 	/** Zonder titel wordt het alleen "HH Shops". */
@@ -21,6 +22,14 @@ const {
 } = Astro.props;
 
 const pageTitle = title ? `${title} | HH Shops` : 'HH Shops';
+
+/*
+ * De categorieen voor het menu en de footer komen uit de database, niet uit
+ * een vaste lijst in de code. Zo volgt de site een categorie die in het
+ * beheerpaneel wordt hernoemd of toegevoegd. Een keer opgehaald per pagina en
+ * doorgegeven aan kop en voet, zodat het een query is en niet twee.
+ */
+const categorieen = await listCategories();
 ---
 
 <!doctype html>
@@ -43,12 +52,12 @@ const pageTitle = title ? `${title} | HH Shops` : 'HH Shops';
 			Naar de inhoud
 		</a>
 
-		<SiteHeader />
+		<SiteHeader categorieen={categorieen} />
 
 		<main id="inhoud">
 			<slot />
 		</main>
 
-		<SiteFooter />
+		<SiteFooter categorieen={categorieen} />
 	</body>
 </html>

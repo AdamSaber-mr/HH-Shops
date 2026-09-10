@@ -1,6 +1,7 @@
 ---
 import { Icon } from 'astro-icon/components';
-import { categoryHref, trendingCategories } from '../lib/navigation.ts';
+import { listCategories } from '../lib/catalog.ts';
+import { categoryHref } from '../lib/navigation.ts';
 import CategoryCard from './CategoryCard.astro';
 
 /*
@@ -9,35 +10,34 @@ import CategoryCard from './CategoryCard.astro';
  * breed als de productkaarten eronder; de grote is twee kaarten plus de
  * tussenruimte, en daarmee precies even hoog als het blok ernaast.
  *
+ * Welke vijf: de categorieen uit de database op volgorde van `position`
+ * (in te stellen in het beheerpaneel), maar alleen die met een foto in
+ * src/assets/categorieen/<slug>.png. De eerste wordt de grote kaart. Zo kan
+ * Adam de volgorde en de selectie sturen zonder code: een categorie zonder
+ * foto staat er niet bij, en de eerste met foto is de blikvanger.
+ *
  * Zes op een rij bleek te klein (zo'n 215px per kaart) en drie per rij te
  * groot (zo'n 435px). Dit is de tussenweg die Adam koos: vijf kaarten, een
- * eruit springend. Welke vijf, en welke de grote is, staat in
- * src/lib/navigation.ts; de foto's staan in src/assets/categorieen, een per
- * slug.
- *
- * De sectie is even breed als de productrijen (1400 pixels), zodat de kaarten
- * uitlijnen met de producten eronder. De kaarten zijn 5:4 en de foto's ook,
- * zie CategoryCard. Het blok is zo'n 535px hoog.
+ * eruit springend. De sectie is even breed als de productrijen (1400
+ * pixels), zodat de kaarten uitlijnen met de producten eronder. De kaarten
+ * zijn 5:4 en de foto's ook, zie CategoryCard. Het blok is zo'n 535px hoog.
  *
  * Op telefoon en tablet staat de grote kaart over de volle breedte bovenaan
  * en het blok van vier eronder.
- *
- * De glob koppelt slug aan bestand. Ontbreekt een foto, dan valt de build om
- * met een duidelijke fout in plaats van een lege kaart op de site.
  */
+
+const AANTAL = 5;
 
 const files = import.meta.glob<{ default: ImageMetadata }>('../assets/categorieen/*.png', {
 	eager: true,
 });
 
-function imageFor(slug: string): ImageMetadata {
-	const entry = files[`../assets/categorieen/${slug}.png`];
-	if (!entry) throw new Error(`Geen categoriefoto voor "${slug}" in src/assets/categorieen`);
-	return entry.default;
-}
+const kaarten = (await listCategories())
+	.map((c) => ({ ...c, image: files[`../assets/categorieen/${c.slug}.png`]?.default }))
+	.filter((c): c is typeof c & { image: ImageMetadata } => c.image !== undefined)
+	.slice(0, AANTAL);
 
-const [featured, ...rest] = trendingCategories;
-if (!featured) throw new Error('trendingCategories is leeg');
+const [featured, ...rest] = kaarten;
 ---
 
 <section
@@ -57,19 +57,23 @@ if (!featured) throw new Error('trendingCategories is leeg');
 		</a>
 	</div>
 
-	<div class="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-		<CategoryCard
-			name={featured.name}
-			href={categoryHref(featured.slug)}
-			image={imageFor(featured.slug)}
-			featured
-		/>
-		{rest.map((category) => (
+	{featured ? (
+		<div class="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
 			<CategoryCard
-				name={category.name}
-				href={categoryHref(category.slug)}
-				image={imageFor(category.slug)}
+				name={featured.name}
+				href={categoryHref(featured.slug)}
+				image={featured.image}
+				featured
 			/>
-		))}
-	</div>
+			{rest.map((category) => (
+				<CategoryCard
+					name={category.name}
+					href={categoryHref(category.slug)}
+					image={category.image}
+				/>
+			))}
+		</div>
+	) : (
+		<p class="mt-6 text-text-muted">Er zijn nog geen categorieën met een foto.</p>
+	)}
 </section>

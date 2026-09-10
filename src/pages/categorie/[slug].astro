@@ -53,7 +53,10 @@ const entries = gefilterd
 	);
 const favorieten = new Set(await leesFavorieten(Astro));
 
+// De vaste tekst per categorie, tenzij er in het beheerpaneel een
+// beschrijving is ingevuld: die wint, want die kan de klant zelf aanpassen.
 const tekst = tekstVoor(category.slug, category.name);
+const bannerTekst = category.description ?? tekst.tekst;
 const pad = `/categorie/${category.slug}`;
 const gefilterdActief = heeftActieveFilters(filter);
 // Gefilterde en gesorteerde varianten van de pagina horen niet in Google.
@@ -65,7 +68,7 @@ const teller = gefilterdActief
 	: aantal(alle.length);
 ---
 
-<Layout title={category.name} description={category.description ?? tekst.tekst} noindex={noindex}>
+<Layout title={category.name} description={bannerTekst} noindex={noindex}>
 	<div class="mx-auto max-w-[1400px] px-4 pt-5 sm:px-6">
 		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
 			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
@@ -81,7 +84,7 @@ const teller = gefilterdActief
 			slug={category.slug}
 			eyebrow={tekst.eyebrow}
 			title={tekst.titel}
-			text={tekst.tekst}
+			text={bannerTekst}
 			cta={{ label: tekst.knop, href: '#producten' }}
 			imageAlt={category.imageAlt ?? ''}
 		/>
