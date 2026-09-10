@@ -1,0 +1,45 @@
+---
+import { optionSummary } from '../lib/catalog.ts';
+import ProductCard from './ProductCard.astro';
+
+/*
+ * Het productraster: twee kolommen op telefoon, vier op desktop. De
+ * startpagina (via ProductSection) en de categoriepagina gebruiken allebei
+ * dit raster, zodat een productkaart overal dezelfde maat heeft.
+ */
+
+export interface ProductEntry {
+	product: {
+		slug: string;
+		name: string;
+		optionNames: string[];
+		variants: { length: number };
+	};
+	variant: { priceCents: number; compareAtPriceCents: number | null; stockQuantity: number };
+	image: { url: string; alt: string; width: number; height: number };
+}
+
+interface Props {
+	items: readonly ProductEntry[];
+	/** De eerste kaarten boven de vouw laden eager. */
+	eagerCount?: number;
+	class?: string;
+}
+
+const { items, eagerCount = 0, class: extraClass = '' } = Astro.props;
+---
+
+<div class={`grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4 ${extraClass}`}>
+	{items.map(({ product, variant, image }, index) => (
+		<ProductCard
+			slug={product.slug}
+			name={product.name}
+			image={image}
+			priceCents={variant.priceCents}
+			compareAtPriceCents={variant.compareAtPriceCents}
+			stockQuantity={variant.stockQuantity}
+			optionSummary={optionSummary(product.optionNames, product.variants.length)}
+			loading={index < eagerCount ? 'eager' : 'lazy'}
+		/>
+	))}
+</div>

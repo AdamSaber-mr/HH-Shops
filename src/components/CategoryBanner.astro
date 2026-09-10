@@ -1,0 +1,94 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+
+/*
+ * De banner bovenaan een categoriepagina: links een bovenregel, kop, tekst en
+ * knop, rechts de foto van de categorie.
+ *
+ * De foto komt uit src/assets/categorie-banners/<slug>.png. Ontbreekt hij, dan
+ * is de banner alleen het bosgroene vlak met de tekst; de pagina werkt dus al
+ * voordat Adam de foto's heeft gemaakt. Dat is anders dan bij de
+ * categoriekaarten op de startpagina, waar een ontbrekende foto de build
+ * laat omvallen: daar is een lege kaart een fout, hier is een banner zonder
+ * foto gewoon een tussenstand.
+ *
+ * Foto's zijn 2:1 (1400 x 700). Op desktop vult de foto de rechterhelft op
+ * ware verhouding en bepaalt hij de hoogte van de banner; de tekst centreert
+ * ernaast. Op telefoon staat de foto onder de tekst, over de volle breedte.
+ *
+ * De kop is bewust een <p> met kopstijl en geen heading: de h1 van de pagina
+ * staat lager, bij het raster, en een h2 boven de h1 is verkeerd voor
+ * schermlezers en zoekmachines.
+ */
+
+interface Props {
+	slug: string;
+	eyebrow?: string;
+	title: string;
+	text: string;
+	cta: { label: string; href: string };
+	imageAlt?: string;
+}
+
+const { slug, eyebrow, title, text, cta, imageAlt = '' } = Astro.props;
+
+const files = import.meta.glob<{ default: ImageMetadata }>(
+	'../assets/categorie-banners/*.png',
+	{ eager: true },
+);
+const image = files[`../assets/categorie-banners/${slug}.png`]?.default;
+---
+
+<section class="mx-auto max-w-[1400px] px-4 sm:px-6" aria-label="Over deze categorie">
+	<div
+		class:list={[
+			'overflow-hidden rounded-card bg-accent text-white',
+			image && 'lg:grid lg:grid-cols-2',
+		]}
+	>
+		<div
+			class:list={[
+				'relative flex flex-col justify-center px-6 py-10 sm:px-10 sm:py-12 lg:px-14',
+				!image && 'min-h-56 lg:min-h-64',
+			]}
+		>
+			{!image && (
+				<div class="pointer-events-none absolute inset-0" aria-hidden="true">
+					<div class="absolute -top-24 -right-24 size-96 rounded-full bg-white/5"></div>
+					<div class="absolute -right-10 -bottom-40 size-[28rem] rounded-full bg-white/5"></div>
+				</div>
+			)}
+			<div class="relative max-w-xl">
+				{eyebrow && (
+					<p class="text-sm font-semibold tracking-wide text-white/80 uppercase">{eyebrow}</p>
+				)}
+				<p class="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
+					{title}
+				</p>
+				<p class="mt-4 max-w-md text-base text-pretty text-white/85 sm:text-lg">{text}</p>
+				<a
+					href={cta.href}
+					class="mt-8 inline-flex min-h-12 items-center gap-2 rounded-control bg-white px-6 text-base font-medium text-accent transition-colors hover:bg-accent-subtle"
+				>
+					{cta.label}
+					<Icon name="ph:arrow-right" class="size-5" aria-hidden="true" />
+				</a>
+			</div>
+		</div>
+
+		{image && (
+			<Image
+				src={image}
+				alt={imageAlt}
+				widths={[480, 768, 1024, 1400]}
+				sizes="(min-width: 1400px) 676px, (min-width: 1024px) 50vw, calc(100vw - 32px)"
+				quality={72}
+				loading="eager"
+				fetchpriority="high"
+				decoding="async"
+				class="block w-full lg:h-full lg:object-cover"
+			/>
+		)}
+	</div>
+</section>

@@ -1,24 +1,12 @@
 ---
 import { Icon } from 'astro-icon/components';
-import { optionSummary } from '../lib/catalog.ts';
-import ProductCard from './ProductCard.astro';
+import ProductGrid, { type ProductEntry } from './ProductGrid.astro';
 
 /*
- * Een productrij op de startpagina: kop, link rechts en een raster van
- * kaarten. "Populaire producten" en "Nieuw binnen" zijn allebei dit component
- * met andere producten erin.
+ * Een productrij op de startpagina: kop, link rechts en het raster uit
+ * ProductGrid. "Populaire producten" en "Nieuw binnen" zijn allebei dit
+ * component met andere producten erin.
  */
-
-export interface ProductEntry {
-	product: {
-		slug: string;
-		name: string;
-		optionNames: string[];
-		variants: { length: number };
-	};
-	variant: { priceCents: number; compareAtPriceCents: number | null; stockQuantity: number };
-	image: { url: string; alt: string; width: number; height: number };
-}
 
 interface Props {
 	id: string;
@@ -54,19 +42,6 @@ const { id, title, link, items, eagerCount = 0 } = Astro.props;
 			</p>
 		</div>
 	) : (
-		<div class="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-			{items.map(({ product, variant, image }, index) => (
-				<ProductCard
-					slug={product.slug}
-					name={product.name}
-					image={image}
-					priceCents={variant.priceCents}
-					compareAtPriceCents={variant.compareAtPriceCents}
-					stockQuantity={variant.stockQuantity}
-					optionSummary={optionSummary(product.optionNames, product.variants.length)}
-					loading={index < eagerCount ? 'eager' : 'lazy'}
-				/>
-			))}
-		</div>
+		<ProductGrid items={items} eagerCount={eagerCount} class="mt-6" />
 	)}
 </section>

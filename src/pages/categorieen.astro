@@ -1,0 +1,86 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import Layout from '../layouts/Layout.astro';
+import { listCategories } from '../lib/catalog.ts';
+import { categoryHref } from '../lib/navigation.ts';
+
+/*
+ * Het overzicht van alle categorieen: een raster van kaarten met de foto, de
+ * naam en het aantal producten.
+ *
+ * De foto's zijn dezelfde als op de startpagina (src/assets/categorieen).
+ * Niet elke categorie heeft er een; die krijgt een kaart met alleen de naam
+ * op een groen vlak, zodat het raster compleet blijft.
+ */
+
+const categorieen = await listCategories();
+
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/categorieen/*.png', {
+	eager: true,
+});
+const fotoVoor = (slug: string) => files[`../assets/categorieen/${slug}.png`]?.default;
+
+const aantal = (n: number) => (n === 1 ? '1 product' : `${n} producten`);
+---
+
+<Layout
+	title="Alle categorieën"
+	description="Alle categorieën van H&H Shops op een rij: huishoudelijke artikelen, kinderartikelen, tassen, schoenen, cosmetica en meer."
+>
+	<div class="mx-auto max-w-[1400px] px-4 pt-5 pb-4 sm:px-6">
+		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
+			<span aria-hidden="true" class="mx-2">/</span>
+			<span aria-current="page" class="text-text">Categorieën</span>
+		</nav>
+
+		<h1 class="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Alle categorieën</h1>
+		<p class="mt-2 max-w-xl text-text-muted">
+			Kies een categorie en bekijk alle producten, of gebruik de filters op de categoriepagina.
+		</p>
+
+		<ul class="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
+			{categorieen.map((c) => {
+				const foto = fotoVoor(c.slug);
+				return (
+					<li>
+						<a href={categoryHref(c.slug)} class="group block rounded-card">
+							<div class="aspect-[5/4] overflow-hidden rounded-card bg-accent shadow-sm transition-[transform,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:shadow-lg">
+								{foto ? (
+									<Image
+										src={foto}
+										alt=""
+										widths={[320, 480, 640, 900]}
+										sizes="(min-width: 1400px) 435px, (min-width: 1024px) 31vw, 50vw"
+										quality={72}
+										loading="lazy"
+										decoding="async"
+										class="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+									/>
+								) : (
+									<div class="flex size-full items-center justify-center p-6 text-center">
+										<span class="text-2xl font-bold tracking-tight text-balance text-white sm:text-3xl">
+											{c.name}
+										</span>
+									</div>
+								)}
+							</div>
+							<div class="mt-3 flex items-start justify-between gap-3">
+								<div>
+									<h2 class="font-semibold tracking-tight group-hover:text-accent">{c.name}</h2>
+									<p class="text-sm text-text-muted">{aantal(c.productCount)}</p>
+								</div>
+								<Icon
+									name="ph:caret-right"
+									class="mt-1 size-5 shrink-0 text-text-muted transition-transform duration-200 group-hover:translate-x-1 group-hover:text-accent"
+									aria-hidden="true"
+								/>
+							</div>
+						</a>
+					</li>
+				);
+			})}
+		</ul>
+	</div>
+</Layout>

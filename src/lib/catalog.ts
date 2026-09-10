@@ -1,6 +1,12 @@
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import { getDb } from '../db/client.ts';
-import { products } from '../db/schema.ts';
+import { categories, products } from '../db/schema.ts';
+
+/*
+ * defaultVariant woont in categorie-filters.ts, zodat die zonder database te
+ * testen is. Hier opnieuw geexporteerd, zodat pagina's een importplek houden.
+ */
+export { defaultVariant } from './categorie-filters.ts';
 
 /*
  * Leesvragen op de catalogus.
@@ -28,6 +34,66 @@ export async function listActiveProducts() {
 	});
 }
 
+/**
+ * Alle categorieen op volgorde, met het aantal zichtbare producten erin.
+ * Voor het overzicht op /categorieen.
+ */
+export async function listCategories() {
+	const db = getDb();
+	return db
+		.select({
+			id: categories.id,
+			slug: categories.slug,
+			name: categories.name,
+			description: categories.description,
+			imageUrl: categories.imageUrl,
+			imageAlt: categories.imageAlt,
+			position: categories.position,
+			// LET OP: bewust "categories"."id" als tekst en niet ${categories.id}.
+			// Drizzle schrijft die referentie in een enkelvoudige select als kale
+			// kolom "id", en binnen de subquery wijst "id" dan naar products.id.
+			// Dan is elke telling 0.
+			productCount: sql<number>`(
+				select count(*)::int
+				from product_categories pc
+				join products p on p.id = pc.product_id
+				where pc.category_id = "categories"."id" and p.status = 'active'
+			)`,
+		})
+		.from(categories)
+		.orderBy(asc(categories.position), asc(categories.name));
+}
+
+/** Een categorie op haar slug, of undefined als ze niet bestaat. */
+export async function getCategoryBySlug(slug: string) {
+	const db = getDb();
+	return db.query.categories.findFirst({ where: eq(categories.slug, slug) });
+}
+
+/**
+ * De zichtbare producten in een categorie, in dezelfde vorm als
+ * listActiveProducts, zodat de productkaart en defaultVariant hetzelfde
+ * blijven. Filteren en sorteren gebeurt daarna in categorie-filters.ts.
+ */
+export async function listProductsInCategory(slug: string) {
+	const db = getDb();
+	return db.query.products.findMany({
+		where: and(
+			eq(products.status, 'active'),
+			sql`exists (
+				select 1 from product_categories pc
+				join categories c on c.id = pc.category_id
+				where pc.product_id = ${products.id} and c.slug = ${slug}
+			)`,
+		),
+		orderBy: [asc(products.name)],
+		with: {
+			variants: { orderBy: (v, { asc }) => [asc(v.position)] },
+			images: { orderBy: (i, { asc }) => [asc(i.position)] },
+		},
+	});
+}
+
 /** Een product op zijn slug, of undefined als het niet bestaat of niet zichtbaar is. */
 export async function getProductBySlug(slug: string) {
 	const db = getDb();
@@ -40,24 +106,6 @@ export async function getProductBySlug(slug: string) {
 		},
 	});
 	return product;
-}
-
-type Variant = { stockQuantity: number; priceCents: number };
-
-/**
- * De variant die standaard geselecteerd is.
- *
- * De goedkoopste die nog leverbaar is, en pas als er niets leverbaar is de
- * eerste. Zo landt een bezoeker niet op een uitverkochte maat terwijl er naast
- * hem wel een op voorraad ligt.
- */
-export function defaultVariant<T extends Variant>(variants: T[]): T | undefined {
-	const available = variants.filter((v) => v.stockQuantity > 0);
-	const pool = available.length > 0 ? available : variants;
-	return pool.reduce<T | undefined>(
-		(cheapest, v) => (!cheapest || v.priceCents < cheapest.priceCents ? v : cheapest),
-		undefined,
-	);
 }
 
 /*

@@ -1,0 +1,192 @@
+---
+import { Icon } from 'astro-icon/components';
+import { metFilters } from '../lib/admin/paginering.ts';
+import {
+	type Filter,
+	heeftActieveFilters,
+	type Optiegroep,
+	PRIJSKLASSEN,
+	SORTERINGEN,
+	sorteerLabel,
+} from '../lib/categorie-filters.ts';
+import Button from './Button.astro';
+
+/*
+ * De filterbalk van de categoriepagina: links de filterknoppen, rechts
+ * sorteren.
+ *
+ * Alles werkt zonder JavaScript en met het toetsenbord:
+ *  - Prijs, Maat en Kleur zijn <details>-uitklappers met een <summary> als
+ *    knop. Daarin staan radio's (prijs) of vinkjes (maat, kleur) en een knop
+ *    Toepassen. De hele balk is een GET-formulier, dus Toepassen stuurt ook
+ *    de vinkjes uit een dichtgeklapt paneel mee.
+ *  - "Op voorraad" is een schakelknop als link: een klik zet de filter aan of
+ *    uit, de andere filters blijven staan.
+ *  - Sorteren is een uitklapper met links, geen <select>: een select
+ *    verstuurt zonder JavaScript niets bij een keuze.
+ *  - Verborgen velden houden sortering en voorraad vast als iemand op
+ *    Toepassen drukt.
+ * De `name` op <details> zorgt dat er maar een paneel tegelijk open staat, in
+ * browsers die dat kennen; in oudere browsers doet het niets.
+ *
+ * Links die een filter wijzigen komen van metFilters uit de beheerlaag: die
+ * houdt de rest van de querystring vast. Let op: die functie verwijdert een
+ * waarde die precies het getal 1 is (een paginahack), dus geef altijd
+ * strings door.
+ */
+
+interface Props {
+	/** Het pad van de pagina, zonder querystring. */
+	pad: string;
+	params: URLSearchParams;
+	filter: Filter;
+	opties: Optiegroep[];
+}
+
+const { pad, params, filter, opties } = Astro.props;
+
+const actief = heeftActieveFilters(filter);
+const prijsKlasse = PRIJSKLASSEN.find((k) => k.waarde === filter.prijs);
+
+const chip =
+	'inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-full border bg-surface px-4 text-sm font-medium text-text select-none transition-colors hover:bg-surface-hover [&::-webkit-details-marker]:hidden';
+const chipRust = 'border-border-strong';
+const chipActief = 'border-accent bg-accent-subtle text-accent hover:bg-accent-subtle';
+const paneel =
+	'absolute top-full left-0 z-20 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-card border border-border bg-surface p-3 shadow-lg';
+const keuze = 'flex min-h-10 cursor-pointer items-center gap-2.5 rounded-control px-2 text-sm hover:bg-surface-hover';
+---
+
+<form method="get" action={pad} class="flex flex-wrap items-center gap-2" aria-label="Filters">
+	{filter.sorteer !== 'naam' && <input type="hidden" name="sorteer" value={filter.sorteer} />}
+	{filter.alleenVoorraad && <input type="hidden" name="voorraad" value="1" />}
+
+	<!-- Prijs -->
+	<details class="relative" name="filter">
+		<summary class:list={[chip, prijsKlasse ? chipActief : chipRust]}>
+			{prijsKlasse ? `Prijs: ${prijsKlasse.label}` : 'Prijs'}
+			<Icon name="ph:caret-down" class="size-4" aria-hidden="true" />
+		</summary>
+		<div class={paneel}>
+			<fieldset>
+				<legend class="sr-only">Prijs</legend>
+				{PRIJSKLASSEN.map((k) => (
+					<label class={keuze}>
+						<input
+							type="radio"
+							name="prijs"
+							value={k.waarde}
+							checked={filter.prijs === k.waarde}
+							class="size-4 accent-accent"
+						/>
+						{k.label}
+					</label>
+				))}
+			</fieldset>
+			<div class="mt-2 flex items-center justify-between gap-3 border-t border-border pt-3">
+				{prijsKlasse ? (
+					<a
+						href={metFilters(pad, params, { prijs: null })}
+						class="rounded-control text-sm font-medium text-accent hover:underline"
+					>
+						Wissen
+					</a>
+				) : (
+					<span />
+				)}
+				<Button type="submit">Toepassen</Button>
+			</div>
+		</div>
+	</details>
+
+	<!-- Op voorraad -->
+	<a
+		href={metFilters(pad, params, { voorraad: filter.alleenVoorraad ? null : '1' })}
+		class:list={[chip, filter.alleenVoorraad ? chipActief : chipRust]}
+	>
+		{filter.alleenVoorraad && <Icon name="ph:check" class="size-4" aria-hidden="true" />}
+		Op voorraad
+		<span class="sr-only">{filter.alleenVoorraad ? '(aan, klik om uit te zetten)' : '(uit)'}</span>
+	</a>
+
+	<!-- Maat, kleur -->
+	{opties.map((groep) => {
+		const gekozen = filter.opties[groep.param] ?? [];
+		return (
+			<details class="relative" name="filter">
+				<summary class:list={[chip, gekozen.length > 0 ? chipActief : chipRust]}>
+					{gekozen.length > 0 ? `${groep.naam} (${gekozen.length})` : groep.naam}
+					<Icon name="ph:caret-down" class="size-4" aria-hidden="true" />
+				</summary>
+				<div class={paneel}>
+					<fieldset>
+						<legend class="sr-only">{groep.naam}</legend>
+						<div class="grid grid-cols-2 gap-x-2">
+							{groep.waarden.map((waarde) => (
+								<label class={keuze}>
+									<input
+										type="checkbox"
+										name={groep.param}
+										value={waarde}
+										checked={gekozen.includes(waarde)}
+										class="size-4 accent-accent"
+									/>
+									{waarde}
+								</label>
+							))}
+						</div>
+					</fieldset>
+					<div class="mt-2 flex items-center justify-between gap-3 border-t border-border pt-3">
+						{gekozen.length > 0 ? (
+							<a
+								href={metFilters(pad, params, { [groep.param]: null })}
+								class="rounded-control text-sm font-medium text-accent hover:underline"
+							>
+								Wissen
+							</a>
+						) : (
+							<span />
+						)}
+						<Button type="submit">Toepassen</Button>
+					</div>
+				</div>
+			</details>
+		);
+	})}
+
+	{actief && (
+		<a
+			href={pad}
+			class="inline-flex min-h-11 items-center gap-1.5 rounded-control px-2 text-sm font-medium text-text-muted hover:text-text hover:underline"
+		>
+			<Icon name="ph:x" class="size-4" aria-hidden="true" />
+			Alles wissen
+		</a>
+	)}
+
+	<!-- Sorteren -->
+	<details class="relative sm:ml-auto" name="sorteren">
+		<summary class:list={[chip, chipRust]}>
+			<span class="text-text-muted">Sorteren:</span>
+			{sorteerLabel(filter.sorteer)}
+			<Icon name="ph:caret-down" class="size-4" aria-hidden="true" />
+		</summary>
+		<ul class:list={[paneel, 'left-auto right-0 w-56 p-2']} aria-label="Sorteren op">
+			{SORTERINGEN.map((s) => {
+				const huidig = s.waarde === filter.sorteer;
+				return (
+					<li>
+						<a
+							href={metFilters(pad, params, { sorteer: s.waarde === 'naam' ? null : s.waarde })}
+							class:list={[keuze, 'justify-between', huidig && 'font-semibold text-accent']}
+							aria-current={huidig ? 'true' : undefined}
+						>
+							{s.label}
+							{huidig && <Icon name="ph:check" class="size-4" aria-hidden="true" />}
+						</a>
+					</li>
+				);
+			})}
+		</ul>
+	</details>
+</form>

@@ -1,0 +1,120 @@
+---
+import Button from '../../components/Button.astro';
+import CategoryBanner from '../../components/CategoryBanner.astro';
+import FilterBar from '../../components/FilterBar.astro';
+import ProductGrid from '../../components/ProductGrid.astro';
+import Layout from '../../layouts/Layout.astro';
+import { getCategoryBySlug, listProductsInCategory } from '../../lib/catalog.ts';
+import {
+	beschikbareOpties,
+	defaultVariant,
+	filterEnSorteer,
+	heeftActieveFilters,
+	leesFilter,
+} from '../../lib/categorie-filters.ts';
+import { tekstVoor } from '../../lib/categorie-teksten.ts';
+
+/*
+ * De categoriepagina: banner, filterbalk, kop met teller en het raster.
+ *
+ * Een pagina voor alle categorieen. De slug bepaalt de categorie, de tekst in
+ * de banner komt uit categorie-teksten.ts, de foto uit
+ * src/assets/categorie-banners. Filters en sortering staan in de querystring
+ * en worden in categorie-filters.ts uitgerekend.
+ *
+ * Twee lege staten: een categorie zonder producten (dan ook geen filterbalk,
+ * er valt niets te filteren) en filters die niets opleveren (dan blijft de
+ * balk staan, anders kun je niet terug).
+ */
+
+const { slug } = Astro.params;
+if (!slug) return new Response(null, { status: 404, statusText: 'Niet gevonden' });
+
+const [category, alle] = await Promise.all([getCategoryBySlug(slug), listProductsInCategory(slug)]);
+if (!category) return new Response(null, { status: 404, statusText: 'Niet gevonden' });
+
+const opties = beschikbareOpties(alle);
+const filter = leesFilter(
+	Astro.url.searchParams,
+	opties.map((o) => o.param),
+);
+const gefilterd = filterEnSorteer(alle, filter);
+
+const entries = gefilterd
+	.map((product) => ({
+		product,
+		variant: defaultVariant(product.variants),
+		image: product.images[0],
+	}))
+	.filter(
+		(entry): entry is typeof entry & { variant: NonNullable<typeof entry.variant> } =>
+			Boolean(entry.variant && entry.image),
+	);
+
+const tekst = tekstVoor(category.slug, category.name);
+const pad = `/categorie/${category.slug}`;
+const gefilterdActief = heeftActieveFilters(filter);
+// Gefilterde en gesorteerde varianten van de pagina horen niet in Google.
+const noindex = gefilterdActief || filter.sorteer !== 'naam';
+
+const aantal = (n: number) => (n === 1 ? '1 product' : `${n} producten`);
+const teller = gefilterdActief
+	? `${gefilterd.length} van ${aantal(alle.length)}`
+	: aantal(alle.length);
+---
+
+<Layout title={category.name} description={category.description ?? tekst.tekst} noindex={noindex}>
+	<div class="mx-auto max-w-[1400px] px-4 pt-5 sm:px-6">
+		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
+			<span aria-hidden="true" class="mx-2">/</span>
+			<a href="/categorieen" class="rounded-control hover:text-text hover:underline">Categorieën</a>
+			<span aria-hidden="true" class="mx-2">/</span>
+			<span aria-current="page" class="text-text">{category.name}</span>
+		</nav>
+	</div>
+
+	<div class="mt-4">
+		<CategoryBanner
+			slug={category.slug}
+			eyebrow={tekst.eyebrow}
+			title={tekst.titel}
+			text={tekst.tekst}
+			cta={{ label: tekst.knop, href: '#producten' }}
+			imageAlt={category.imageAlt ?? ''}
+		/>
+	</div>
+
+	<section id="producten" class="mx-auto max-w-[1400px] scroll-mt-32 px-4 pt-8 sm:px-6 lg:pt-10">
+		{alle.length > 0 && (
+			<FilterBar pad={pad} params={Astro.url.searchParams} filter={filter} opties={opties} />
+		)}
+
+		<div class="mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+			<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{category.name}</h1>
+			<p class="text-text-muted">{teller}</p>
+		</div>
+
+		{alle.length === 0 ? (
+			<div class="mt-6 rounded-card border border-border bg-surface p-8 text-center">
+				<p class="font-medium">Er staat nog niets in deze categorie</p>
+				<p class="mt-1 text-sm text-text-muted">Kijk gerust in een van de andere categorieën.</p>
+				<div class="mt-5 flex justify-center">
+					<Button href="/categorieen" variant="secondary">Alle categorieën</Button>
+				</div>
+			</div>
+		) : entries.length === 0 ? (
+			<div class="mt-6 rounded-card border border-border bg-surface p-8 text-center">
+				<p class="font-medium">Geen producten met deze filters</p>
+				<p class="mt-1 text-sm text-text-muted">
+					Probeer een andere prijs of maat, of wis de filters.
+				</p>
+				<div class="mt-5 flex justify-center">
+					<Button href={pad} variant="secondary">Filters wissen</Button>
+				</div>
+			</div>
+		) : (
+			<ProductGrid items={entries} eagerCount={4} class="mt-6" />
+		)}
+	</section>
+</Layout>
