@@ -1,10 +1,13 @@
 ---
 import Button from '../../components/Button.astro';
+import Hartje from '../../components/klant/Hartje.astro';
+import WinkelmandKnop from '../../components/klant/WinkelmandKnop.astro';
 import Price from '../../components/Price.astro';
 import ProductImage from '../../components/ProductImage.astro';
 import StockBadge from '../../components/StockBadge.astro';
 import Layout from '../../layouts/Layout.astro';
 import { defaultVariant, getProductBySlug } from '../../lib/catalog.ts';
+import { leesFavorieten } from '../../lib/klanten/favorieten.ts';
 
 /*
  * De productpagina.
@@ -37,6 +40,9 @@ if (!selected) {
 
 const hasChoice = product.variants.length > 1 && Boolean(optionName);
 const soldOut = selected.stockQuantity <= 0;
+const favoriet = (await leesFavorieten(Astro)).includes(product.id);
+// Waar hartje en winkelmandknop zonder JavaScript naar terugkeren: deze maat.
+const hier = Astro.url.pathname + Astro.url.search;
 const cover = product.images[0];
 const rest = product.images.slice(1);
 
@@ -156,6 +162,13 @@ function linkFor(value: string): string {
 					<div class="flex items-center gap-2">
 						<StockBadge quantity={selected.stockQuantity} />
 						<span class="text-xs text-text-muted">Artikelnummer {selected.sku}</span>
+						<Hartje
+							productId={product.id}
+							naam={product.name}
+							favoriet={favoriet}
+							naar={hier}
+							class="ml-auto border border-border shadow-none"
+						/>
 					</div>
 
 					{soldOut ? (
@@ -168,7 +181,7 @@ function linkFor(value: string): string {
 							</>
 						) : (
 							<>
-								<Button block size="lg">In winkelwagen</Button>
+								<WinkelmandKnop variantId={selected.id} naam={product.name} naar={hier} stijl="blok" />
 								<p class="text-sm text-text-muted">
 									Voor 16.00 uur besteld, morgen in huis. Dertig dagen bedenktijd.
 								</p>
