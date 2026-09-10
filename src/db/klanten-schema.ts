@@ -66,7 +66,10 @@ export const cartItems = pgTable(
 		primaryKey({ columns: [t.userId, t.variantId] }),
 		// Nul zou "verwijderd" betekenen en hoort dan ook weg te zijn; boven de
 		// tien is geen consumentenbestelling meer.
-		check('cart_items_quantity_range', sql`${t.quantity} BETWEEN 1 AND ${sql.raw(String(MAX_AANTAL))}`),
+		check(
+			'cart_items_quantity_range',
+			sql`${t.quantity} BETWEEN 1 AND ${sql.raw(String(MAX_AANTAL))}`,
+		),
 	],
 );
 
@@ -107,7 +110,10 @@ export const customerAddresses = pgTable(
 			'customer_addresses_addition_shape',
 			sql`${t.houseNumberAddition} IS NULL OR (btrim(${t.houseNumberAddition}) = ${t.houseNumberAddition} AND length(${t.houseNumberAddition}) BETWEEN 1 AND 10)`,
 		),
-		check('customer_addresses_postal_code_format', sql`${t.postalCode} ~ '^[1-9][0-9]{3} [A-Z]{2}$'`),
+		check(
+			'customer_addresses_postal_code_format',
+			sql`${t.postalCode} ~ '^[1-9][0-9]{3} [A-Z]{2}$'`,
+		),
 		check(
 			'customer_addresses_city_shape',
 			sql`btrim(${t.city}) = ${t.city} AND length(${t.city}) BETWEEN 2 AND 100`,

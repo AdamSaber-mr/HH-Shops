@@ -1,0 +1,40 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { Flash } from '../../lib/klanten/flash.ts';
+
+/*
+ * Een melding: de flash na een redirect ("zit in je winkelmand"), of een
+ * fout bovenaan een formulier. role="status" voor goed nieuws, role="alert"
+ * voor een fout, zodat een schermlezer het voorleest zonder de focus te
+ * stelen.
+ */
+
+interface Props {
+	melding: Flash | null | undefined;
+	class?: string;
+}
+
+const { melding, class: extraClass = 'mb-6' } = Astro.props;
+---
+
+{
+	melding && (
+		<div
+			role={melding.soort === 'ok' ? 'status' : 'alert'}
+			class:list={[
+				'flex items-start gap-3 rounded-card border px-4 py-3 text-sm',
+				melding.soort === 'ok'
+					? 'border-accent/30 bg-accent-subtle text-text'
+					: 'border-danger/30 bg-danger-subtle text-danger',
+				extraClass,
+			]}
+		>
+			<Icon
+				name={melding.soort === 'ok' ? 'ph:check' : 'ph:warning-circle'}
+				class="mt-0.5 size-4 shrink-0"
+				aria-hidden="true"
+			/>
+			<p>{melding.tekst}</p>
+		</div>
+	)
+}

@@ -1,0 +1,120 @@
+---
+import { actions } from 'astro:actions';
+import Button from '../../components/Button.astro';
+import AccountPagina from '../../components/klant/AccountPagina.astro';
+import Formulierveld from '../../components/klant/Formulierveld.astro';
+import Melding from '../../components/klant/Melding.astro';
+import { leesFormulier, veldfoutenUit } from '../../lib/admin/formulier.ts';
+import { leesAdres } from '../../lib/klanten/account.ts';
+import { leesFlash, zetFlash } from '../../lib/klanten/flash.ts';
+
+/*
+ * Een bezorgadres per klant. Wordt straks bij het afrekenen vooringevuld.
+ */
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/account/inloggen?naar=%2Faccount%2Fadres');
+
+const opslaan = Astro.getActionResult(actions.klant.adres);
+if (opslaan && !opslaan.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Je bezorgadres is opgeslagen.' });
+	return Astro.redirect('/account/adres', 303);
+}
+const verwijderen = Astro.getActionResult(actions.klant.adresVerwijderen);
+if (verwijderen && !verwijderen.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Je bezorgadres is verwijderd.' });
+	return Astro.redirect('/account/adres', 303);
+}
+
+const { velden: fouten, algemeen } = veldfoutenUit(opslaan?.error);
+const adres = await leesAdres(user.id);
+const ingevuld = opslaan?.error
+	? (await leesFormulier(Astro.request)).velden
+	: {
+			name: adres?.name ?? user.name,
+			street: adres?.street ?? '',
+			houseNumber: adres?.houseNumber ?? '',
+			houseNumberAddition: adres?.houseNumberAddition ?? '',
+			postalCode: adres?.postalCode ?? '',
+			city: adres?.city ?? '',
+		};
+---
+
+<AccountPagina
+	titel="Bezorgadres"
+	intro="Alleen adressen in Nederland. We gebruiken dit straks om je bestelling te bezorgen."
+	huidig="/account/adres"
+	melding={leesFlash(Astro.cookies)}
+>
+	<Melding melding={algemeen ? { soort: 'fout', tekst: algemeen } : null} />
+
+	<form method="POST" action={actions.klant.adres} class="space-y-5" novalidate>
+		<Formulierveld
+			naam="name"
+			label="Naam van de ontvanger"
+			autocomplete="shipping name"
+			verplicht
+			maxlength={100}
+			waarde={ingevuld.name ?? ''}
+			fout={fouten.name?.[0]}
+		/>
+		<Formulierveld
+			naam="street"
+			label="Straat"
+			autocomplete="shipping address-line1"
+			verplicht
+			maxlength={100}
+			waarde={ingevuld.street ?? ''}
+			fout={fouten.street?.[0]}
+		/>
+		<div class="grid grid-cols-2 gap-4">
+			<Formulierveld
+				naam="houseNumber"
+				label="Huisnummer"
+				inputmode="numeric"
+				verplicht
+				maxlength={6}
+				waarde={ingevuld.houseNumber ?? ''}
+				fout={fouten.houseNumber?.[0]}
+			/>
+			<Formulierveld
+				naam="houseNumberAddition"
+				label="Toevoeging"
+				maxlength={10}
+				waarde={ingevuld.houseNumberAddition ?? ''}
+				fout={fouten.houseNumberAddition?.[0]}
+			/>
+		</div>
+		<div class="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4">
+			<Formulierveld
+				naam="postalCode"
+				label="Postcode"
+				autocomplete="shipping postal-code"
+				verplicht
+				maxlength={8}
+				waarde={ingevuld.postalCode ?? ''}
+				fout={fouten.postalCode?.[0]}
+			/>
+			<Formulierveld
+				naam="city"
+				label="Plaats"
+				autocomplete="shipping address-level2"
+				verplicht
+				maxlength={100}
+				waarde={ingevuld.city ?? ''}
+				fout={fouten.city?.[0]}
+			/>
+		</div>
+		<Button type="submit">Adres opslaan</Button>
+	</form>
+
+	{
+		adres && (
+			<form method="POST" action={actions.klant.adresVerwijderen} class="mt-8 border-t border-border pt-6">
+				<Button type="submit" variant="secondary">
+					Adres verwijderen
+				</Button>
+			</form>
+		)
+	}
+</AccountPagina>

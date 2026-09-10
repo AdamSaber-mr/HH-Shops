@@ -1,0 +1,40 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import type { Flash } from '../../lib/klanten/flash.ts';
+import AccountMenu from './AccountMenu.astro';
+import Melding from './Melding.astro';
+
+/*
+ * Het kader van elke accountpagina: titel, zijmenu, melding, inhoud. Niet
+ * in Google, niet in een cache: dit is persoonlijk.
+ */
+
+interface Props {
+	titel: string;
+	intro?: string;
+	huidig: string;
+	melding?: Flash | null;
+}
+
+const { titel, intro, huidig, melding } = Astro.props;
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<Layout title={titel} noindex>
+	<div class="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:py-10">
+		<div class="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12">
+			<aside class="mb-6 lg:mb-0">
+				<p class="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">Mijn account</p>
+				<AccountMenu huidig={huidig} />
+			</aside>
+			<div class="max-w-2xl">
+				<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{titel}</h1>
+				{intro && <p class="mt-2 text-text-muted">{intro}</p>}
+				<div class="mt-6">
+					<Melding melding={melding} />
+					<slot />
+				</div>
+			</div>
+		</div>
+	</div>
+</Layout>

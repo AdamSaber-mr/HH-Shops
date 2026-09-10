@@ -1,0 +1,78 @@
+---
+import { Icon } from 'astro-icon/components';
+import AccountPagina from '../../components/klant/AccountPagina.astro';
+import { leesAdres } from '../../lib/klanten/account.ts';
+import { adresRegel } from '../../lib/klanten/adres.ts';
+import { leesFavorieten } from '../../lib/klanten/favorieten.ts';
+import { leesFlash } from '../../lib/klanten/flash.ts';
+import { telWinkelmand } from '../../lib/klanten/winkelmand.ts';
+
+/*
+ * Het overzicht van "Mijn account". De middleware laat hier alleen
+ * ingelogde bezoekers toe.
+ */
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/account/inloggen?naar=%2Faccount');
+
+const [favorieten, artikelen, adres] = await Promise.all([
+	leesFavorieten(Astro),
+	telWinkelmand(Astro),
+	leesAdres(user.id),
+]);
+const voornaam = user.name.split(' ')[0];
+
+const kaarten = [
+	{
+		href: '/account/favorieten',
+		icon: 'ph:heart',
+		titel: 'Favorieten',
+		tekst:
+			favorieten.length === 0
+				? 'Nog geen favorieten. Klik op het hartje bij een product.'
+				: `${favorieten.length} ${favorieten.length === 1 ? 'product' : 'producten'} bewaard.`,
+	},
+	{
+		href: '/winkelmand',
+		icon: 'ph:shopping-cart-simple',
+		titel: 'Winkelmand',
+		tekst:
+			artikelen === 0
+				? 'Je winkelmand is leeg.'
+				: `${artikelen} ${artikelen === 1 ? 'artikel' : 'artikelen'} in je winkelmand.`,
+	},
+	{
+		href: '/account/adres',
+		icon: 'ph:map-pin',
+		titel: 'Bezorgadres',
+		tekst: adres ? adresRegel(adres) : 'Nog geen adres opgeslagen.',
+	},
+	{
+		href: '/account/gegevens',
+		icon: 'ph:pencil-simple',
+		titel: 'Gegevens',
+		tekst: `${user.name}, ${user.email}`,
+	},
+];
+---
+
+<AccountPagina titel={`Hallo ${voornaam}`} huidig="/account" melding={leesFlash(Astro.cookies)}>
+	<ul class="grid gap-4 sm:grid-cols-2">
+		{
+			kaarten.map((k) => (
+				<li>
+					<a
+						href={k.href}
+						class="flex h-full gap-4 rounded-card border border-border bg-surface p-5 transition-colors hover:border-border-strong"
+					>
+						<Icon name={k.icon} class="mt-0.5 size-6 shrink-0 text-accent" aria-hidden="true" />
+						<span>
+							<span class="block font-semibold">{k.titel}</span>
+							<span class="mt-1 block text-sm text-text-muted">{k.tekst}</span>
+						</span>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</AccountPagina>

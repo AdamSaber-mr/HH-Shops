@@ -1,0 +1,74 @@
+---
+import { actions } from 'astro:actions';
+import Button from '../../components/Button.astro';
+import Formulierveld from '../../components/klant/Formulierveld.astro';
+import Melding from '../../components/klant/Melding.astro';
+import Layout from '../../layouts/Layout.astro';
+import { leesFormulier, veldfoutenUit } from '../../lib/admin/formulier.ts';
+import { leesFlash, zetFlash } from '../../lib/klanten/flash.ts';
+import { lokaalPad } from '../../lib/klanten/pad.ts';
+
+/*
+ * Inloggen voor klanten. Een gewoon formulier; de middleware stuurt wie al
+ * ingelogd is meteen door naar /account.
+ */
+
+const result = Astro.getActionResult(actions.klant.inloggen);
+if (result && !result.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Je bent ingelogd.' });
+	return Astro.redirect(result.data.naar, 303);
+}
+
+const naar = lokaalPad(Astro.url.searchParams.get('naar'), '/account');
+const { velden: fouten, algemeen } = veldfoutenUit(result?.error);
+const ingevuld = result?.error ? (await leesFormulier(Astro.request)).velden : {};
+const flash = leesFlash(Astro.cookies);
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<Layout title="Inloggen" noindex>
+	<div class="mx-auto max-w-md px-4 py-10 sm:px-6 lg:py-16">
+		<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Inloggen</h1>
+		<p class="mt-2 text-text-muted">Je favorieten en winkelmand staan dan op elk apparaat klaar.</p>
+
+		<div class="mt-6">
+			<Melding melding={flash} />
+			<Melding melding={algemeen ? { soort: 'fout', tekst: algemeen } : null} />
+		</div>
+
+		<form method="POST" action={actions.klant.inloggen} class="space-y-5" novalidate>
+			<input type="hidden" name="naar" value={naar} />
+			<Formulierveld
+				naam="email"
+				label="E-mailadres"
+				type="email"
+				autocomplete="username"
+				inputmode="email"
+				verplicht
+				waarde={ingevuld.email ?? ''}
+				fout={fouten.email?.[0]}
+			/>
+			<Formulierveld
+				naam="wachtwoord"
+				label="Wachtwoord"
+				type="password"
+				autocomplete="current-password"
+				verplicht
+				fout={fouten.wachtwoord?.[0]}
+			/>
+			<Button type="submit" block size="lg">Inloggen</Button>
+		</form>
+
+		<p class="mt-4 text-sm text-text-muted">
+			Wachtwoord vergeten? Dat kunnen we op dit moment nog niet zelf herstellen. Stuur een mail naar
+			<a href="mailto:info@hh-shops.nl" class="font-medium text-accent hover:underline">info@hh-shops.nl</a>.
+		</p>
+
+		<div class="mt-8 border-t border-border pt-6">
+			<p class="text-sm">Nog geen account?</p>
+			<Button href={`/account/registreren?naar=${encodeURIComponent(naar)}`} variant="secondary" block class="mt-3">
+				Account aanmaken
+			</Button>
+		</div>
+	</div>
+</Layout>

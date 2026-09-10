@@ -1,0 +1,175 @@
+---
+import { actions } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+import Button from '../components/Button.astro';
+import Melding from '../components/klant/Melding.astro';
+import Price from '../components/Price.astro';
+import ProductImage from '../components/ProductImage.astro';
+import Layout from '../layouts/Layout.astro';
+import { leesFlash } from '../lib/klanten/flash.ts';
+import { lokaalPad } from '../lib/klanten/pad.ts';
+import { haalWinkelmand, MAX_AANTAL } from '../lib/klanten/winkelmand.ts';
+import { formatEuro } from '../lib/price.ts';
+
+/*
+ * De winkelmand. Elke knop is een formulier (min, plus, verwijderen) dat
+ * door de middleware wordt afgehandeld en terugkomt op deze pagina. Werkt
+ * zonder JavaScript.
+ *
+ * Afrekenen is er nog niet: die knop staat uit tot fase 4 is besloten.
+ */
+
+const overzicht = await haalWinkelmand(Astro);
+const flash = leesFlash(Astro.cookies);
+const terug = lokaalPad(Astro.url.searchParams.get('terug'), '/categorieen');
+const naar = '/winkelmand';
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const knop =
+	'inline-flex size-10 items-center justify-center rounded-control border border-border-strong bg-surface text-text hover:bg-surface-hover disabled:cursor-not-allowed disabled:border-border disabled:text-text-disabled';
+---
+
+<Layout title="Winkelmand" noindex>
+	<div class="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:py-10">
+		<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">
+			Winkelmand
+			{
+				overzicht.aantalArtikelen > 0 && (
+					<span class="text-lg font-normal text-text-muted">
+						({overzicht.aantalArtikelen} {overzicht.aantalArtikelen === 1 ? 'artikel' : 'artikelen'})
+					</span>
+				)
+			}
+		</h1>
+
+		<div class="mt-6 space-y-3">
+			<Melding melding={flash} class="" />
+			{overzicht.meldingen.map((tekst) => <Melding melding={{ soort: 'fout', tekst }} class="" />)}
+		</div>
+
+		{
+			overzicht.regels.length === 0 ? (
+				<div class="mt-6 rounded-card border border-border bg-surface p-8 text-center">
+					<p class="font-medium">Je winkelmand is leeg</p>
+					<p class="mt-1 text-sm text-text-muted">Alles wat je toevoegt komt hier te staan.</p>
+					<Button href="/categorieen" class="mt-5">
+						Bekijk de categorieën
+					</Button>
+				</div>
+			) : (
+				<div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+					<ul class="divide-y divide-border rounded-card border border-border bg-surface">
+						{overzicht.regels.map((regel) => (
+							<li class="flex gap-4 p-4 sm:p-5">
+								<a
+									href={`/product/${regel.product.slug}`}
+									class="block size-24 shrink-0 overflow-hidden rounded-card bg-surface-hover sm:size-28"
+								>
+									{regel.image && (
+										<ProductImage
+											src={regel.image.url}
+											alt={regel.image.alt}
+											width={regel.image.width}
+											height={regel.image.height}
+											widths={[112, 224]}
+											sizes="112px"
+											class="size-full object-cover mix-blend-multiply"
+										/>
+									)}
+								</a>
+								<div class="flex min-w-0 flex-1 flex-col gap-2">
+									<div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+										<div class="min-w-0">
+											<h2 class="text-sm font-semibold leading-snug">
+												<a href={`/product/${regel.product.slug}`} class="hover:underline">
+													{regel.product.name}
+												</a>
+											</h2>
+											{regel.optieTekst && <p class="text-xs text-text-muted">{regel.optieTekst}</p>}
+											<p class="text-xs text-text-muted">Artikelnummer {regel.sku}</p>
+										</div>
+										<Price cents={regel.regelTotaalCents} class="shrink-0" />
+									</div>
+									<div class="mt-auto flex flex-wrap items-center gap-3">
+										<fieldset class="flex items-center gap-2">
+											<legend class="sr-only">Aantal van {regel.product.name}</legend>
+											<form method="POST" action={actions.winkelmand.aantal} class="contents">
+												<input type="hidden" name="variantId" value={regel.variantId} />
+												<input type="hidden" name="aantal" value={regel.aantal - 1} />
+												<input type="hidden" name="naar" value={naar} />
+												<button type="submit" class={knop} aria-label={`Een minder van ${regel.product.name}`}>
+													<Icon name="ph:minus" class="size-4" aria-hidden="true" />
+												</button>
+											</form>
+											<span class="min-w-6 text-center text-sm font-medium tabular-nums" aria-live="polite">
+												{regel.aantal}
+											</span>
+											<form method="POST" action={actions.winkelmand.aantal} class="contents">
+												<input type="hidden" name="variantId" value={regel.variantId} />
+												<input type="hidden" name="aantal" value={regel.aantal + 1} />
+												<input type="hidden" name="naar" value={naar} />
+												<button
+													type="submit"
+													class={knop}
+													disabled={regel.aantal >= regel.maxAantal}
+													aria-label={`Een meer van ${regel.product.name}`}
+												>
+													<Icon name="ph:plus" class="size-4" aria-hidden="true" />
+												</button>
+											</form>
+										</fieldset>
+										<p class="text-xs text-text-muted">
+											{formatEuro(regel.priceCents)} per stuk
+											{regel.aantal >= regel.maxAantal &&
+												(regel.maxAantal < MAX_AANTAL
+													? `, meer is er niet op voorraad`
+													: `, maximaal ${MAX_AANTAL} per bestelling`)}
+										</p>
+										<form method="POST" action={actions.winkelmand.verwijderen} class="ml-auto contents">
+											<input type="hidden" name="variantId" value={regel.variantId} />
+											<input type="hidden" name="naar" value={naar} />
+											<button
+												type="submit"
+												class="ml-auto inline-flex min-h-10 items-center gap-1.5 rounded-control px-2 text-sm text-text-muted hover:bg-surface-hover hover:text-danger"
+											>
+												<Icon name="ph:trash" class="size-4" aria-hidden="true" />
+												Verwijderen
+												<span class="sr-only">: {regel.product.name}</span>
+											</button>
+										</form>
+									</div>
+								</div>
+							</li>
+						))}
+					</ul>
+
+					<aside class="h-fit rounded-card border border-border bg-surface p-5 sm:p-6" aria-labelledby="overzicht-titel">
+						<h2 id="overzicht-titel" class="text-lg font-semibold">Overzicht</h2>
+						<dl class="mt-4 space-y-2 text-sm">
+							<div class="flex justify-between gap-4">
+								<dt>Subtotaal</dt>
+								<dd class="font-medium tabular-nums">{formatEuro(overzicht.subtotaalCents)}</dd>
+							</div>
+							<div class="flex justify-between gap-4 text-text-muted">
+								<dt>Verzendkosten</dt>
+								<dd>{overzicht.subtotaalCents >= 5000 ? 'Gratis' : 'Bij het afrekenen'}</dd>
+							</div>
+						</dl>
+						<p class="mt-4 text-xs text-text-muted">Prijzen zijn inclusief btw. Gratis verzending vanaf € 50.</p>
+						<Button disabled block size="lg" class="mt-5">
+							Afrekenen
+						</Button>
+						<p class="mt-2 text-center text-xs text-text-muted">Afrekenen is binnenkort mogelijk.</p>
+						<a
+							href={terug}
+							class="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-control text-sm font-medium text-accent hover:underline"
+						>
+							<Icon name="ph:arrow-left" class="size-4" aria-hidden="true" />
+							Verder winkelen
+						</a>
+					</aside>
+				</div>
+			)
+		}
+	</div>
+</Layout>

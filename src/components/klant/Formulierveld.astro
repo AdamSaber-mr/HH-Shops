@@ -1,0 +1,65 @@
+---
+/*
+ * Een invoerveld met label erboven, hint en foutmelding eronder, aan elkaar
+ * geknoopt voor schermlezers. De klantkant van admin/Veld.astro: dezelfde
+ * regels, dezelfde tokens, maar los van het beheerpaneel zodat de twee
+ * onafhankelijk kunnen veranderen.
+ */
+
+interface Props {
+	naam: string;
+	label: string;
+	type?: 'text' | 'email' | 'password' | 'tel';
+	waarde?: string;
+	hint?: string;
+	fout?: string | undefined;
+	verplicht?: boolean;
+	autocomplete?: string;
+	inputmode?: 'text' | 'numeric' | 'email';
+	maxlength?: number;
+	class?: string;
+}
+
+const {
+	naam,
+	label,
+	type = 'text',
+	waarde = '',
+	hint,
+	fout,
+	verplicht = false,
+	autocomplete,
+	inputmode,
+	maxlength,
+	class: extraClass = '',
+} = Astro.props;
+
+const id = `veld-${naam}`;
+const beschrijving =
+	[hint ? `${id}-hint` : null, fout ? `${id}-fout` : null].filter(Boolean).join(' ') || undefined;
+---
+
+<div class={extraClass}>
+	<label for={id} class="block text-sm font-medium">
+		{label}
+		{!verplicht && <span class="font-normal text-text-muted"> (niet verplicht)</span>}
+	</label>
+	{hint && <p id={`${id}-hint`} class="mt-0.5 text-xs text-text-muted">{hint}</p>}
+	<input
+		id={id}
+		name={naam}
+		type={type}
+		value={waarde}
+		autocomplete={autocomplete}
+		inputmode={inputmode}
+		maxlength={maxlength}
+		required={verplicht}
+		aria-invalid={fout ? 'true' : undefined}
+		aria-describedby={beschrijving}
+		class:list={[
+			'mt-1.5 block min-h-11 w-full rounded-control border bg-surface px-3 text-base',
+			fout ? 'border-danger' : 'border-border-strong',
+		]}
+	/>
+	{fout && <p id={`${id}-fout`} class="mt-1 text-sm text-danger">{fout}</p>}
+</div>

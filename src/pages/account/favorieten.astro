@@ -1,0 +1,48 @@
+---
+import Button from '../../components/Button.astro';
+import AccountPagina from '../../components/klant/AccountPagina.astro';
+import ProductGrid, { type ProductEntry } from '../../components/ProductGrid.astro';
+import { defaultVariant } from '../../lib/catalog.ts';
+import { favorieteProducten, leesFavorieten } from '../../lib/klanten/favorieten.ts';
+import { leesFlash } from '../../lib/klanten/flash.ts';
+
+/*
+ * De favorieten van een klant, in hetzelfde raster als de winkel. Het
+ * hartje op elke kaart staat gevuld; klikken haalt het product eraf.
+ */
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/account/inloggen?naar=%2Faccount%2Ffavorieten');
+
+const ids = await leesFavorieten(Astro);
+const producten = await favorieteProducten(ids);
+
+const entries: ProductEntry[] = [];
+for (const product of producten) {
+	const variant = defaultVariant(product.variants);
+	const image = product.images[0];
+	if (variant && image) entries.push({ product, variant, image });
+}
+const favorieten = new Set(ids);
+---
+
+<AccountPagina
+	titel="Favorieten"
+	intro={entries.length > 0 ? 'Klik op het hartje om een product uit je favorieten te halen.' : undefined}
+	huidig="/account/favorieten"
+	melding={leesFlash(Astro.cookies)}
+>
+	{
+		entries.length === 0 ? (
+			<div class="rounded-card border border-border bg-surface p-8 text-center">
+				<p class="font-medium">Je hebt nog geen favorieten</p>
+				<p class="mt-1 text-sm text-text-muted">
+					Klik op het hartje bij een product om het hier te bewaren.
+				</p>
+				<Button href="/categorieen" class="mt-5">Bekijk de categorieën</Button>
+			</div>
+		) : (
+			<ProductGrid items={entries} favorieten={favorieten} eagerCount={4} class="lg:grid-cols-3" />
+		)
+	}
+</AccountPagina>

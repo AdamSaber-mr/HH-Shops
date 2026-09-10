@@ -1,0 +1,107 @@
+---
+import { actions } from 'astro:actions';
+import Button from '../../components/Button.astro';
+import AccountPagina from '../../components/klant/AccountPagina.astro';
+import Formulierveld from '../../components/klant/Formulierveld.astro';
+import Melding from '../../components/klant/Melding.astro';
+import { leesFormulier, veldfoutenUit } from '../../lib/admin/formulier.ts';
+import { leesFlash, zetFlash } from '../../lib/klanten/flash.ts';
+
+/*
+ * Naam en e-mailadres, en apart daarvan het wachtwoord. Twee formulieren,
+ * twee actions; na succes een redirect naar dezelfde pagina zodat
+ * verversen niets opnieuw verstuurt.
+ */
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/account/inloggen?naar=%2Faccount%2Fgegevens');
+
+const gegevens = Astro.getActionResult(actions.klant.gegevens);
+if (gegevens && !gegevens.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Je gegevens zijn opgeslagen.' });
+	return Astro.redirect('/account/gegevens', 303);
+}
+const wachtwoord = Astro.getActionResult(actions.klant.wachtwoord);
+if (wachtwoord && !wachtwoord.error) {
+	zetFlash(Astro.cookies, {
+		soort: 'ok',
+		tekst: 'Je wachtwoord is gewijzigd. Op andere apparaten ben je uitgelogd.',
+	});
+	return Astro.redirect('/account/gegevens', 303);
+}
+
+const g = veldfoutenUit(gegevens?.error);
+const w = veldfoutenUit(wachtwoord?.error);
+const ingevuld = gegevens?.error ? (await leesFormulier(Astro.request)).velden : {};
+---
+
+<AccountPagina
+	titel="Gegevens"
+	huidig="/account/gegevens"
+	melding={leesFlash(Astro.cookies)}
+>
+	<section aria-labelledby="gegevens-titel" class="rounded-card border border-border bg-surface p-5 sm:p-6">
+		<h2 id="gegevens-titel" class="text-lg font-semibold">Naam en e-mailadres</h2>
+		<div class="mt-4">
+			<Melding melding={g.algemeen ? { soort: 'fout', tekst: g.algemeen } : null} class="mb-4" />
+		</div>
+		<form method="POST" action={actions.klant.gegevens} class="space-y-5" novalidate>
+			<Formulierveld
+				naam="naam"
+				label="Naam"
+				autocomplete="name"
+				verplicht
+				maxlength={100}
+				waarde={ingevuld.naam ?? user.name}
+				fout={g.velden.naam?.[0]}
+			/>
+			<Formulierveld
+				naam="email"
+				label="E-mailadres"
+				type="email"
+				autocomplete="email"
+				inputmode="email"
+				verplicht
+				hint="Hiermee log je in."
+				waarde={ingevuld.email ?? user.email}
+				fout={g.velden.email?.[0]}
+			/>
+			<Button type="submit">Opslaan</Button>
+		</form>
+	</section>
+
+	<section aria-labelledby="wachtwoord-titel" class="mt-6 rounded-card border border-border bg-surface p-5 sm:p-6">
+		<h2 id="wachtwoord-titel" class="text-lg font-semibold">Wachtwoord wijzigen</h2>
+		<div class="mt-4">
+			<Melding melding={w.algemeen ? { soort: 'fout', tekst: w.algemeen } : null} class="mb-4" />
+		</div>
+		<form method="POST" action={actions.klant.wachtwoord} class="space-y-5" novalidate>
+			<Formulierveld
+				naam="huidig"
+				label="Huidig wachtwoord"
+				type="password"
+				autocomplete="current-password"
+				verplicht
+				fout={w.velden.huidig?.[0]}
+			/>
+			<Formulierveld
+				naam="nieuw"
+				label="Nieuw wachtwoord"
+				type="password"
+				autocomplete="new-password"
+				hint="Minstens 12 tekens."
+				verplicht
+				fout={w.velden.nieuw?.[0]}
+			/>
+			<Formulierveld
+				naam="herhaling"
+				label="Nieuw wachtwoord, nog een keer"
+				type="password"
+				autocomplete="new-password"
+				verplicht
+				fout={w.velden.herhaling?.[0]}
+			/>
+			<Button type="submit">Wachtwoord wijzigen</Button>
+		</form>
+	</section>
+</AccountPagina>

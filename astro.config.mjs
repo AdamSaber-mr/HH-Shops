@@ -120,6 +120,8 @@ export default defineConfig({
 					'funnel',
 					'image',
 					'heart',
+					'heart-fill',
+					'arrow-left',
 					'star-fill',
 					'quotes',
 					'clock',

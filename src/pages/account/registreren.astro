@@ -1,0 +1,86 @@
+---
+import { actions } from 'astro:actions';
+import Button from '../../components/Button.astro';
+import Formulierveld from '../../components/klant/Formulierveld.astro';
+import Melding from '../../components/klant/Melding.astro';
+import Layout from '../../layouts/Layout.astro';
+import { leesFormulier, veldfoutenUit } from '../../lib/admin/formulier.ts';
+import { zetFlash } from '../../lib/klanten/flash.ts';
+import { lokaalPad } from '../../lib/klanten/pad.ts';
+
+/*
+ * Een account aanmaken. Na het registreren is de klant meteen ingelogd en
+ * gaan de favorieten en de winkelmand uit de cookies mee.
+ *
+ * Het veld "website" is een honeypot: onzichtbaar voor mensen, en een
+ * formulier waarin het is ingevuld wordt geweigerd.
+ */
+
+const result = Astro.getActionResult(actions.klant.registreren);
+if (result && !result.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Je account is aangemaakt. Welkom!' });
+	return Astro.redirect(result.data.naar, 303);
+}
+
+const naar = lokaalPad(Astro.url.searchParams.get('naar'), '/account');
+const { velden: fouten, algemeen } = veldfoutenUit(result?.error);
+const ingevuld = result?.error ? (await leesFormulier(Astro.request)).velden : {};
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<Layout title="Account aanmaken" noindex>
+	<div class="mx-auto max-w-md px-4 py-10 sm:px-6 lg:py-16">
+		<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Account aanmaken</h1>
+		<p class="mt-2 text-text-muted">
+			Bewaar je favorieten en winkelmand, en vul straks je gegevens niet elke keer opnieuw in.
+		</p>
+
+		<div class="mt-6">
+			<Melding melding={algemeen ? { soort: 'fout', tekst: algemeen } : null} />
+		</div>
+
+		<form method="POST" action={actions.klant.registreren} class="space-y-5" novalidate>
+			<input type="hidden" name="naar" value={naar} />
+			<Formulierveld
+				naam="naam"
+				label="Naam"
+				autocomplete="name"
+				verplicht
+				maxlength={100}
+				waarde={ingevuld.naam ?? ''}
+				fout={fouten.naam?.[0]}
+			/>
+			<Formulierveld
+				naam="email"
+				label="E-mailadres"
+				type="email"
+				autocomplete="username"
+				inputmode="email"
+				verplicht
+				waarde={ingevuld.email ?? ''}
+				fout={fouten.email?.[0]}
+			/>
+			<Formulierveld
+				naam="wachtwoord"
+				label="Wachtwoord"
+				type="password"
+				autocomplete="new-password"
+				hint="Minstens 12 tekens. Een zin die je makkelijk onthoudt werkt goed."
+				verplicht
+				fout={fouten.wachtwoord?.[0]}
+			/>
+			<div class="absolute -left-[9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+				<label for="veld-website">Website, laat dit veld leeg</label>
+				<input id="veld-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+			</div>
+			<Button type="submit" block size="lg">Account aanmaken</Button>
+		</form>
+
+		<div class="mt-8 border-t border-border pt-6">
+			<p class="text-sm">Heb je al een account?</p>
+			<Button href={`/account/inloggen?naar=${encodeURIComponent(naar)}`} variant="secondary" block class="mt-3">
+				Inloggen
+			</Button>
+		</div>
+	</div>
+</Layout>

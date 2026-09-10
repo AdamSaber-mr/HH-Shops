@@ -1,0 +1,57 @@
+---
+import { actions } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+
+/*
+ * Het zijmenu van "Mijn account". Op telefoon een rij bovenaan, op desktop
+ * een kolom links. De huidige pagina is gemarkeerd met aria-current.
+ */
+
+interface Props {
+	huidig: string;
+}
+
+const { huidig } = Astro.props;
+
+const items = [
+	{ href: '/account', label: 'Overzicht', icon: 'ph:user' },
+	{ href: '/account/favorieten', label: 'Favorieten', icon: 'ph:heart' },
+	{ href: '/winkelmand', label: 'Winkelmand', icon: 'ph:shopping-cart-simple' },
+	{ href: '/account/adres', label: 'Bezorgadres', icon: 'ph:map-pin' },
+	{ href: '/account/gegevens', label: 'Gegevens', icon: 'ph:pencil-simple' },
+];
+---
+
+<nav aria-label="Mijn account" class="flex flex-col gap-4 lg:gap-6">
+	<ul class="flex flex-wrap gap-1 lg:flex-col">
+		{
+			items.map((item) => {
+				const actief = item.href === huidig;
+				return (
+					<li>
+						<a
+							href={item.href}
+							aria-current={actief ? 'page' : undefined}
+							class:list={[
+								'inline-flex min-h-11 items-center gap-2 rounded-control px-3 text-sm font-medium lg:w-full',
+								actief ? 'bg-accent-subtle text-accent' : 'text-text hover:bg-surface-hover',
+							]}
+						>
+							<Icon name={item.icon} class="size-5 shrink-0" aria-hidden="true" />
+							{item.label}
+						</a>
+					</li>
+				);
+			})
+		}
+	</ul>
+	<form method="POST" action={actions.klant.uitloggen}>
+		<button
+			type="submit"
+			class="inline-flex min-h-11 items-center gap-2 rounded-control px-3 text-sm font-medium text-text-muted hover:bg-surface-hover hover:text-text"
+		>
+			<Icon name="ph:sign-out" class="size-5 shrink-0" aria-hidden="true" />
+			Uitloggen
+		</button>
+	</form>
+</nav>

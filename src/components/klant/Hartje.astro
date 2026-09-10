@@ -1,0 +1,85 @@
+---
+import { actions } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+
+/*
+ * Het hartje: een formulier met een knop. Zonder JavaScript doet de
+ * middleware een POST en een redirect terug naar `naar`; met JavaScript
+ * onderschept het script hieronder het formulier, roept de action aan en
+ * wisselt het icoon zonder herladen.
+ *
+ * De knop zelf krijgt zijn plek van de ouder (op de kaart absoluut in de
+ * hoek, op de productpagina in het koopblok) via `class`.
+ */
+
+interface Props {
+	productId: number;
+	naam: string;
+	favoriet: boolean;
+	/** Waar de bezoeker na een POST zonder JavaScript terugkomt. */
+	naar: string;
+	class?: string;
+}
+
+const { productId, naam, favoriet, naar, class: extraClass = '' } = Astro.props;
+const labelAan = `${naam} uit je favorieten halen`;
+const labelUit = `${naam} bewaren als favoriet`;
+---
+
+<form method="POST" action={actions.favorieten.wissel} data-hartje class="contents">
+	<input type="hidden" name="productId" value={productId} />
+	<input type="hidden" name="naar" value={naar} />
+	<button
+		type="submit"
+		class:list={[
+			'inline-flex size-10 items-center justify-center rounded-full bg-surface shadow-sm transition-colors hover:text-danger',
+			favoriet ? 'text-danger' : 'text-text',
+			extraClass,
+		]}
+		aria-pressed={favoriet ? 'true' : 'false'}
+		aria-label={favoriet ? labelAan : labelUit}
+		data-label-aan={labelAan}
+		data-label-uit={labelUit}
+	>
+		<span data-icoon="aan" hidden={!favoriet} class="contents">
+			<Icon name="ph:heart-fill" class="size-5" aria-hidden="true" />
+		</span>
+		<span data-icoon="uit" hidden={favoriet} class="contents">
+			<Icon name="ph:heart" class="size-5" aria-hidden="true" />
+		</span>
+	</button>
+</form>
+
+<script>
+	import { actions } from 'astro:actions';
+
+	// Een luisteraar voor alle hartjes op de pagina, ook die later bijkomen.
+	document.addEventListener('submit', async (event) => {
+		const form = event.target;
+		if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-hartje')) return;
+		const knop = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+		if (!knop) return;
+		event.preventDefault();
+		knop.disabled = true;
+		try {
+			const { data, error } = await actions.favorieten.wissel(new FormData(form));
+			if (error || !data) {
+				// Dan maar de gewone weg, die werkt altijd.
+				knop.disabled = false;
+				form.removeAttribute('data-hartje');
+				form.requestSubmit();
+				return;
+			}
+			const aan = data.favoriet;
+			knop.setAttribute('aria-pressed', aan ? 'true' : 'false');
+			knop.setAttribute('aria-label', (aan ? knop.dataset.labelAan : knop.dataset.labelUit) ?? '');
+			knop.classList.toggle('text-danger', aan);
+			knop.classList.toggle('text-text', !aan);
+			for (const icoon of knop.querySelectorAll<HTMLElement>('[data-icoon]')) {
+				icoon.hidden = (icoon.dataset.icoon === 'aan') !== aan;
+			}
+		} finally {
+			knop.disabled = false;
+		}
+	});
+</script>
