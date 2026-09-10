@@ -1,20 +1,24 @@
 /*
- * Het vertrouwensblok op de startpagina: de Google-beoordeling en een paar
- * recensies.
+ * Het vertrouwensblok op de startpagina.
  *
- * LET OP: ALLES HIERONDER IS VOORBEELDINHOUD. Er is nog geen koppeling met
- * Google en er zijn nog geen echte recensies verzameld. Dit bestand bestaat
- * zodat het ontwerp gebouwd en beoordeeld kan worden. Voor de livegang moet
- * dit vervangen worden door echte recensies (letterlijk overgenomen, met
- * toestemming) of door een koppeling met de Google Places API. Verzonnen
- * recensies op een echte winkel zijn misleiding en in Nederland verboden.
+ * De recensies en de score zijn letterlijk overgenomen van de oude site
+ * (hh-shops.nl, sectie "Wat onze klanten zeggen", 10 september 2026). Die
+ * site zegt: "Met een gemiddelde beoordeling van 8,1 op bol.com zijn onze
+ * klanten dik tevreden." De bron is dus bol.com en niet Google. Elke recensie
+ * had daar vijf sterren en geen datum.
+ *
+ * Nieuwe recensies toevoegen: alleen echte, letterlijk overgenomen en met
+ * toestemming. Verzonnen recensies op een echte winkel zijn misleiding.
  */
 
-export interface GoogleRating {
-	/** Gemiddelde score, 0 tot 5. */
+export interface RatingSource {
+	/** Waar de beoordeling vandaan komt, bijvoorbeeld "bol.com". */
+	name: string;
+	/** Gemiddelde score. */
 	score: number;
-	count: number;
-	/** De link "Bekijk alle reviews". INVULLEN: de echte Google-bedrijfspagina. */
+	/** Het maximum van de schaal: 10 op bol.com, 5 op Google. */
+	max: 5 | 10;
+	/** Link naar de reviewpagina. Leeg laat de link weg. INVULLEN zodra bekend. */
 	url: string;
 }
 
@@ -23,33 +27,36 @@ export interface Review {
 	/** 1 tot 5. */
 	rating: number;
 	text: string;
-	/** Bijvoorbeeld "augustus 2026". */
-	date: string;
+	/** Bijvoorbeeld "augustus 2026". De oude site toonde geen datums. */
+	date?: string;
 }
 
-export const googleRating: GoogleRating = {
-	score: 4.8,
-	count: 127,
-	url: 'https://www.google.com/maps',
+export const ratingSource: RatingSource = {
+	name: 'bol.com',
+	score: 8.1,
+	max: 10,
+	url: '',
 };
 
 export const reviews: readonly Review[] = [
 	{
-		author: 'Fatima B.',
+		author: 'Yvonne',
 		rating: 5,
-		text: 'Snel geleverd en netjes verpakt. De schoenenrekjes waren precies wat ik zocht en de prijs was beter dan bij de grote webwinkels.',
-		date: 'augustus 2026',
+		text: 'De bestelling werd op tijd geleverd en netjes ingepakt. Helemaal tevreden.',
 	},
 	{
-		author: 'Mark de V.',
+		author: 'Petra',
 		rating: 5,
-		text: 'Ik had een vraag over een maat en kreeg dezelfde dag nog antwoord. Fijn dat je nog met echte mensen te maken hebt.',
-		date: 'juli 2026',
+		text: 'Het product is precies zoals beschreven.',
 	},
 	{
-		author: 'Sanne K.',
-		rating: 4,
-		text: 'Leuke spullen voor de kinderkamer, goede kwaliteit. Bezorging duurde een dagje langer dan verwacht, verder helemaal tevreden.',
-		date: 'juli 2026',
+		author: 'Hans',
+		rating: 5,
+		text: 'Artikel zoals omschreven, snel en verzorgd geleverd. Alles top geregeld.',
+	},
+	{
+		author: 'Marleen',
+		rating: 5,
+		text: 'Correcte levering en duidelijke productinformatie. Zeer tevreden.',
 	},
 ];

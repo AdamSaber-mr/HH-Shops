@@ -6,6 +6,11 @@
  * LET OP: de waarden met "INVULLEN" erbij zijn nog niet bevestigd door de
  * klant. Ze staan er zodat het ontwerp compleet is, en moeten voor de
  * livegang vervangen of geschrapt worden.
+ *
+ * De oude site (hh-shops.nl, 10 september 2026) belooft: gratis verzending
+ * vanaf 50 euro, voor 15:00 besteld morgen in huis, en betalen via iDEAL,
+ * creditcard of achteraf met Klarna. Dat staat hier bewust nog niet in, tot
+ * Adam bevestigt dat het voor de nieuwe shop ook geldt.
  */
 
 export const site = {
@@ -13,10 +18,11 @@ export const site = {
 	tagline: 'Alles voor thuis, in één winkel.',
 	description:
 		'H&H Shops verkoopt huishoudelijke artikelen, kinderartikelen, cosmetica, tassen en schoeisel. Snel geleverd in heel Nederland.',
-	/** INVULLEN: het echte e-mailadres van de klantenservice. */
+	/** Overgenomen van de oude site (hh-shops.nl). */
 	email: 'info@hh-shops.nl',
-	/** INVULLEN: KVK- en btw-nummer, zodra bekend. Leeg laat de regel weg. */
-	kvk: '',
+	/** Overgenomen van de footer van de oude site. */
+	kvk: '95788468',
+	/** INVULLEN: btw-nummer, zodra bekend. Leeg laat de regel weg. */
 	btw: '',
 } as const;
 
