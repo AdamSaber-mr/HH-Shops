@@ -56,7 +56,7 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 
 	<!-- Navigatie -->
 	<div class="border-b border-border bg-surface/95 backdrop-blur">
-		<div class="mx-auto flex max-w-[1400px] items-center gap-4 px-4 py-2 sm:px-6 lg:gap-8">
+		<div class="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6 lg:gap-8">
 			<!-- Hamburger, alleen op telefoon en tablet -->
 			<button
 				type="button"
@@ -79,7 +79,7 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 					sizes="216px"
 					loading="eager"
 					fetchpriority="high"
-					class="h-16 w-auto sm:h-[4.5rem]"
+					class="h-14 w-auto sm:h-[4.5rem]"
 				/>
 			</a>
 
@@ -163,29 +163,17 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 			</search>
 
 			<!-- Account en winkelmand -->
-			<div class="ml-auto flex shrink-0 items-center gap-1 md:ml-0">
+			<div class="ml-auto flex shrink-0 items-center gap-0 sm:gap-1 md:ml-0">
 				<a
 					href="/account"
-					class="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
+					class="inline-flex min-h-11 items-center gap-2 rounded-control px-1.5 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
 				>
 					<Icon name="ph:user" class="size-6 sm:size-5" aria-hidden="true" />
 					<span class="hidden sm:inline">{voornaam ?? 'Account'}</span>
 				</a>
 				<a
-					href="/favorieten"
-					data-favorieten-open
-					class="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
-				>
-					<span class="relative">
-						<Icon name="ph:heart" class="size-6 sm:size-5" aria-hidden="true" />
-						<Teller aantal={aantalFavorieten} naam="favorieten" />
-					</span>
-					<span class="hidden lg:inline">Favorieten</span>
-					<span class="sr-only">, {aantalFavorieten} {aantalFavorieten === 1 ? 'product' : 'producten'}</span>
-				</a>
-				<a
 					href="/winkelmand"
-					class="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
+					class="inline-flex min-h-11 items-center gap-2 rounded-control px-1.5 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
 				>
 					<span class="relative">
 						<Icon name="ph:shopping-cart-simple" class="size-6 sm:size-5" aria-hidden="true" />
@@ -193,6 +181,17 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 					</span>
 					<span class="hidden sm:inline">Winkelmand</span>
 					<span class="sr-only">, {aantalInMand} {aantalInMand === 1 ? 'artikel' : 'artikelen'}</span>
+				</a>
+				<a
+					href="/favorieten"
+					data-favorieten-open
+					class="inline-flex min-h-11 items-center gap-2 rounded-control px-1.5 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
+				>
+					<span class="relative">
+						<Icon name="ph:heart" class="size-6 sm:size-5" aria-hidden="true" />
+						<Teller aantal={aantalFavorieten} naam="favorieten" />
+					</span>
+					<span class="sr-only">Favorieten, {aantalFavorieten} {aantalFavorieten === 1 ? 'product' : 'producten'}</span>
 				</a>
 			</div>
 		</div>
