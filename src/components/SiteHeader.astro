@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import logo from '../assets/logo.png';
+import { telWinkelmand } from '../lib/klanten/winkelmand.ts';
 import { categoryHref, featuredCategories, mainNavigation } from '../lib/navigation.ts';
 
 /*
@@ -19,6 +20,11 @@ import { categoryHref, featuredCategories, mainNavigation } from '../lib/navigat
  * De links wijzen al naar de juiste adressen, maar die pagina's bestaan nog
  * niet. Dat is bewust: de navigatie is af, de pagina's komen stap voor stap.
  */
+
+// De teller en de naam: voor een gast uit de cookie, zonder query; voor een
+// ingelogde bezoeker uit de database (src/lib/klanten/winkelmand.ts).
+const aantalInMand = await telWinkelmand(Astro);
+const voornaam = Astro.locals.user?.name.split(' ')[0];
 ---
 
 <header class="sticky top-0 z-40">
@@ -153,7 +159,7 @@ import { categoryHref, featuredCategories, mainNavigation } from '../lib/navigat
 					class="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
 				>
 					<Icon name="ph:user" class="size-6 sm:size-5" aria-hidden="true" />
-					<span class="hidden sm:inline">Account</span>
+					<span class="hidden sm:inline">{voornaam ?? 'Account'}</span>
 				</a>
 				<a
 					href="/winkelmand"
@@ -161,15 +167,17 @@ import { categoryHref, featuredCategories, mainNavigation } from '../lib/navigat
 				>
 					<span class="relative">
 						<Icon name="ph:shopping-cart-simple" class="size-6 sm:size-5" aria-hidden="true" />
-						<span
-							class="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] leading-none font-semibold text-white"
-							aria-hidden="true"
-						>
-							0
-						</span>
+						{aantalInMand > 0 && (
+							<span
+								class="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] leading-none font-semibold text-white"
+								aria-hidden="true"
+							>
+								{aantalInMand}
+							</span>
+						)}
 					</span>
 					<span class="hidden sm:inline">Winkelmand</span>
-					<span class="sr-only">, 0 artikelen</span>
+					<span class="sr-only">, {aantalInMand} {aantalInMand === 1 ? 'artikel' : 'artikelen'}</span>
 				</a>
 			</div>
 		</div>
