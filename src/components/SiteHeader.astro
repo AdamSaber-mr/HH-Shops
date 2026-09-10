@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import logo from '../assets/logo.png';
-import { categoryHref, featuredCategories, mainNavigation } from '../lib/navigation.ts';
+import { categoryHref, mainNavigation } from '../lib/navigation.ts';
 
 /*
  * De kop van elke pagina: een smalle servicebalk, daaronder de navigatie.
@@ -16,9 +16,15 @@ import { categoryHref, featuredCategories, mainNavigation } from '../lib/navigat
  * Beide sluiten op Escape en bij een klik erbuiten. Geen hover-menu's: die
  * werken niet op een aanraakscherm en niet met het toetsenbord.
  *
- * De links wijzen al naar de juiste adressen, maar die pagina's bestaan nog
- * niet. Dat is bewust: de navigatie is af, de pagina's komen stap voor stap.
+ * De categorieen komen via Layout uit de database (op volgorde van
+ * `position`, in te stellen in het beheerpaneel).
  */
+
+interface Props {
+	categorieen: readonly { slug: string; name: string }[];
+}
+
+const { categorieen } = Astro.props;
 ---
 
 <header class="sticky top-0 z-40">
@@ -90,7 +96,7 @@ import { categoryHref, featuredCategories, mainNavigation } from '../lib/navigat
 						data-dropdown-panel
 					>
 						<ul class="grid gap-0.5">
-							{featuredCategories.map((category) => (
+							{categorieen.map((category) => (
 								<li>
 									<a
 										href={categoryHref(category.slug)}
@@ -210,7 +216,7 @@ import { categoryHref, featuredCategories, mainNavigation } from '../lib/navigat
 					Categorieën
 				</p>
 				<ul class="grid gap-0.5 sm:grid-cols-2">
-					{featuredCategories.map((category) => (
+					{categorieen.map((category) => (
 						<li>
 							<a
 								href={categoryHref(category.slug)}

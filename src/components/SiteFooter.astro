@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import logo from '../assets/logo.png';
-import { categoryHref, featuredCategories } from '../lib/navigation.ts';
+import { categoryHref } from '../lib/navigation.ts';
 import { footerGroups, paymentMethods, site } from '../lib/site.ts';
 
 /*
@@ -15,9 +15,15 @@ import { footerGroups, paymentMethods, site } from '../lib/site.ts';
  * Het nieuwsbriefformulier verstuurt nog nergens heen. De action wijst naar
  * /nieuwsbrief, die pagina komt als de e-mailprovider gekozen is.
  *
- * Contactgegevens komen uit src/lib/site.ts en zijn deels nog INVULLEN.
+ * Contactgegevens komen uit src/lib/site.ts en zijn deels nog INVULLEN. De
+ * categorieen komen via Layout uit de database.
  */
 
+interface Props {
+	categorieen: readonly { slug: string; name: string }[];
+}
+
+const { categorieen } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
@@ -87,7 +93,7 @@ const year = new Date().getFullYear();
 				Categorieën
 			</h2>
 			<ul class="mt-4 space-y-2.5 text-sm">
-				{featuredCategories.map((category) => (
+				{categorieen.map((category) => (
 					<li>
 						<a href={categoryHref(category.slug)} class="text-text-muted hover:text-accent hover:underline">
 							{category.name}
