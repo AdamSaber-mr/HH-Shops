@@ -57,6 +57,8 @@ const fotoBijwerken = Astro.getActionResult(actions.fotos.bijwerken);
 if (fotoBijwerken && !fotoBijwerken.error) return geslaagd('Foto opgeslagen.', `${pad}#fotos`);
 const fotoVerwijderen = Astro.getActionResult(actions.fotos.verwijderen);
 if (fotoVerwijderen && !fotoVerwijderen.error) return geslaagd('Foto verwijderd.', `${pad}#fotos`);
+const fotoVervangen = Astro.getActionResult(actions.fotos.vervangen);
+if (fotoVervangen && !fotoVervangen.error) return geslaagd(`Foto vervangen (${Math.round(fotoVervangen.data.bytes / 1024)} KB als WebP).`, `${pad}#fotos`);
 const fotoVerplaatsen = Astro.getActionResult(actions.fotos.verplaatsen);
 if (fotoVerplaatsen && !fotoVerplaatsen.error) return Astro.redirect(`${pad}#fotos`);
 
@@ -92,14 +94,16 @@ if (bijwerken?.error) {
 /* Fouten uit de varianten- en fotoblokken, met de rij waar het om ging. */
 const variantFout = veldfoutenUit(variantBijwerken?.error ?? variantVerwijderen?.error ?? variantVerplaatsen?.error);
 const nieuweVariantFout = veldfoutenUit(variantToevoegen?.error);
-const fotoFout = veldfoutenUit(fotoBijwerken?.error ?? fotoVerwijderen?.error ?? fotoVerplaatsen?.error);
+const fotoFout = veldfoutenUit(
+	fotoBijwerken?.error ?? fotoVervangen?.error ?? fotoVerwijderen?.error ?? fotoVerplaatsen?.error,
+);
 const uploadFout = veldfoutenUit(fotoUploaden?.error);
 const ingevuld =
-	variantToevoegen?.error || variantBijwerken?.error || fotoUploaden?.error || fotoBijwerken?.error
+	variantToevoegen?.error || variantBijwerken?.error || fotoUploaden?.error || fotoBijwerken?.error || fotoVervangen?.error
 		? await leesFormulier(Astro.request)
 		: { velden: {}, lijsten: {} };
 const foutieveVariant = variantBijwerken?.error ? Number(ingevuld.velden.variantId) : null;
-const foutieveFoto = fotoBijwerken?.error ? Number(ingevuld.velden.fotoId) : null;
+const foutieveFoto = fotoBijwerken?.error || fotoVervangen?.error ? Number(ingevuld.velden.fotoId) : null;
 
 const optieNaam = product.optionNames[0];
 const knop =
@@ -404,6 +408,17 @@ const rijWaarde = (variantId: number, naam: string, standaard: string) =>
 													</button>
 												</form>
 											</div>
+											<form method="POST" action={`${actions.fotos.vervangen}`} enctype="multipart/form-data" class="mt-2 flex flex-wrap items-center gap-2" data-max-bytes={MAX_BESTAND}>
+												<input type="hidden" name="fotoId" value={img.id} />
+												<label for={`${fid}-bestand`} class="text-xs font-medium">Vervangen door</label>
+												<input id={`${fid}-bestand`} type="file" name="bestand" accept="image/jpeg,image/png,image/webp" required class="max-w-56 text-xs file:mr-2 file:min-h-9 file:rounded-control file:border file:border-border-strong file:bg-surface file:px-2 file:text-xs file:font-medium" />
+												<button type="submit" class={knopKlein} title="Vervangen">
+													<Icon name="ph:upload-simple" class="size-4" aria-hidden="true" />
+													<span class="sr-only">Vervangen</span>
+												</button>
+												<p data-bestand-fout class={fouttekst} hidden></p>
+												{foutieveFoto === img.id && fotoFout.velden.bestand && <p class={fouttekst}>{fotoFout.velden.bestand[0]}</p>}
+											</form>
 										</div>
 									</li>
 								);
@@ -499,11 +514,12 @@ const rijWaarde = (variantId: number, naam: string, standaard: string) =>
 				if (!window.confirm(form.dataset.bevestig)) event.preventDefault();
 			});
 		}
-		const upload = document.querySelector<HTMLFormElement>('form[data-max-bytes]');
-		const bestand = document.getElementById('upload-bestand') as HTMLInputElement | null;
-		const melding = document.getElementById('upload-bestand-fout');
-		if (upload && bestand && melding) {
-			const max = Number(upload.dataset.maxBytes);
+		// Elk formulier met een bestand: te groot is meteen zichtbaar, niet pas na de upload.
+		for (const form of document.querySelectorAll<HTMLFormElement>('form[data-max-bytes]')) {
+			const bestand = form.querySelector<HTMLInputElement>('input[type="file"]');
+			const melding = form.querySelector<HTMLElement>('[data-bestand-fout], #upload-bestand-fout');
+			if (!bestand || !melding) continue;
+			const max = Number(form.dataset.maxBytes);
 			const controleer = () => {
 				const file = bestand.files?.[0];
 				const teGroot = Boolean(file && file.size > max);
@@ -512,7 +528,7 @@ const rijWaarde = (variantId: number, naam: string, standaard: string) =>
 				return !teGroot;
 			};
 			bestand.addEventListener('change', controleer);
-			upload.addEventListener('submit', (event) => {
+			form.addEventListener('submit', (event) => {
 				if (!controleer()) event.preventDefault();
 			});
 		}

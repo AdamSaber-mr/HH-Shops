@@ -101,6 +101,66 @@ export async function werkBij(
 		.where(eq(productImages.id, fotoId));
 }
 
+/**
+ * Een bestaande foto vervangen door een nieuw bestand. Positie, alt-tekst en
+ * variant blijven staan; alleen het bestand en de afmetingen veranderen. Het
+ * oude bestand gaat uit Blob als geen ander product het nog gebruikt.
+ */
+export async function vervang(
+	db: Database,
+	fotoId: number,
+	bestand: { buffer: Buffer; naam: string },
+	alt: string | null,
+): Promise<{ bytesOut: number }> {
+	const [foto] = await db
+		.select({ productId: productImages.productId, url: productImages.url, alt: productImages.alt })
+		.from(productImages)
+		.where(eq(productImages.id, fotoId));
+	if (!foto) throw new InvoerFout('', 'Deze foto bestaat niet meer.');
+	const [product] = await db
+		.select({ slug: products.slug })
+		.from(products)
+		.where(eq(products.id, foto.productId));
+	if (!product) throw new InvoerFout('', 'Dit product bestaat niet meer.');
+
+	let beeld: Awaited<ReturnType<typeof verwerkBuffer>>;
+	try {
+		beeld = await verwerkBuffer(bestand.buffer);
+	} catch {
+		throw new InvoerFout('bestand', 'Dit bestand is geen geldige afbeelding.');
+	}
+
+	const blob = await put(
+		blobPathFor('producten', bestand.naam, `${product.slug}-${Date.now()}`),
+		beeld.data,
+		{
+			access: 'public',
+			addRandomSuffix: false,
+			contentType: 'image/webp',
+			cacheControlMaxAge: 60 * 60 * 24 * 365,
+		},
+	);
+	try {
+		await db
+			.update(productImages)
+			.set({ url: blob.url, width: beeld.width, height: beeld.height, alt: alt ?? foto.alt })
+			.where(eq(productImages.id, fotoId));
+	} catch (error) {
+		await del(blob.url).catch(() => undefined);
+		throw error;
+	}
+
+	const [{ n }] = await db
+		.select({ n: sql<number>`count(*)::int` })
+		.from(productImages)
+		.where(eq(productImages.url, foto.url));
+	if (n === 0)
+		await del(foto.url).catch((error) =>
+			console.error('[admin] oude foto niet uit Blob verwijderd', error),
+		);
+	return { bytesOut: beeld.bytesOut };
+}
+
 export async function verwijder(db: Database, fotoId: number): Promise<void> {
 	const url = await db.transaction(async (tx) => {
 		const [foto] = await tx

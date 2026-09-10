@@ -90,6 +90,45 @@ export const fotosActions = {
 		},
 	}),
 
+	vervangen: defineAction({
+		accept: 'form',
+		input: z
+			.object({
+				fotoId: z.coerce.number().int().positive(),
+				bestand: z.instanceof(File),
+				alt: tekst(),
+			})
+			.transform((v, ctx) => {
+				if (v.bestand.size === 0) {
+					ctx.addIssue({ code: 'custom', path: ['bestand'], message: 'Kies een bestand.' });
+				} else if (v.bestand.size > fotos.MAX_BESTAND) {
+					ctx.addIssue({
+						code: 'custom',
+						path: ['bestand'],
+						message: 'Het bestand is groter dan 4 MB. Verklein het eerst.',
+					});
+				} else if (!fotos.TOEGESTANE_TYPES.includes(v.bestand.type)) {
+					ctx.addIssue({ code: 'custom', path: ['bestand'], message: 'Alleen JPG, PNG of WebP.' });
+				}
+				// De alt-tekst is hier optioneel: leeg betekent de bestaande houden.
+				const alt = normaliseWhitespace(v.alt ?? '');
+				if (alt !== '')
+					for (const p of altProblems(alt))
+						ctx.addIssue({ code: 'custom', path: ['alt'], message: `De alt-tekst ${p}.` });
+				return { fotoId: v.fotoId, bestand: v.bestand, alt: alt === '' ? null : alt };
+			}),
+		handler: async ({ fotoId, bestand, alt }, context) => {
+			vereisBeheerder(context);
+			try {
+				const buffer = Buffer.from(await bestand.arrayBuffer());
+				const result = await fotos.vervang(getDb(), fotoId, { buffer, naam: bestand.name }, alt);
+				return { bytes: result.bytesOut };
+			} catch (error) {
+				return gooi(error);
+			}
+		},
+	}),
+
 	bijwerken: defineAction({
 		accept: 'form',
 		input: z

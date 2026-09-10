@@ -26,16 +26,20 @@ if (!secret) {
 	process.exit(1);
 }
 
-if (!process.stdin.isTTY) {
-	console.error(
-		'Dit script vraagt om een wachtwoord en heeft daarvoor een echte terminal nodig. Draai het in PowerShell of de terminal van VS Code, niet via een chat of een pipe.',
-	);
-	process.exit(1);
+// Voor tests en automatisering: het wachtwoord uit een omgevingsvariabele.
+// Voor mensen: een prompt, en die heeft een echte terminal nodig.
+let password = (process.env.BEHEERDER_WACHTWOORD ?? '').trim();
+if (password === '') {
+	if (!process.stdin.isTTY) {
+		console.error(
+			'Dit script vraagt om een wachtwoord en heeft daarvoor een echte terminal nodig. Draai het in PowerShell of de terminal van VS Code, niet via een chat of een pipe.',
+		);
+		process.exit(1);
+	}
+	const rl = createInterface({ input: process.stdin, output: process.stdout });
+	password = (await rl.question('Wachtwoord (minstens 12 tekens): ')).trim();
+	rl.close();
 }
-
-const rl = createInterface({ input: process.stdin, output: process.stdout });
-const password = (await rl.question('Wachtwoord (minstens 12 tekens): ')).trim();
-rl.close();
 
 if (password.length < 12) {
 	console.error('Het wachtwoord moet minstens 12 tekens zijn.');

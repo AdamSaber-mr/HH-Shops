@@ -17,7 +17,9 @@ zelfde deploy. Alleen bereikbaar na inloggen.
   btw, voorraad en aan/uit. Artikelnummers worden automatisch toegekend en
   tellen door op de nummers uit de import (`HH-1084` en verder).
 - **Foto's**: uploaden (JPG, PNG, WebP, maximaal 4 MB), verplichte alt-tekst,
-  volgorde, optioneel aan een maat of kleur gekoppeld. Elke foto gaat door
+  volgorde, optioneel aan een maat of kleur gekoppeld. Een eerste foto kan
+  meteen mee bij het aanmaken; een bestaande foto is te vervangen door een
+  nieuw bestand met behoud van plek en alt-tekst. Elke foto gaat door
   dezelfde verwerking als de import: recht, op wit, maximaal 1200 pixels,
   WebP.
 - **Categorieen**: naam, adres, volgorde, beschrijving en foto. Verwijderen

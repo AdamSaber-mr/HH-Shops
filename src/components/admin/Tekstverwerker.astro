@@ -44,12 +44,14 @@ const knop =
 		<button type="button" class={knop} data-opdracht="insertOrderedList">Nummering</button>
 	</div>
 
+	<!-- biome-ignore lint/a11y/useSemanticElements: een bewerkbaar vlak met opmaak heeft geen semantisch alternatief, textarea kan geen opmaak -->
 	<div
 		data-vlak
 		hidden
 		contenteditable="true"
 		role="textbox"
 		aria-multiline="true"
+		tabindex="0"
 		aria-labelledby={id}
 		class:list={[
 			'tekstvlak mt-1.5 min-h-64 w-full rounded-control border bg-surface px-3 py-2 text-base leading-relaxed',

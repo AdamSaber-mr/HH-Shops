@@ -15,6 +15,10 @@ try {
 	// Geen .env, bijvoorbeeld in CI of op Vercel.
 }
 
+// Alleen bij `astro build`: in de dev-server laat Vite CommonJS-pakketten
+// beter extern, daar werkt require van ESM gewoon (Node 24).
+const isBuild = process.argv.includes('build');
+
 // https://astro.build/config
 export default defineConfig({
 	// `site` staat er bewust nog niet. Zolang hh-shops.nl naar WordPress wijst,
@@ -142,25 +146,27 @@ export default defineConfig({
 			// serverbundel haalt dat require tijdens het draaien weg.
 			// De hele boom, anders blijft er een require van een van de
 			// afhankelijkheden over die Vercel niet meeneemt in de functie.
-			noExternal: [
-				'dayjs',
-				'deepmerge',
-				'dom-serializer',
-				'domelementtype',
-				'domhandler',
-				'domutils',
-				'entities',
-				'escape-string-regexp',
-				'htmlparser2',
-				'is-plain-object',
-				'launder',
-				'nanoid',
-				'parse-srcset',
-				'picocolors',
-				'postcss',
-				'sanitize-html',
-				'source-map-js',
-			],
+			noExternal: isBuild
+				? [
+						'dayjs',
+						'deepmerge',
+						'dom-serializer',
+						'domelementtype',
+						'domhandler',
+						'domutils',
+						'entities',
+						'escape-string-regexp',
+						'htmlparser2',
+						'is-plain-object',
+						'launder',
+						'nanoid',
+						'parse-srcset',
+						'picocolors',
+						'postcss',
+						'sanitize-html',
+						'source-map-js',
+					]
+				: [],
 		},
 	},
 

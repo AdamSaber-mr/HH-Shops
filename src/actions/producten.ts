@@ -2,6 +2,7 @@ import { ActionError, defineAction } from 'astro:actions';
 import { del } from '@vercel/blob';
 import { z } from 'astro/zod';
 import { getDb } from '../db/client.ts';
+import { upload as fotoUpload, MAX_BESTAND, TOEGESTANE_TYPES } from '../lib/admin/fotos.ts';
 import {
 	InvoerFout,
 	maakProduct,
@@ -12,6 +13,7 @@ import {
 } from '../lib/admin/producten-schrijven.ts';
 import { parseEuro, parseGeheel } from '../lib/admin/validatie.ts';
 import {
+	altProblems,
 	cleanHtml,
 	cleanName,
 	htmlToText,
@@ -152,7 +154,15 @@ export const productenActions = {
 	aanmaken: defineAction({
 		accept: 'form',
 		input: productVelden
-			.extend({ prijs: tekst(), voorraad: tekst(), waarde: tekst() })
+			.extend({
+				prijs: tekst(),
+				voorraad: tekst(),
+				waarde: tekst(),
+				// Optioneel meteen een eerste foto. Zonder gekozen bestand komt er
+				// een leeg File-object binnen, vandaar de controle op size.
+				bestand: z.instanceof(File).optional(),
+				fotoAlt: tekst(),
+			})
 			.transform((v, ctx) => {
 				const invoer = naarInvoer(v, ctx);
 				const waarde = normaliseWhitespace(v.waarde ?? '').slice(0, 40);
@@ -163,25 +173,75 @@ export const productenActions = {
 						message: `Vul de ${invoer.optieNaam.toLowerCase()} van de eerste variant in.`,
 					});
 				}
+
+				const bestand = v.bestand && v.bestand.size > 0 ? v.bestand : null;
+				const fotoAlt = normaliseWhitespace(v.fotoAlt ?? '');
+				if (bestand) {
+					if (bestand.size > MAX_BESTAND) {
+						ctx.addIssue({
+							code: 'custom',
+							path: ['bestand'],
+							message: 'Het bestand is groter dan 4 MB. Verklein het eerst.',
+						});
+					} else if (!TOEGESTANE_TYPES.includes(bestand.type)) {
+						ctx.addIssue({
+							code: 'custom',
+							path: ['bestand'],
+							message: 'Alleen JPG, PNG of WebP.',
+						});
+					}
+					if (fotoAlt === '') {
+						ctx.addIssue({
+							code: 'custom',
+							path: ['fotoAlt'],
+							message: 'Schrijf een alt-tekst bij de foto: wat is er te zien?',
+						});
+					} else {
+						for (const p of altProblems(fotoAlt))
+							ctx.addIssue({ code: 'custom', path: ['fotoAlt'], message: `De alt-tekst ${p}.` });
+					}
+				}
+
 				return {
 					invoer,
 					prijs: bedrag(v.prijs, 'prijs', ctx),
 					voorraad: aantal(v.voorraad, 'voorraad', ctx),
 					waarde: waarde === '' ? null : waarde,
+					bestand,
+					fotoAlt,
 				};
 			}),
-		handler: async ({ invoer, prijs, voorraad, waarde }, context) => {
+		handler: async ({ invoer, prijs, voorraad, waarde, bestand, fotoAlt }, context) => {
 			vereisBeheerder(context);
+			let id: number;
 			try {
-				const id = await maakProduct(getDb(), invoer, {
+				id = await maakProduct(getDb(), invoer, {
 					priceCents: prijs,
 					stockQuantity: voorraad,
 					waarde,
 				});
-				return { id };
 			} catch (error) {
 				return gooiInvoerFout(error);
 			}
+
+			// De foto na het product: mislukt die, dan bestaat het product wel en
+			// meldt de pagina dat de foto alsnog op de productpagina kan.
+			let fotoFout: string | null = null;
+			if (bestand) {
+				try {
+					const buffer = Buffer.from(await bestand.arrayBuffer());
+					await fotoUpload(
+						getDb(),
+						id,
+						{ buffer, naam: bestand.name },
+						{ alt: fotoAlt, variantId: null },
+					);
+				} catch (error) {
+					fotoFout =
+						error instanceof InvoerFout ? error.message : 'De foto kon niet worden opgeslagen.';
+				}
+			}
+			return { id, fotoFout };
 		},
 	}),
 

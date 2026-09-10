@@ -1,5 +1,6 @@
 ---
 import type { Veldfouten } from '../../lib/admin/formulier.ts';
+import { MAX_BESTAND } from '../../lib/admin/fotos.ts';
 import Button from '../Button.astro';
 import Keuzelijst from './Keuzelijst.astro';
 import Tekstvak from './Tekstvak.astro';
@@ -28,7 +29,7 @@ const w = (naam: string, standaard = '') => waarden[naam] ?? standaard;
 const optieNaam = w('optieNaam');
 ---
 
-<form method="POST" action={action} class="space-y-8" novalidate>
+<form method="POST" action={action} enctype="multipart/form-data" class="space-y-8" novalidate data-max-bytes={MAX_BESTAND}>
 	{id !== undefined && <input type="hidden" name="id" value={id} />}
 
 	{
@@ -128,6 +129,32 @@ const optieNaam = w('optieNaam');
 		)
 	}
 
+	{
+		nieuw && (
+			<section class="rounded-card border border-border bg-surface p-5 sm:p-6">
+				<h2 class="text-lg font-semibold">Foto</h2>
+				<p class="mt-1 text-sm text-text-muted">
+					Optioneel. Dit wordt de hoofdfoto; meer foto's voeg je toe na het opslaan. JPG, PNG of WebP, maximaal 4 MB.
+				</p>
+				<div class="mt-4 grid gap-5 sm:grid-cols-2">
+					<div>
+						<label for="upload-bestand" class="block text-sm font-medium">Bestand</label>
+						<input
+							id="upload-bestand"
+							type="file"
+							name="bestand"
+							accept="image/jpeg,image/png,image/webp"
+							class="mt-1.5 block w-full text-sm file:mr-3 file:min-h-11 file:rounded-control file:border file:border-border-strong file:bg-surface file:px-3 file:text-sm file:font-medium"
+						/>
+						<p id="upload-bestand-fout" class="mt-1 text-sm text-danger" hidden></p>
+						{veldfouten.bestand && <p class="mt-1 text-sm text-danger">{veldfouten.bestand[0]}</p>}
+					</div>
+					<Veld naam="fotoAlt" label="Alt-tekst van de foto" waarde={w('fotoAlt')} fout={veldfouten.fotoAlt} hint="Wat is er te zien? Verplicht zodra je een foto kiest." />
+				</div>
+			</section>
+		)
+	}
+
 	<section class="rounded-card border border-border bg-surface p-5 sm:p-6">
 		<h2 class="text-lg font-semibold">Vindbaarheid</h2>
 		<p class="mt-1 text-sm text-text-muted">Optioneel. Zonder deze velden gebruikt de shop de naam en de korte beschrijving.</p>
@@ -142,3 +169,24 @@ const optieNaam = w('optieNaam');
 		<Button href={nieuw ? '/admin/producten' : `/admin/producten/${id}`} variant="secondary">Annuleren</Button>
 	</div>
 </form>
+
+<script>
+	// Een te groot bestand meteen melden, niet pas na het verzenden.
+	for (const form of document.querySelectorAll<HTMLFormElement>('form[data-max-bytes]')) {
+		const bestand = form.querySelector<HTMLInputElement>('input[type="file"]');
+		const melding = form.querySelector<HTMLElement>('#upload-bestand-fout');
+		if (!bestand || !melding) continue;
+		const max = Number(form.dataset.maxBytes);
+		const controleer = () => {
+			const file = bestand.files?.[0];
+			const teGroot = Boolean(file && file.size > max);
+			melding.hidden = !teGroot;
+			melding.textContent = teGroot ? `Dit bestand is ${((file?.size ?? 0) / 1024 / 1024).toFixed(1)} MB. Maximaal 4 MB.` : '';
+			return !teGroot;
+		};
+		bestand.addEventListener('change', controleer);
+		form.addEventListener('submit', (event) => {
+			if (!controleer()) event.preventDefault();
+		});
+	}
+</script>

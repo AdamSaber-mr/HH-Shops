@@ -9,7 +9,14 @@ import { lijstCategorieen } from '../../../lib/admin/producten.ts';
 
 const result = Astro.getActionResult(actions.producten.aanmaken);
 if (result && !result.error) {
-	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Product aangemaakt. Voeg nu foto\'s en eventueel varianten toe.' });
+	if (result.data.fotoFout) {
+		zetFlash(Astro.cookies, {
+			soort: 'fout',
+			tekst: `Product aangemaakt, maar de foto is niet opgeslagen: ${result.data.fotoFout} Probeer het hieronder opnieuw.`,
+		});
+	} else {
+		zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Product aangemaakt. Voeg eventueel meer foto\'s en varianten toe.' });
+	}
 	return Astro.redirect(`/admin/producten/${result.data.id}`);
 }
 
