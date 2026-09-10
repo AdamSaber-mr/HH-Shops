@@ -51,35 +51,5 @@ const labelUit = `${naam} bewaren als favoriet`;
 </form>
 
 <script>
-	import { actions } from 'astro:actions';
-
-	// Een luisteraar voor alle hartjes op de pagina, ook die later bijkomen.
-	document.addEventListener('submit', async (event) => {
-		const form = event.target;
-		if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-hartje')) return;
-		const knop = form.querySelector<HTMLButtonElement>('button[type="submit"]');
-		if (!knop) return;
-		event.preventDefault();
-		knop.disabled = true;
-		try {
-			const { data, error } = await actions.favorieten.wissel(new FormData(form));
-			if (error || !data) {
-				// Dan maar de gewone weg, die werkt altijd.
-				knop.disabled = false;
-				form.removeAttribute('data-hartje');
-				form.requestSubmit();
-				return;
-			}
-			const aan = data.favoriet;
-			knop.setAttribute('aria-pressed', aan ? 'true' : 'false');
-			knop.setAttribute('aria-label', (aan ? knop.dataset.labelAan : knop.dataset.labelUit) ?? '');
-			knop.classList.toggle('text-danger', aan);
-			knop.classList.toggle('text-text', !aan);
-			for (const icoon of knop.querySelectorAll<HTMLElement>('[data-icoon]')) {
-				icoon.hidden = (icoon.dataset.icoon === 'aan') !== aan;
-			}
-		} finally {
-			knop.disabled = false;
-		}
-	});
+	import '../../scripts/hartje.ts';
 </script>

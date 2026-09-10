@@ -1,0 +1,71 @@
+---
+import { Icon } from 'astro-icon/components';
+
+/*
+ * Het zijpaneel met favorieten. Zit in de header, op elke pagina, maar is
+ * leeg tot iemand op het hartje klikt: dan haalt het script de lijst op van
+ * /favorieten/paneel. Zo kost het paneel niets op pagina's waar niemand
+ * het opent. Zonder JavaScript is het hartje in de header een gewone link
+ * naar /favorieten.
+ */
+---
+
+<dialog
+	data-favorieten-paneel
+	aria-labelledby="favorieten-paneel-titel"
+	class="m-0 ml-auto h-dvh max-h-dvh w-full max-w-md bg-canvas p-0 text-text shadow-xl backdrop:bg-black/40"
+>
+	<div class="flex h-full flex-col">
+		<div class="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
+			<h2 id="favorieten-paneel-titel" class="text-lg font-semibold">Favorieten</h2>
+			<button
+				type="button"
+				data-paneel-sluit
+				class="inline-flex size-10 items-center justify-center rounded-control text-text hover:bg-surface-hover"
+			>
+				<Icon name="ph:x" class="size-5" aria-hidden="true" />
+				<span class="sr-only">Sluiten</span>
+			</button>
+		</div>
+		<div data-paneel-inhoud class="flex-1 overflow-y-auto px-4 py-3" aria-live="polite">
+			<p class="py-6 text-center text-sm text-text-muted">Even geduld, we halen je favorieten op.</p>
+		</div>
+		<div class="border-t border-border bg-surface px-4 py-3 text-sm">
+			<a href="/favorieten" class="font-medium text-accent hover:underline">Alle favorieten bekijken</a>
+		</div>
+	</div>
+</dialog>
+
+<script>
+	import '../../scripts/hartje.ts';
+
+	const paneel = document.querySelector<HTMLDialogElement>('[data-favorieten-paneel]');
+	const inhoud = paneel?.querySelector<HTMLElement>('[data-paneel-inhoud]');
+
+	async function laad(): Promise<void> {
+		if (!inhoud) return;
+		try {
+			const antwoord = await fetch('/favorieten/paneel', { headers: { accept: 'text/html' } });
+			if (!antwoord.ok) throw new Error(String(antwoord.status));
+			inhoud.innerHTML = await antwoord.text();
+		} catch {
+			inhoud.innerHTML =
+				'<p class="py-6 text-center text-sm text-text-muted">Het lukt niet om je favorieten op te halen. <a href="/favorieten" class="font-medium text-accent hover:underline">Bekijk ze op de pagina</a>.</p>';
+		}
+	}
+
+	for (const knop of document.querySelectorAll<HTMLAnchorElement>('[data-favorieten-open]')) {
+		knop.addEventListener('click', (event) => {
+			if (!paneel || typeof paneel.showModal !== 'function') return;
+			event.preventDefault();
+			paneel.showModal();
+			void laad();
+		});
+	}
+
+	paneel?.querySelector('[data-paneel-sluit]')?.addEventListener('click', () => paneel.close());
+	// Klik op de donkere achtergrond sluit het paneel.
+	paneel?.addEventListener('click', (event) => {
+		if (event.target === paneel) paneel.close();
+	});
+</script>

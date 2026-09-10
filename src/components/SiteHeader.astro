@@ -2,8 +2,11 @@
 import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import logo from '../assets/logo.png';
+import { leesFavorieten } from '../lib/klanten/favorieten.ts';
 import { telWinkelmand } from '../lib/klanten/winkelmand.ts';
 import { categoryHref, mainNavigation } from '../lib/navigation.ts';
+import FavorietenPaneel from './klant/FavorietenPaneel.astro';
+import Teller from './klant/Teller.astro';
 
 /*
  * De kop van elke pagina: een smalle servicebalk, daaronder de navigatie.
@@ -30,6 +33,7 @@ const { categorieen } = Astro.props;
 // De teller en de naam: voor een gast uit de cookie, zonder query; voor een
 // ingelogde bezoeker uit de database (src/lib/klanten/winkelmand.ts).
 const aantalInMand = await telWinkelmand(Astro);
+const aantalFavorieten = (await leesFavorieten(Astro)).length;
 const voornaam = Astro.locals.user?.name.split(' ')[0];
 ---
 
@@ -168,19 +172,24 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 					<span class="hidden sm:inline">{voornaam ?? 'Account'}</span>
 				</a>
 				<a
+					href="/favorieten"
+					data-favorieten-open
+					class="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
+				>
+					<span class="relative">
+						<Icon name="ph:heart" class="size-6 sm:size-5" aria-hidden="true" />
+						<Teller aantal={aantalFavorieten} naam="favorieten" />
+					</span>
+					<span class="hidden lg:inline">Favorieten</span>
+					<span class="sr-only">, {aantalFavorieten} {aantalFavorieten === 1 ? 'product' : 'producten'}</span>
+				</a>
+				<a
 					href="/winkelmand"
 					class="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
 				>
 					<span class="relative">
 						<Icon name="ph:shopping-cart-simple" class="size-6 sm:size-5" aria-hidden="true" />
-						{aantalInMand > 0 && (
-							<span
-								class="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] leading-none font-semibold text-white"
-								aria-hidden="true"
-							>
-								{aantalInMand}
-							</span>
-						)}
+						<Teller aantal={aantalInMand} naam="winkelmand" />
 					</span>
 					<span class="hidden sm:inline">Winkelmand</span>
 					<span class="sr-only">, {aantalInMand} {aantalInMand === 1 ? 'artikel' : 'artikelen'}</span>
@@ -252,6 +261,8 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 		</nav>
 	</div>
 </header>
+
+<FavorietenPaneel />
 
 <script>
 	/*

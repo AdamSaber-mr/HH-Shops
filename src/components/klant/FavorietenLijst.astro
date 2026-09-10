@@ -1,0 +1,93 @@
+---
+import { defaultVariant, optionSummary } from '../../lib/catalog.ts';
+import type { favorieteProducten } from '../../lib/klanten/favorieten.ts';
+import Button from '../Button.astro';
+import Price from '../Price.astro';
+import ProductImage from '../ProductImage.astro';
+import Hartje from './Hartje.astro';
+import WinkelmandKnop from './WinkelmandKnop.astro';
+
+/*
+ * De compacte lijst voor het zijpaneel: foto, naam, prijs, hartje om te
+ * verwijderen en een knop naar de winkelmand. De volledige pagina
+ * (/favorieten) gebruikt het gewone productraster.
+ */
+
+interface Props {
+	producten: Awaited<ReturnType<typeof favorieteProducten>>;
+	/** Waar hartje en winkelmandknop zonder JavaScript naar terugkeren. */
+	naar: string;
+}
+
+const { producten, naar } = Astro.props;
+const rijen = producten
+	.map((product) => ({ product, variant: defaultVariant(product.variants), image: product.images[0] }))
+	.filter((r) => r.variant && r.image);
+---
+
+<div data-favorieten-lijst>
+	<div
+		data-favorieten-leeg
+		hidden={rijen.length > 0}
+		class="rounded-card border border-border bg-surface p-6 text-center"
+	>
+		<p class="font-medium">Nog geen favorieten</p>
+		<p class="mt-1 text-sm text-text-muted">Klik op het hartje bij een product om het hier te bewaren.</p>
+		<Button href="/categorieen" variant="secondary" class="mt-4">Bekijk de categorieën</Button>
+	</div>
+	<ul hidden={rijen.length === 0} class="divide-y divide-border">
+		{
+			rijen.map(({ product, variant, image }) =>
+				variant && image ? (
+					<li data-favorieten-rij class="flex gap-3 py-3">
+						<a
+							href={`/product/${product.slug}`}
+							class="block size-20 shrink-0 overflow-hidden rounded-card bg-surface-hover"
+						>
+							<ProductImage
+								src={image.url}
+								alt={image.alt}
+								width={image.width}
+								height={image.height}
+								widths={[80, 160]}
+								sizes="80px"
+								class="size-full object-cover mix-blend-multiply"
+							/>
+						</a>
+						<div class="flex min-w-0 flex-1 flex-col gap-1">
+							<div class="flex items-start justify-between gap-2">
+								<a href={`/product/${product.slug}`} class="text-sm font-semibold leading-snug hover:underline">
+									{product.name}
+								</a>
+								<Hartje
+									productId={product.id}
+									naam={product.name}
+									favoriet={true}
+									naar={naar}
+									class="-mt-1 -mr-1 size-9 border border-border shadow-none"
+								/>
+							</div>
+							<p class="text-xs text-text-muted">
+								{optionSummary(product.optionNames, product.variants.length) ?? ' '}
+							</p>
+							<div class="mt-auto flex items-center justify-between gap-2">
+								<Price cents={variant.priceCents} compareAtCents={variant.compareAtPriceCents} />
+								{variant.stockQuantity > 0 ? (
+									<WinkelmandKnop
+										variantId={variant.id}
+										naam={product.name}
+										naar={naar}
+										stijl="pil"
+										class="inline-flex min-h-9 items-center justify-center rounded-full border border-border-strong bg-surface px-3 text-xs font-medium text-text hover:border-accent hover:bg-accent hover:text-white"
+									/>
+								) : (
+									<span class="text-xs font-medium text-danger">Uitverkocht</span>
+								)}
+							</div>
+						</div>
+					</li>
+				) : null,
+			)
+		}
+	</ul>
+</div>

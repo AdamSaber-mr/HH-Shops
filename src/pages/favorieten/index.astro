@@ -1,0 +1,75 @@
+---
+import Button from '../../components/Button.astro';
+import Melding from '../../components/klant/Melding.astro';
+import ProductGrid, { type ProductEntry } from '../../components/ProductGrid.astro';
+import Layout from '../../layouts/Layout.astro';
+import { defaultVariant } from '../../lib/catalog.ts';
+import { favorieteProducten, leesFavorieten } from '../../lib/klanten/favorieten.ts';
+import { leesFlash } from '../../lib/klanten/flash.ts';
+
+/*
+ * De favorieten, voor iedereen: gasten uit de cookie, klanten uit hun
+ * account. Zonder JavaScript is dit waar het hartje in de header heen gaat.
+ */
+
+const ids = await leesFavorieten(Astro);
+const producten = await favorieteProducten(ids);
+
+const entries: ProductEntry[] = [];
+for (const product of producten) {
+	const variant = defaultVariant(product.variants);
+	const image = product.images[0];
+	if (variant && image) entries.push({ product, variant, image });
+}
+const favorieten = new Set(ids);
+const ingelogd = Boolean(Astro.locals.user);
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<Layout title="Favorieten" noindex>
+	<div class="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:py-10">
+		<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">
+			Favorieten
+			{
+				entries.length > 0 && (
+					<span class="text-lg font-normal text-text-muted">
+						({entries.length} {entries.length === 1 ? 'product' : 'producten'})
+					</span>
+				)
+			}
+		</h1>
+		{
+			!ingelogd && (
+				<p class="mt-2 max-w-xl text-text-muted">
+					Je favorieten staan op dit apparaat bewaard.
+					<a href="/account/inloggen?naar=%2Ffavorieten" class="font-medium text-accent hover:underline">
+						Log in
+					</a>
+					of
+					<a href="/account/registreren?naar=%2Ffavorieten" class="font-medium text-accent hover:underline">
+						maak een account
+					</a>
+					om ze overal terug te vinden.
+				</p>
+			)
+		}
+
+		<div class="mt-6">
+			<Melding melding={leesFlash(Astro.cookies)} />
+		</div>
+
+		{
+			entries.length === 0 ? (
+				<div class="rounded-card border border-border bg-surface p-8 text-center">
+					<p class="font-medium">Je hebt nog geen favorieten</p>
+					<p class="mt-1 text-sm text-text-muted">Klik op het hartje bij een product om het hier te bewaren.</p>
+					<Button href="/categorieen" class="mt-5">
+						Bekijk de categorieën
+					</Button>
+				</div>
+			) : (
+				<ProductGrid items={entries} favorieten={favorieten} eagerCount={4} />
+			)
+		}
+	</div>
+</Layout>

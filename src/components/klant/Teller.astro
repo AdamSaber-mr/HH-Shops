@@ -1,0 +1,25 @@
+---
+/*
+ * De groene cirkel met een getal, half over een icoon in de header. Altijd
+ * zichtbaar, ook bij nul: zo ziet een bezoeker meteen dat het hartje en de
+ * winkelmand iets tellen. De ouder is `relative`.
+ *
+ * `data-teller` maakt hem vindbaar voor het script dat na een klik op een
+ * hartje het getal bijwerkt zonder herladen (src/scripts/hartje.ts).
+ */
+
+interface Props {
+	aantal: number;
+	naam: 'favorieten' | 'winkelmand';
+}
+
+const { aantal, naam } = Astro.props;
+---
+
+<span
+	class="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] leading-none font-semibold text-white"
+	aria-hidden="true"
+	data-teller={naam}
+>
+	{aantal}
+</span>

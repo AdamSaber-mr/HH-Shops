@@ -1,0 +1,16 @@
+---
+import FavorietenLijst from '../../components/klant/FavorietenLijst.astro';
+import { favorieteProducten, leesFavorieten } from '../../lib/klanten/favorieten.ts';
+
+/*
+ * De inhoud van het zijpaneel, als los stuk HTML voor het script in
+ * FavorietenPaneel.astro. Geen layout, geen head: alleen de lijst.
+ */
+export const partial = true;
+
+const ids = await leesFavorieten(Astro);
+const producten = await favorieteProducten(ids);
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<FavorietenLijst producten={producten} naar="/favorieten" />
