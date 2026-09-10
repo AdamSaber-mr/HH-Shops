@@ -88,8 +88,10 @@ die aandacht vragen.
 leest als "op voorraad, veilig, ga door" en werkt goed op koopknoppen. Een
 accentkleur, overal consequent doorgevoerd.
 
-**Typografie:** Geist. Nuchter, goed leesbaar, en het ligt qua karakter dicht
-bij wat bol.com gebruikt zonder dat we een gelicentieerd font nodig hebben.
+**Typografie:** Plus Jakarta Sans. Fase 1 begon met Geist; bij het bouwen van
+de startpagina bleek een iets warmere letter beter bij de winkel te passen, en
+Adam heeft die keuze op 10 september 2026 bevestigd. Zelf gehost via
+`@fontsource-variable/plus-jakarta-sans`, geen Google Fonts.
 
 **Dichtheid:** vol zoals bol.com, maar rustiger gestyled. Veel producten per
 scherm en veel informatie per kaart, alleen zonder de banners en promoblokken
@@ -141,6 +143,8 @@ Maak dit herhaalbaar. Je gaat het meer dan een keer draaien.
 
 **Klaar wanneer:** alle producten staan in de nieuwe database, kloppen, en de
 54 zware PNG's zijn terug van 22 MB naar een fractie daarvan.
+
+Deze fase is uitgewerkt in [docs/fase-2-assortiment.md](docs/fase-2-assortiment.md).
 
 ### Fase 3, de winkel
 
