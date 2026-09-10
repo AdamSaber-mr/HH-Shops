@@ -27,7 +27,7 @@ export const users = pgTable(
 		email: text('email').notNull().unique(),
 		emailVerified: boolean('email_verified').notNull().default(false),
 		image: text('image'),
-		// Van de admin-plugin: alle beheerders krijgen de rol admin.
+		// Van de admin-plugin: 'admin' voor beheerders, 'klant' voor iedereen die zich registreert.
 		role: text('role'),
 		banned: boolean('banned').default(false),
 		banReason: text('ban_reason'),

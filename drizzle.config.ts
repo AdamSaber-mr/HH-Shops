@@ -23,9 +23,9 @@ const url = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL ?? '';
 
 export default defineConfig({
 	dialect: 'postgresql',
-	// Twee bestanden: de winkel en de beheerders. Bewust gescheiden, zie
+	// Drie bestanden: de winkel, de accounts en wat klanten bewaren. Bewust gescheiden, zie
 	// src/db/auth-schema.ts.
-	schema: ['./src/db/schema.ts', './src/db/auth-schema.ts'],
+	schema: ['./src/db/schema.ts', './src/db/auth-schema.ts', './src/db/klanten-schema.ts'],
 	out: './drizzle',
 	dbCredentials: { url },
 	migrations: {
