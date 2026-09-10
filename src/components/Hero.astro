@@ -1,0 +1,95 @@
+---
+import Button from './Button.astro';
+
+/*
+ * De hero bovenaan de startpagina.
+ *
+ * Op desktop ligt de tekst over de linkerhelft van de banner: daar is de
+ * afbeelding leeg (alleen lucht en vloer), rechts staan de producten. Op
+ * telefoon en tablet past dat niet, dan staat de tekst op een hemelsblauw vlak
+ * en komt de banner eronder. Het vlak heeft precies de kleur van de linkerrand
+ * van de banner, zodat het een geheel blijft.
+ *
+ * Op desktop is de sectie de helft van de vensterbreedte hoog (de banner is
+ * 2:1), met een plafond van 44rem. Zo wordt er bij 1440px vrijwel niets
+ * weggesneden; alleen op heel brede schermen gaat er wat lucht bovenaan en
+ * vloer onderaan af. De beeldpositie ligt iets boven het midden, zodat het
+ * kledingrek bovenin heel blijft.
+ *
+ * LET OP: dit is bewust een hoogte en geen `aspect-ratio` met een `max-h`.
+ * Bij die combinatie rekent de browser de breedte terug uit de geknipte
+ * hoogte, en dan is de sectie op een 1920px-scherm nog maar 1408px breed
+ * met een witte strook rechts.
+ *
+ * De banner is de grootste afbeelding van de pagina en bepaalt de LCP.
+ * Daarom: fetchpriority="high", geen lazy loading, en breedte en hoogte erbij
+ * zodat de browser de ruimte al reserveert voordat het bestand binnen is.
+ */
+
+interface Props {
+	title: string;
+	text: string;
+	primary: { label: string; href: string };
+	secondary?: { label: string; href: string };
+}
+
+const { title, text, primary, secondary } = Astro.props;
+---
+
+<section
+	class="relative overflow-hidden bg-sky lg:h-[min(50vw,44rem)]"
+	aria-labelledby="hero-titel"
+>
+	<!-- Desktop: de banner vult de sectie, de tekst ligt erover -->
+	<div class="absolute inset-0 hidden lg:block" aria-hidden="true">
+		<img
+			src="/banner.png"
+			alt=""
+			width="1774"
+			height="887"
+			class="size-full object-cover object-[right_40%]"
+			fetchpriority="high"
+			decoding="async"
+		/>
+		<!-- Een zacht verloop links houdt de tekst leesbaar op brede schermen,
+		     waar de banner ver naar links wordt uitgerekt. -->
+		<div
+			class="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-sky via-sky/60 to-transparent"
+		>
+		</div>
+	</div>
+
+	<div class="relative mx-auto flex h-full max-w-[1400px] px-4 sm:px-6">
+		<div
+			class="flex min-h-[22rem] flex-col justify-center py-12 sm:py-16 lg:min-h-0 lg:max-w-xl lg:py-24"
+		>
+			<p class="text-sm font-semibold tracking-wide text-accent uppercase">H&amp;H Shops</p>
+			<h1
+				id="hero-titel"
+				class="mt-3 text-4xl font-bold tracking-tight text-balance text-accent-hover sm:text-5xl lg:text-6xl"
+			>
+				{title}
+			</h1>
+			<p class="mt-5 max-w-md text-base text-pretty text-text sm:text-lg">{text}</p>
+			<div class="mt-8 flex flex-wrap gap-3">
+				<Button href={primary.href} size="lg">{primary.label}</Button>
+				{secondary && (
+					<Button href={secondary.href} size="lg" variant="secondary">
+						{secondary.label}
+					</Button>
+				)}
+			</div>
+		</div>
+	</div>
+
+	<!-- Telefoon en tablet: de banner onder de tekst -->
+	<img
+		src="/banner.png"
+		alt="Speelgoed, tassen, schoenen, cosmetica en huishoudelijke artikelen op gele podia"
+		width="1774"
+		height="887"
+		class="block w-full lg:hidden"
+		fetchpriority="high"
+		decoding="async"
+	/>
+</section>

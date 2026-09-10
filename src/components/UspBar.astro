@@ -1,0 +1,31 @@
+---
+import { Icon } from 'astro-icon/components';
+import { usps } from '../lib/site.ts';
+
+/*
+ * De vier kernpunten, direct onder de hero. Dit is het eerste wat een
+ * bezoeker ziet na de banner, en het antwoord op de vraag "kan ik deze winkel
+ * vertrouwen". Rustig gehouden: een icoon, een korte titel, een regel tekst.
+ */
+---
+
+<section class="border-b border-border bg-surface" aria-label="Waarom H&H Shops">
+	<ul
+		class="mx-auto grid max-w-[1400px] grid-cols-2 gap-x-6 gap-y-5 px-4 py-6 sm:px-6 lg:grid-cols-4 lg:py-7"
+	>
+		{usps.map((usp) => (
+			<li class="flex items-center gap-3">
+				<span
+					class="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent"
+					aria-hidden="true"
+				>
+					<Icon name={usp.icon} class="size-6" />
+				</span>
+				<span class="min-w-0">
+					<span class="block text-sm font-semibold">{usp.title}</span>
+					<span class="block text-xs text-text-muted sm:text-sm">{usp.text}</span>
+				</span>
+			</li>
+		))}
+	</ul>
+</section>

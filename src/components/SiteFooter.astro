@@ -1,0 +1,128 @@
+---
+import { Icon } from 'astro-icon/components';
+import { categoryHref, featuredCategories } from '../lib/navigation.ts';
+import { footerGroups, paymentMethods, site } from '../lib/site.ts';
+
+/*
+ * De footer van elke pagina.
+ *
+ * Bovenin een nieuwsbriefstrook, daaronder vier kolommen (over de winkel,
+ * categorieen, klantenservice, over H&H Shops) en een onderbalk met
+ * betaalmethoden en de juridische regel.
+ *
+ * Het nieuwsbriefformulier verstuurt nog nergens heen. De action wijst naar
+ * /nieuwsbrief, die pagina komt als de e-mailprovider gekozen is.
+ *
+ * Contactgegevens komen uit src/lib/site.ts en zijn deels nog INVULLEN.
+ */
+
+const year = new Date().getFullYear();
+---
+
+<footer class="mt-16 border-t border-border bg-surface lg:mt-20">
+	<!-- Nieuwsbrief -->
+	<div class="border-b border-border">
+		<div
+			class="mx-auto flex max-w-[1400px] flex-col gap-6 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-between"
+		>
+			<div class="max-w-md">
+				<h2 class="text-xl font-bold tracking-tight">Blijf op de hoogte</h2>
+				<p class="mt-1 text-sm text-text-muted">
+					Nieuwe producten en acties als eerste in je inbox. Geen spam, uitschrijven kan altijd.
+				</p>
+			</div>
+			<form action="/nieuwsbrief" method="post" class="flex w-full max-w-lg gap-2">
+				<label for="nieuwsbrief-email" class="sr-only">E-mailadres</label>
+				<input
+					id="nieuwsbrief-email"
+					type="email"
+					name="email"
+					required
+					autocomplete="email"
+					placeholder="Je e-mailadres"
+					class="min-h-12 min-w-0 flex-1 rounded-control border border-border-strong bg-surface px-4 text-sm placeholder:text-text-muted focus:border-accent"
+				/>
+				<button
+					type="submit"
+					class="inline-flex min-h-12 shrink-0 items-center justify-center rounded-control bg-accent px-5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+				>
+					Aanmelden
+				</button>
+			</form>
+		</div>
+	</div>
+
+	<!-- Kolommen -->
+	<div
+		class="mx-auto grid max-w-[1400px] gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-8"
+	>
+		<div>
+			<a href="/" class="inline-block rounded-control" aria-label="H&H Shops, naar de startpagina">
+				<img src="/logo.png" alt="" width="2172" height="724" class="-my-3 -ml-3 h-16 w-auto" loading="lazy" />
+			</a>
+			<p class="mt-3 max-w-xs text-sm text-text-muted">{site.description}</p>
+			<ul class="mt-5 space-y-2 text-sm">
+				<li class="flex items-center gap-2">
+					<Icon name="ph:envelope-simple" class="size-4 shrink-0 text-accent" aria-hidden="true" />
+					<a href={`mailto:${site.email}`} class="hover:underline">{site.email}</a>
+				</li>
+				<li class="flex items-center gap-2">
+					<Icon name="ph:map-pin" class="size-4 shrink-0 text-accent" aria-hidden="true" />
+					<span>Nederland</span>
+				</li>
+			</ul>
+		</div>
+
+		<nav aria-labelledby="footer-categorieen">
+			<h2 id="footer-categorieen" class="text-sm font-semibold tracking-wide uppercase">
+				Categorieën
+			</h2>
+			<ul class="mt-4 space-y-2.5 text-sm">
+				{featuredCategories.map((category) => (
+					<li>
+						<a href={categoryHref(category.slug)} class="text-text-muted hover:text-accent hover:underline">
+							{category.name}
+						</a>
+					</li>
+				))}
+			</ul>
+		</nav>
+
+		{footerGroups.map((group, index) => (
+			<nav aria-labelledby={`footer-groep-${index}`}>
+				<h2 id={`footer-groep-${index}`} class="text-sm font-semibold tracking-wide uppercase">
+					{group.title}
+				</h2>
+				<ul class="mt-4 space-y-2.5 text-sm">
+					{group.links.map((link) => (
+						<li>
+							<a href={link.href} class="text-text-muted hover:text-accent hover:underline">
+								{link.label}
+							</a>
+						</li>
+					))}
+				</ul>
+			</nav>
+		))}
+	</div>
+
+	<!-- Onderbalk -->
+	<div class="border-t border-border">
+		<div
+			class="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-6 text-xs text-text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6"
+		>
+			<p>
+				© {year} {site.name}. Alle rechten voorbehouden.
+				{site.kvk && <span> · KVK {site.kvk}</span>}
+				{site.btw && <span> · btw {site.btw}</span>}
+			</p>
+			<ul class="flex flex-wrap gap-2" aria-label="Betaalmethoden">
+				{paymentMethods.map((method) => (
+					<li class="rounded-control border border-border bg-canvas px-2.5 py-1 font-medium text-text">
+						{method}
+					</li>
+				))}
+			</ul>
+		</div>
+	</div>
+</footer>

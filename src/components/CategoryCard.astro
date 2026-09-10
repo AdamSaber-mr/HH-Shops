@@ -1,0 +1,61 @@
+---
+/*
+ * Een categoriekaart voor "Trending categorieen": een hoog, staand kleurvlak
+ * met de naam bovenin, zoals in het voorbeeld van Adam.
+ *
+ * De foto komt later. Tot die tijd is de kaart alleen het kleurvlak, met de
+ * beginletter groot en zacht onderin zodat de kaart niet leeg oogt. Zodra de
+ * foto er is, ligt die over het vlak heen; de beginletter verdwijnt dan.
+ *
+ * De titel staat altijd op een donker verloop bovenaan. Dat is niet voor nu,
+ * maar voor straks: op een lichte foto is witte tekst zonder dat verloop niet
+ * te lezen.
+ */
+
+interface Props {
+	name: string;
+	href: string;
+	/** Een complete Tailwind-klasse, bijvoorbeeld "bg-tint-sage". */
+	tint: string;
+	image?: { url: string; alt: string; width: number; height: number };
+}
+
+const { name, href, tint, image } = Astro.props;
+---
+
+<a
+	href={href}
+	class={`group relative block aspect-[3/4] overflow-hidden rounded-card ${tint} shadow-sm transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg`}
+>
+	{image ? (
+		<img
+			src={image.url}
+			alt={image.alt}
+			width={image.width}
+			height={image.height}
+			loading="lazy"
+			decoding="async"
+			class="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
+		/>
+	) : (
+		<span
+			class="absolute -right-3 -bottom-8 text-[9rem] leading-none font-bold text-white/20 select-none"
+			aria-hidden="true"
+		>
+			{name.charAt(0)}
+		</span>
+	)}
+
+	<!-- Donker verloop bovenaan, zodat de titel ook op een foto leesbaar blijft. -->
+	<span
+		class="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-black/45 to-transparent"
+		aria-hidden="true"
+	>
+	</span>
+
+	<span
+		class="absolute inset-x-2 top-5 text-center text-base leading-tight font-bold text-balance hyphens-auto text-white drop-shadow-sm sm:text-lg xl:text-xl"
+	>
+		{name}
+	</span>
+</a>

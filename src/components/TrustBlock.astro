@@ -1,0 +1,90 @@
+---
+import { Icon } from 'astro-icon/components';
+import { googleRating, reviews } from '../lib/reviews.ts';
+
+/*
+ * Het vertrouwensblok: de Google-beoordeling links, drie recensies rechts.
+ *
+ * De inhoud komt uit src/lib/reviews.ts en is NU NOG VOORBEELDINHOUD. Zie de
+ * waarschuwing in dat bestand.
+ *
+ * Sterren zijn nooit de enige drager van de score: de score staat er ook als
+ * getal, en elke recensie heeft een sr-only regel met het aantal sterren.
+ */
+
+const stars = [1, 2, 3, 4, 5] as const;
+const scoreLabel = googleRating.score.toLocaleString('nl-NL', {
+	minimumFractionDigits: 1,
+	maximumFractionDigits: 1,
+});
+---
+
+<section class="bg-surface" aria-labelledby="reviews-titel">
+	<div class="mx-auto max-w-[1400px] px-4 py-14 sm:px-6 lg:py-20">
+		<div class="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,5fr)] lg:gap-12">
+			<!-- Score -->
+			<div class="flex flex-col justify-center">
+				<p class="text-sm font-semibold tracking-wide text-accent uppercase">Klanten over ons</p>
+				<h2 id="reviews-titel" class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+					Beoordeeld op Google
+				</h2>
+				<div class="mt-5 flex items-center gap-4">
+					<span class="text-5xl font-bold tracking-tight text-accent">{scoreLabel}</span>
+					<div>
+						<div class="flex gap-0.5 text-tint-amber" aria-hidden="true">
+							{stars.map((n) => (
+								<Icon
+									name="ph:star-fill"
+									class={`size-5 ${n <= Math.round(googleRating.score) ? '' : 'opacity-25'}`}
+								/>
+							))}
+						</div>
+						<p class="mt-1 text-sm text-text-muted">
+							<span class="sr-only">{scoreLabel} van de 5 sterren, </span>
+							op basis van {googleRating.count} Google-reviews
+						</p>
+					</div>
+				</div>
+				<a
+					href={googleRating.url}
+					rel="noopener"
+					target="_blank"
+					class="mt-6 inline-flex min-h-11 items-center gap-1.5 self-start rounded-control text-sm font-medium text-accent hover:underline"
+				>
+					Bekijk alle reviews op Google
+					<Icon name="ph:arrow-right" class="size-4" aria-hidden="true" />
+					<span class="sr-only">(opent in een nieuw venster)</span>
+				</a>
+			</div>
+
+			<!-- Recensies -->
+			<ul class="grid gap-4 sm:grid-cols-3">
+				{reviews.map((review) => (
+					<li class="flex flex-col rounded-card border border-border bg-canvas p-5">
+						<div class="flex gap-0.5 text-tint-amber" aria-hidden="true">
+							{stars.map((n) => (
+								<Icon
+									name="ph:star-fill"
+									class={`size-4 ${n <= review.rating ? '' : 'opacity-25'}`}
+								/>
+							))}
+						</div>
+						<span class="sr-only">{review.rating} van de 5 sterren</span>
+						<blockquote class="mt-3 flex-1 text-sm leading-relaxed text-pretty">
+							<Icon
+								name="ph:quotes"
+								class="mb-1 size-5 text-accent/40"
+								aria-hidden="true"
+							/>
+							<p>{review.text}</p>
+						</blockquote>
+						<p class="mt-4 text-sm">
+							<span class="font-semibold">{review.author}</span>
+							<span class="text-text-muted"> · {review.date}</span>
+						</p>
+					</li>
+				))}
+			</ul>
+		</div>
+	</div>
+</section>

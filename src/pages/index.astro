@@ -1,55 +1,108 @@
 ---
-import ProductCard from '../components/ProductCard.astro';
+import Hero from '../components/Hero.astro';
+import ProductSection from '../components/ProductSection.astro';
+import PromoBanner from '../components/PromoBanner.astro';
+import TrendingCategories from '../components/TrendingCategories.astro';
+import TrustBlock from '../components/TrustBlock.astro';
+import UspBar from '../components/UspBar.astro';
 import Layout from '../layouts/Layout.astro';
-import { defaultVariant, listActiveProducts, optionSummary } from '../lib/catalog.ts';
+import { defaultVariant, listActiveProducts } from '../lib/catalog.ts';
 
 /*
- * De startpagina.
+ * De startpagina, van boven naar beneden:
  *
- * In fase 1 is dit het bewijs dat alles samenwerkt: serverside renderen, de
- * databaseverbinding, de tokens, Geist en de afbeeldingen. In fase 3 wordt dit
- * de echte startpagina met uitgelichte producten en categorieen.
+ *  1. Hero met de banner
+ *  2. USP-balk: vier kernpunten
+ *  3. Trending categorieen
+ *  4. Populaire producten (4)
+ *  5. Tussenbanner
+ *  6. Vertrouwensblok: Google-beoordeling en recensies
+ *  7. Nieuw binnen (8)
+ *  8. Footer met nieuwsbrief (uit Layout)
+ *
+ * Het volledige assortiment hoort niet op de startpagina; dat komt op
+ * /producten.
+ *
+ * "Populair" is nu nog: de eerste vier leverbare producten op naam. Er zijn
+ * nog geen verkoopcijfers om op te sorteren. "Nieuw binnen" is wel echt: de
+ * acht laatst toegevoegde producten, zonder de vier populaire.
  */
 
-const items = await listActiveProducts();
+const POPULAR_COUNT = 4;
+const NEW_COUNT = 8;
+
+const entries = (await listActiveProducts())
+	.map((product) => ({
+		product,
+		variant: defaultVariant(product.variants),
+		image: product.images[0],
+	}))
+	.filter(
+		(entry): entry is typeof entry & { variant: NonNullable<typeof entry.variant> } =>
+			Boolean(entry.variant && entry.image),
+	);
+
+const available = (entry: (typeof entries)[number]) => entry.variant.stockQuantity > 0;
+
+const popular = [...entries]
+	// Leverbare producten eerst; een uitverkocht product is niet populair.
+	.sort((a, b) => Number(available(b)) - Number(available(a)))
+	.slice(0, POPULAR_COUNT);
+
+const popularSlugs = new Set(popular.map((entry) => entry.product.slug));
+
+const newest = [...entries]
+	.filter((entry) => !popularSlugs.has(entry.product.slug))
+	// Nieuwste eerst, maar leverbaar gaat voor: een rij vol "Uitverkocht"
+	// onder de kop "Nieuw binnen" nodigt niet uit.
+	.sort(
+		(a, b) =>
+			Number(available(b)) - Number(available(a)) ||
+			b.product.createdAt.getTime() - a.product.createdAt.getTime(),
+	)
+	.slice(0, NEW_COUNT);
 ---
 
-<Layout description="Huishoudelijke artikelen, kinderartikelen, cosmetica, tassen en schoeisel.">
-	<div class="mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
-		<h1 class="text-2xl font-semibold tracking-tight">Ons assortiment</h1>
-		<p class="mt-1 text-sm text-text-muted">
-			{items.length === 1 ? '1 product' : `${items.length} producten`}
-		</p>
+<Layout
+	description="Huishoudelijke artikelen, kinderartikelen, cosmetica, tassen en schoeisel. Snel geleverd in Nederland."
+>
+	<Hero
+		title="Alles voor thuis, in één winkel."
+		text="Van huishoudelijke artikelen en kinderspullen tot cosmetica, tassen en schoenen. Snel geleverd in heel Nederland."
+		primary={{ label: 'Bekijk het assortiment', href: '/producten' }}
+		secondary={{ label: 'Alle categorieën', href: '/categorieen' }}
+	/>
 
-		{items.length === 0 ? (
-				<div class="mt-8 rounded-card border border-border bg-surface p-8 text-center">
-					<p class="font-medium">Er staat nog niets in de winkel</p>
-					<p class="mt-1 text-sm text-text-muted">
-						Zodra het assortiment is overgezet, staan de producten hier.
-					</p>
-				</div>
-			) : (
-				<div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-					{items.map((product) => {
-						const variant = defaultVariant(product.variants);
-						const image = product.images[0];
-						if (!variant || !image) return null;
-						return (
-							<ProductCard
-								slug={product.slug}
-								name={product.name}
-								image={image}
-								priceCents={variant.priceCents}
-								compareAtPriceCents={variant.compareAtPriceCents}
-								stockQuantity={variant.stockQuantity}
-								optionSummary={optionSummary(
-									product.optionNames,
-									product.variants.length,
-								)}
-							/>
-						);
-					})}
-				</div>
-			)}
+	<UspBar />
+
+	<TrendingCategories />
+
+	<ProductSection
+		id="populair"
+		title="Populaire producten"
+		link={{ label: 'Alle producten', href: '/producten' }}
+		items={popular}
+	/>
+
+	<div class="mt-14 lg:mt-20">
+		<PromoBanner
+			eyebrow="Van keuken tot kinderkamer"
+			title="Elke week nieuwe producten voor in en om het huis."
+			text="Handige spullen voor de keuken, speelgoed voor de kleintjes, tassen en schoenen voor onderweg. Kijk wat er deze week is bijgekomen."
+			cta={{ label: 'Bekijk wat nieuw is', href: '#nieuw-titel' }}
+		/>
+	</div>
+
+	<div class="mt-14 lg:mt-20">
+		<TrustBlock />
+	</div>
+
+	<div class="mt-14 scroll-mt-32 lg:mt-20">
+		<ProductSection
+			id="nieuw"
+			title="Nieuw binnen"
+			link={{ label: 'Alle producten', href: '/producten' }}
+			items={newest}
+		/>
 	</div>
 </Layout>

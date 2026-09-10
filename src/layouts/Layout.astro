@@ -3,6 +3,8 @@
 // asset-URL's van de woff2-bestanden herschrijft.
 import '@fontsource-variable/geist';
 import '../styles/global.css';
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
 
 interface Props {
 	/** Zonder titel wordt het alleen "HH Shops". */
@@ -41,22 +43,12 @@ const pageTitle = title ? `${title} | HH Shops` : 'HH Shops';
 			Naar de inhoud
 		</a>
 
-		<header class="border-b border-border bg-surface">
-			<div class="mx-auto flex max-w-[1400px] items-center gap-6 px-4 py-4 sm:px-6">
-				<a href="/" class="rounded-control text-xl font-semibold tracking-tight text-accent">
-					HH Shops
-				</a>
-			</div>
-		</header>
+		<SiteHeader />
 
 		<main id="inhoud">
 			<slot />
 		</main>
 
-		<footer class="mt-16 border-t border-border bg-surface">
-			<div class="mx-auto max-w-[1400px] px-4 py-8 text-sm text-text-muted sm:px-6">
-				<p>HH Shops</p>
-			</div>
-		</footer>
+		<SiteFooter />
 	</body>
 </html>

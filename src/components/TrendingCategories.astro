@@ -1,0 +1,35 @@
+---
+import { Icon } from 'astro-icon/components';
+import { categoryHref, trendingCategories } from '../lib/navigation.ts';
+import CategoryCard from './CategoryCard.astro';
+
+/*
+ * "Trending categorieen" op de startpagina: zes hoge kaarten naast elkaar op
+ * desktop, drie op tablet, twee op telefoon. Welke zes en welke kleur staat in
+ * src/lib/navigation.ts. De foto's volgen later, zie CategoryCard.
+ */
+---
+
+<section
+	class="mx-auto max-w-[1400px] px-4 py-14 sm:px-6 lg:py-20"
+	aria-labelledby="trending-titel"
+>
+	<div class="flex flex-wrap items-end justify-between gap-4">
+		<h2 id="trending-titel" class="text-2xl font-bold tracking-tight sm:text-3xl">
+			Trending categorieën
+		</h2>
+		<a
+			href="/categorieen"
+			class="inline-flex min-h-11 items-center gap-1.5 rounded-control text-sm font-medium text-accent hover:underline"
+		>
+			Alle categorieën
+			<Icon name="ph:caret-right" class="size-4" aria-hidden="true" />
+		</a>
+	</div>
+
+	<div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+		{trendingCategories.map((category) => (
+			<CategoryCard name={category.name} tint={category.tint} href={categoryHref(category.slug)} />
+		))}
+	</div>
+</section>

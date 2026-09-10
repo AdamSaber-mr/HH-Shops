@@ -1,17 +1,26 @@
 ---
+import { Icon } from 'astro-icon/components';
 import Price from './Price.astro';
 import ProductImage from './ProductImage.astro';
-import StockBadge from './StockBadge.astro';
 
 /*
- * De productkaart uit het overzicht.
+ * De productkaart, in de stijl van het voorbeeld van Adam: een licht fotovlak
+ * met een hartje in de hoek, daaronder de naam met de prijs ernaast, een regel
+ * met de keuzes en de voorraad, en een knop "In winkelmand".
  *
- * Dicht gevuld, zoals bol.com, maar rustiger: geen banner, geen promoblok, geen
- * beweging. Wat er staat is wat je nodig hebt om door te klikken.
+ * Geen kader om de kaart heen; het fotovlak is het kader. Op hover komt de
+ * knop groen op, verder beweegt er niets.
  *
- * De hele kaart is klikbaar via een uitgerekt anker over de titel. Dat houdt
- * het aantal links per kaart op een, wat een schermlezer een stuk rustiger
- * maakt dan een kaart met vijf losse links naar dezelfde pagina.
+ * De hele kaart is klikbaar via een uitgerekt anker over de titel. Het hartje
+ * en de knop liggen daar met z-10 bovenop, anders opent een klik op de knop de
+ * productpagina in plaats van dat hij iets in de winkelmand doet.
+ *
+ * Het hartje en de knop doen nu nog niets: verlanglijst en winkelmand komen
+ * later. Ze staan er al zodat de kaart zijn definitieve vorm heeft.
+ *
+ * Geen sterren. Het voorbeeld heeft een beoordeling met een aantal, maar er
+ * zijn nog geen recensies, en verzonnen sterren zijn in een winkel geen
+ * afwerking maar misleiding. Zodra er recensies zijn, komt die regel erbij.
  */
 
 interface Props {
@@ -23,44 +32,95 @@ interface Props {
 	stockQuantity: number;
 	/** Bijvoorbeeld "4 maten". Leeg bij een product zonder keuzes. */
 	optionSummary?: string;
+	/** Eager voor de eerste kaarten boven de vouw. */
+	loading?: 'lazy' | 'eager';
 }
 
-const { slug, name, image, priceCents, compareAtPriceCents, stockQuantity, optionSummary } =
-	Astro.props;
+const {
+	slug,
+	name,
+	image,
+	priceCents,
+	compareAtPriceCents,
+	stockQuantity,
+	optionSummary,
+	loading = 'lazy',
+} = Astro.props;
 
 const soldOut = stockQuantity <= 0;
+const lowStock = !soldOut && stockQuantity <= 10;
+const stockLabel = soldOut
+	? 'Uitverkocht'
+	: lowStock
+		? `Nog ${stockQuantity} op voorraad`
+		: 'Op voorraad';
 ---
 
-<article
-	class="group relative flex flex-col rounded-card border border-border bg-surface transition-colors hover:bg-surface-hover focus-within:bg-surface-hover"
->
-	<div class="aspect-square overflow-hidden rounded-t-card bg-canvas">
+<article class="group relative flex flex-col">
+	<div class="relative aspect-square overflow-hidden rounded-card bg-surface-hover">
 		<ProductImage
 			src={image.url}
 			alt={image.alt}
 			width={image.width}
 			height={image.height}
-			widths={[240, 320, 480]}
-			sizes="(min-width: 1024px) 240px, (min-width: 640px) 33vw, 50vw"
-			class={`size-full object-cover ${soldOut ? 'opacity-60' : ''}`}
+			widths={[320, 480, 640]}
+			sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 50vw"
+			loading={loading}
+			class={`size-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-[1.03] ${soldOut ? 'opacity-50' : ''}`}
 		/>
+
+		<button
+			type="button"
+			class="absolute top-3 right-3 z-10 inline-flex size-10 items-center justify-center rounded-full bg-surface text-text shadow-sm transition-colors hover:text-danger"
+			aria-label={`${name} bewaren`}
+			aria-pressed="false"
+		>
+			<Icon name="ph:heart" class="size-5" aria-hidden="true" />
+		</button>
+
+		{soldOut && (
+			<span
+				class="absolute bottom-3 left-3 rounded-control bg-surface px-2 py-1 text-xs font-medium text-danger shadow-sm"
+			>
+				Uitverkocht
+			</span>
+		)}
 	</div>
 
-	<div class="flex flex-1 flex-col gap-2 p-3">
-		<h3 class="text-sm leading-snug font-medium">
-			<!-- Het uitgerekte anker maakt de hele kaart klikbaar. -->
-			<a href={`/product/${slug}`} class="after:absolute after:inset-0">
-				{name}
-			</a>
-		</h3>
+	<div class="flex flex-1 flex-col gap-1 pt-3">
+		<div class="flex items-start justify-between gap-3">
+			<h3 class="text-sm leading-snug font-semibold">
+				<!-- Het uitgerekte anker maakt de hele kaart klikbaar. -->
+				<a href={`/product/${slug}`} class="after:absolute after:inset-0 after:rounded-card">
+					{name}
+				</a>
+			</h3>
+			<Price cents={priceCents} compareAtCents={compareAtPriceCents} class="shrink-0" />
+		</div>
 
-		{optionSummary && (
-				<p class="text-xs text-text-muted">{optionSummary}</p>
+		<p class="text-xs text-text-muted">
+			{optionSummary && <span>{optionSummary}<span aria-hidden="true"> · </span></span>}
+			<span class={soldOut ? 'text-danger' : 'text-accent'}>{stockLabel}</span>
+		</p>
+
+		<div class="mt-auto pt-3">
+			{soldOut ? (
+				<button
+					type="button"
+					disabled
+					class="relative z-10 inline-flex min-h-10 cursor-not-allowed items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-medium text-text-disabled"
+				>
+					Uitverkocht
+				</button>
+			) : (
+				<button
+					type="button"
+					class="relative z-10 inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-sm font-medium text-text transition-colors group-hover:border-accent group-hover:bg-accent group-hover:text-white hover:bg-accent-hover"
+				>
+					In winkelmand
+					<span class="sr-only">: {name}</span>
+				</button>
 			)}
-
-		<div class="mt-auto flex flex-col gap-2 pt-1">
-			<Price cents={priceCents} compareAtCents={compareAtPriceCents} />
-			<StockBadge quantity={stockQuantity} class="self-start" />
 		</div>
 	</div>
 </article>

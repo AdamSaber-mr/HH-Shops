@@ -1,0 +1,297 @@
+---
+import { Icon } from 'astro-icon/components';
+import { categoryHref, featuredCategories, mainNavigation } from '../lib/navigation.ts';
+
+/*
+ * De kop van elke pagina: een smalle servicebalk, daaronder de navigatie.
+ *
+ * De navigatie plakt bovenaan het scherm (sticky). In een winkel wil je vanaf
+ * elke plek op de pagina bij zoeken en de winkelmand kunnen.
+ *
+ * Twee uitklapdelen, allebei gestuurd door het script onderaan:
+ *  - het categoriemenu op desktop (knop met aria-expanded en een paneel);
+ *  - het volledige menu op telefoon en tablet (hamburger).
+ * Beide sluiten op Escape en bij een klik erbuiten. Geen hover-menu's: die
+ * werken niet op een aanraakscherm en niet met het toetsenbord.
+ *
+ * De links wijzen al naar de juiste adressen, maar die pagina's bestaan nog
+ * niet. Dat is bewust: de navigatie is af, de pagina's komen stap voor stap.
+ */
+---
+
+<header class="sticky top-0 z-40">
+	<!-- Servicebalk -->
+	<div class="bg-accent text-white">
+		<div
+			class="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-1.5 text-xs sm:px-6"
+		>
+			<p class="flex items-center gap-2">
+				<Icon name="ph:truck" class="size-4 shrink-0" aria-hidden="true" />
+				<span>Snel geleverd in heel Nederland</span>
+			</p>
+			<p class="hidden items-center gap-2 sm:flex">
+				<Icon name="ph:lock-simple" class="size-4 shrink-0" aria-hidden="true" />
+				<span>Veilig betalen</span>
+			</p>
+		</div>
+	</div>
+
+	<!-- Navigatie -->
+	<div class="border-b border-border bg-surface/95 backdrop-blur">
+		<div class="mx-auto flex max-w-[1400px] items-center gap-4 px-4 py-2 sm:px-6 lg:gap-8">
+			<!-- Hamburger, alleen op telefoon en tablet -->
+			<button
+				type="button"
+				class="-ml-2 inline-flex size-11 shrink-0 items-center justify-center rounded-control text-text hover:bg-surface-hover lg:hidden"
+				aria-controls="mobiel-menu"
+				aria-expanded="false"
+				data-menu-toggle
+			>
+				<Icon name="ph:list" class="size-6" aria-hidden="true" data-icon-open />
+				<Icon name="ph:x" class="hidden size-6" aria-hidden="true" data-icon-close />
+				<span class="sr-only">Menu</span>
+			</button>
+
+			<!-- Logo. Het bestand heeft veel witruimte rondom, vandaar de negatieve marge. -->
+			<a href="/" class="-my-3 shrink-0 rounded-control" aria-label="H&H Shops, naar de startpagina">
+				<img
+					src="/logo.png"
+					alt=""
+					width="2172"
+					height="724"
+					class="h-16 w-auto sm:h-[4.5rem]"
+					fetchpriority="high"
+				/>
+			</a>
+
+			<!-- Hoofdmenu op desktop -->
+			<nav class="hidden items-center gap-1 lg:flex" aria-label="Hoofdmenu">
+				<div class="relative" data-dropdown>
+					<button
+						type="button"
+						class="group inline-flex min-h-11 items-center gap-1.5 rounded-control px-3 text-sm font-medium text-text hover:bg-surface-hover"
+						aria-expanded="false"
+						aria-controls="categorie-menu"
+						data-dropdown-toggle
+					>
+						Categorieën
+						<Icon
+							name="ph:caret-down"
+							class="size-4 transition-transform duration-200 group-aria-expanded:rotate-180"
+							aria-hidden="true"
+						/>
+					</button>
+					<div
+						id="categorie-menu"
+						class="absolute top-full left-0 mt-2 hidden w-72 rounded-card border border-border bg-surface p-2 shadow-lg"
+						data-dropdown-panel
+					>
+						<ul class="grid gap-0.5">
+							{featuredCategories.map((category) => (
+								<li>
+									<a
+										href={categoryHref(category.slug)}
+										class="flex items-center justify-between gap-3 rounded-control px-3 py-2 text-sm text-text hover:bg-surface-hover hover:text-accent"
+									>
+										{category.name}
+										<Icon name="ph:caret-right" class="size-4 text-text-muted" aria-hidden="true" />
+									</a>
+								</li>
+							))}
+						</ul>
+						<a
+							href="/categorieen"
+							class="mt-1 flex items-center justify-between gap-3 rounded-control border-t border-border px-3 py-2.5 text-sm font-medium text-accent hover:bg-surface-hover"
+						>
+							Alle categorieën
+							<Icon name="ph:caret-right" class="size-4" aria-hidden="true" />
+						</a>
+					</div>
+				</div>
+
+				{mainNavigation.map((link) => (
+					<a
+						href={link.href}
+						class="inline-flex min-h-11 items-center rounded-control px-3 text-sm font-medium text-text hover:bg-surface-hover"
+					>
+						{link.label}
+					</a>
+				))}
+			</nav>
+
+			<!-- Zoeken. Op telefoon staat dit veld als eigen rij onder de balk. -->
+			<search class="ml-auto hidden min-w-0 flex-1 md:block lg:max-w-md">
+			<form action="/zoeken" method="get">
+				<label for="zoeken-desktop" class="sr-only">Zoek een product</label>
+				<div class="relative w-full">
+					<input
+						id="zoeken-desktop"
+						type="search"
+						name="q"
+						placeholder="Zoek een product"
+						autocomplete="off"
+						class="min-h-11 w-full rounded-full border border-border-strong bg-surface pr-12 pl-4 text-sm text-text placeholder:text-text-muted focus:border-accent"
+					/>
+					<button
+						type="submit"
+						class="absolute top-1/2 right-1 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-text-muted hover:bg-accent-subtle hover:text-accent"
+					>
+						<Icon name="ph:magnifying-glass" class="size-5" aria-hidden="true" />
+						<span class="sr-only">Zoeken</span>
+					</button>
+				</div>
+			</form>
+			</search>
+
+			<!-- Account en winkelmand -->
+			<div class="ml-auto flex shrink-0 items-center gap-1 md:ml-0">
+				<a
+					href="/account"
+					class="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
+				>
+					<Icon name="ph:user" class="size-6 sm:size-5" aria-hidden="true" />
+					<span class="hidden sm:inline">Account</span>
+				</a>
+				<a
+					href="/winkelmand"
+					class="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
+				>
+					<span class="relative">
+						<Icon name="ph:shopping-cart-simple" class="size-6 sm:size-5" aria-hidden="true" />
+						<span
+							class="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] leading-none font-semibold text-white"
+							aria-hidden="true"
+						>
+							0
+						</span>
+					</span>
+					<span class="hidden sm:inline">Winkelmand</span>
+					<span class="sr-only">, 0 artikelen</span>
+				</a>
+			</div>
+		</div>
+
+		<!-- Zoekveld op telefoon -->
+		<search class="px-4 pb-3 md:hidden">
+		<form action="/zoeken" method="get">
+			<label for="zoeken-mobiel" class="sr-only">Zoek een product</label>
+			<div class="relative">
+				<input
+					id="zoeken-mobiel"
+					type="search"
+					name="q"
+					placeholder="Zoek een product"
+					autocomplete="off"
+					class="min-h-11 w-full rounded-full border border-border-strong bg-surface pr-12 pl-4 text-sm text-text placeholder:text-text-muted focus:border-accent"
+				/>
+				<button
+					type="submit"
+					class="absolute top-1/2 right-1 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-text-muted hover:bg-accent-subtle hover:text-accent"
+				>
+					<Icon name="ph:magnifying-glass" class="size-5" aria-hidden="true" />
+					<span class="sr-only">Zoeken</span>
+				</button>
+			</div>
+		</form>
+		</search>
+
+		<!-- Mobiel menu -->
+		<nav
+			id="mobiel-menu"
+			class="hidden border-t border-border lg:hidden"
+			aria-label="Hoofdmenu"
+			data-mobile-menu
+		>
+			<div class="mx-auto max-w-[1400px] px-4 py-3 sm:px-6">
+				<p class="px-3 pt-1 pb-2 text-xs font-semibold tracking-wide text-text-muted uppercase">
+					Categorieën
+				</p>
+				<ul class="grid gap-0.5 sm:grid-cols-2">
+					{featuredCategories.map((category) => (
+						<li>
+							<a
+								href={categoryHref(category.slug)}
+								class="flex min-h-11 items-center justify-between gap-3 rounded-control px-3 text-sm text-text hover:bg-surface-hover"
+							>
+								{category.name}
+								<Icon name="ph:caret-right" class="size-4 text-text-muted" aria-hidden="true" />
+							</a>
+						</li>
+					))}
+				</ul>
+				<ul class="mt-3 grid gap-0.5 border-t border-border pt-3 sm:grid-cols-2">
+					{mainNavigation.map((link) => (
+						<li>
+							<a
+								href={link.href}
+								class="flex min-h-11 items-center rounded-control px-3 text-sm font-medium text-text hover:bg-surface-hover"
+							>
+								{link.label}
+							</a>
+						</li>
+					))}
+				</ul>
+			</div>
+		</nav>
+	</div>
+</header>
+
+<script>
+	/*
+	 * Twee uitklapdelen: het categoriemenu op desktop en het mobiele menu.
+	 * Alles werkt op aria-expanded, zodat de toestand voor schermlezers klopt
+	 * en de styling (het draaiende pijltje) er direct op kan reageren.
+	 */
+	const menuToggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+	const mobileMenu = document.querySelector<HTMLElement>('[data-mobile-menu]');
+	const iconOpen = menuToggle?.querySelector<SVGElement>('[data-icon-open]');
+	const iconClose = menuToggle?.querySelector<SVGElement>('[data-icon-close]');
+
+	function setMobile(open: boolean) {
+		if (!menuToggle || !mobileMenu) return;
+		menuToggle.setAttribute('aria-expanded', String(open));
+		mobileMenu.classList.toggle('hidden', !open);
+		iconOpen?.classList.toggle('hidden', open);
+		iconClose?.classList.toggle('hidden', !open);
+	}
+
+	menuToggle?.addEventListener('click', () => {
+		setMobile(menuToggle.getAttribute('aria-expanded') !== 'true');
+	});
+
+	const dropdown = document.querySelector<HTMLElement>('[data-dropdown]');
+	const dropdownToggle = dropdown?.querySelector<HTMLButtonElement>('[data-dropdown-toggle]');
+	const dropdownPanel = dropdown?.querySelector<HTMLElement>('[data-dropdown-panel]');
+
+	function setDropdown(open: boolean) {
+		if (!dropdownToggle || !dropdownPanel) return;
+		dropdownToggle.setAttribute('aria-expanded', String(open));
+		dropdownPanel.classList.toggle('hidden', !open);
+	}
+
+	dropdownToggle?.addEventListener('click', () => {
+		setDropdown(dropdownToggle.getAttribute('aria-expanded') !== 'true');
+	});
+
+	document.addEventListener('click', (event) => {
+		if (dropdown && !dropdown.contains(event.target as Node)) setDropdown(false);
+	});
+
+	document.addEventListener('keydown', (event) => {
+		if (event.key !== 'Escape') return;
+		if (dropdownToggle?.getAttribute('aria-expanded') === 'true') {
+			setDropdown(false);
+			dropdownToggle.focus();
+		}
+		if (menuToggle?.getAttribute('aria-expanded') === 'true') {
+			setMobile(false);
+			menuToggle.focus();
+		}
+	});
+
+	// Wordt het scherm breed genoeg voor het desktopmenu, dan gaat het mobiele
+	// menu dicht. Anders staat het nog open zodra iemand weer smaller gaat.
+	window.matchMedia('(min-width: 64rem)').addEventListener('change', (event) => {
+		if (event.matches) setMobile(false);
+	});
+</script>

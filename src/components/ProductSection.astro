@@ -1,0 +1,72 @@
+---
+import { Icon } from 'astro-icon/components';
+import { optionSummary } from '../lib/catalog.ts';
+import ProductCard from './ProductCard.astro';
+
+/*
+ * Een productrij op de startpagina: kop, link rechts en een raster van
+ * kaarten. "Populaire producten" en "Nieuw binnen" zijn allebei dit component
+ * met andere producten erin.
+ */
+
+export interface ProductEntry {
+	product: {
+		slug: string;
+		name: string;
+		optionNames: string[];
+		variants: { length: number };
+	};
+	variant: { priceCents: number; compareAtPriceCents: number | null; stockQuantity: number };
+	image: { url: string; alt: string; width: number; height: number };
+}
+
+interface Props {
+	id: string;
+	title: string;
+	link?: { label: string; href: string };
+	items: readonly ProductEntry[];
+	/** De eerste kaarten boven de vouw laden eager. */
+	eagerCount?: number;
+}
+
+const { id, title, link, items, eagerCount = 0 } = Astro.props;
+---
+
+<section class="mx-auto max-w-[1400px] px-4 sm:px-6" aria-labelledby={`${id}-titel`}>
+	<div class="flex flex-wrap items-end justify-between gap-4">
+		<h2 id={`${id}-titel`} class="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h2>
+		{link && (
+			<a
+				href={link.href}
+				class="inline-flex min-h-11 items-center gap-1.5 rounded-control text-sm font-medium text-accent hover:underline"
+			>
+				{link.label}
+				<Icon name="ph:caret-right" class="size-4" aria-hidden="true" />
+			</a>
+		)}
+	</div>
+
+	{items.length === 0 ? (
+		<div class="mt-6 rounded-card border border-border bg-surface p-8 text-center">
+			<p class="font-medium">Er staat nog niets in de winkel</p>
+			<p class="mt-1 text-sm text-text-muted">
+				Zodra het assortiment is overgezet, staan de producten hier.
+			</p>
+		</div>
+	) : (
+		<div class="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+			{items.map(({ product, variant, image }, index) => (
+				<ProductCard
+					slug={product.slug}
+					name={product.name}
+					image={image}
+					priceCents={variant.priceCents}
+					compareAtPriceCents={variant.compareAtPriceCents}
+					stockQuantity={variant.stockQuantity}
+					optionSummary={optionSummary(product.optionNames, product.variants.length)}
+					loading={index < eagerCount ? 'eager' : 'lazy'}
+				/>
+			))}
+		</div>
+	)}
+</section>
