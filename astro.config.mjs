@@ -135,6 +135,13 @@ export default defineConfig({
 
 	vite: {
 		plugins: [tailwindcss()],
+		ssr: {
+			// sanitize-html is CommonJS en laadt htmlparser2, dat alleen nog als ESM
+			// bestaat. Node 24 kan dat lokaal (require van ESM), de Node-runtime van
+			// Vercel niet: daar gaf het een 500 op elke action. Meebundelen in de
+			// serverbundel haalt dat require tijdens het draaien weg.
+			noExternal: ['sanitize-html', 'htmlparser2'],
+		},
 	},
 
 	env: {
