@@ -10,12 +10,18 @@ import ProductCard from './ProductCard.astro';
 
 export interface ProductEntry {
 	product: {
+		id: number;
 		slug: string;
 		name: string;
 		optionNames: string[];
 		variants: { length: number };
 	};
-	variant: { priceCents: number; compareAtPriceCents: number | null; stockQuantity: number };
+	variant: {
+		id: number;
+		priceCents: number;
+		compareAtPriceCents: number | null;
+		stockQuantity: number;
+	};
 	image: { url: string; alt: string; width: number; height: number };
 }
 
@@ -23,15 +29,23 @@ interface Props {
 	items: readonly ProductEntry[];
 	/** De eerste kaarten boven de vouw laden eager. */
 	eagerCount?: number;
+	/** Product-id's die de bezoeker als favoriet heeft, voor het gevulde hartje. */
+	favorieten?: ReadonlySet<number>;
 	class?: string;
 }
 
-const { items, eagerCount = 0, class: extraClass = '' } = Astro.props;
+const { items, eagerCount = 0, favorieten = new Set<number>(), class: extraClass = '' } = Astro.props;
+// Waar het hartje en de winkelmandknop zonder JavaScript naar terugkeren.
+const naar = Astro.url.pathname + Astro.url.search;
 ---
 
 <div class={`grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4 ${extraClass}`}>
 	{items.map(({ product, variant, image }, index) => (
 		<ProductCard
+			productId={product.id}
+			variantId={variant.id}
+			favoriet={favorieten.has(product.id)}
+			naar={naar}
 			slug={product.slug}
 			name={product.name}
 			image={image}

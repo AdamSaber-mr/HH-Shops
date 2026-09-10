@@ -1,5 +1,6 @@
 ---
-import { Icon } from 'astro-icon/components';
+import Hartje from './klant/Hartje.astro';
+import WinkelmandKnop from './klant/WinkelmandKnop.astro';
 import Price from './Price.astro';
 import ProductImage from './ProductImage.astro';
 
@@ -24,6 +25,12 @@ import ProductImage from './ProductImage.astro';
  */
 
 interface Props {
+	productId: number;
+	variantId: number;
+	/** Of het hartje gevuld staat. */
+	favoriet?: boolean;
+	/** Waar hartje en winkelmandknop zonder JavaScript naar terugkeren. */
+	naar?: string;
 	slug: string;
 	name: string;
 	image: { url: string; alt: string; width: number; height: number };
@@ -37,6 +44,10 @@ interface Props {
 }
 
 const {
+	productId,
+	variantId,
+	favoriet = false,
+	naar = '/',
 	slug,
 	name,
 	image,
@@ -69,14 +80,13 @@ const stockLabel = soldOut
 			class={`size-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-[1.03] ${soldOut ? 'opacity-50' : ''}`}
 		/>
 
-		<button
-			type="button"
-			class="absolute top-3 right-3 z-10 inline-flex size-10 items-center justify-center rounded-full bg-surface text-text shadow-sm transition-colors hover:text-danger"
-			aria-label={`${name} bewaren`}
-			aria-pressed="false"
-		>
-			<Icon name="ph:heart" class="size-5" aria-hidden="true" />
-		</button>
+		<Hartje
+			productId={productId}
+			naam={name}
+			favoriet={favoriet}
+			naar={naar}
+			class="absolute top-3 right-3 z-10"
+		/>
 
 		{soldOut && (
 			<span
@@ -113,13 +123,13 @@ const stockLabel = soldOut
 					Uitverkocht
 				</button>
 			) : (
-				<button
-					type="button"
+				<WinkelmandKnop
+					variantId={variantId}
+					naam={name}
+					naar={naar}
+					stijl="pil"
 					class="relative z-10 inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-sm font-medium text-text transition-colors group-hover:border-accent group-hover:bg-accent group-hover:text-white hover:bg-accent-hover"
-				>
-					In winkelmand
-					<span class="sr-only">: {name}</span>
-				</button>
+				/>
 			)}
 		</div>
 	</div>

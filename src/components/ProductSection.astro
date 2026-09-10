@@ -15,9 +15,10 @@ interface Props {
 	items: readonly ProductEntry[];
 	/** De eerste kaarten boven de vouw laden eager. */
 	eagerCount?: number;
+	favorieten?: ReadonlySet<number>;
 }
 
-const { id, title, link, items, eagerCount = 0 } = Astro.props;
+const { id, title, link, items, eagerCount = 0, favorieten } = Astro.props;
 ---
 
 <section class="mx-auto max-w-[1400px] px-4 sm:px-6" aria-labelledby={`${id}-titel`}>
@@ -42,6 +43,6 @@ const { id, title, link, items, eagerCount = 0 } = Astro.props;
 			</p>
 		</div>
 	) : (
-		<ProductGrid items={items} eagerCount={eagerCount} class="mt-6" />
+		<ProductGrid items={items} eagerCount={eagerCount} favorieten={favorieten} class="mt-6" />
 	)}
 </section>
