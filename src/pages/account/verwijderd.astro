@@ -1,0 +1,24 @@
+---
+import Button from '../../components/Button.astro';
+import Layout from '../../layouts/Layout.astro';
+
+/*
+ * De bevestiging nadat een klant zijn account heeft verwijderd. Een eigen
+ * pagina, want de startpagina toont geen meldingen en de klant is niet meer
+ * ingelogd. Open voor iedereen (zie KLANT_VRIJ in src/middleware.ts).
+ */
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<Layout title="Account verwijderd" noindex>
+	<div class="mx-auto max-w-md px-4 py-10 sm:px-6 lg:py-16">
+		<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Je account is verwijderd</h1>
+		<p class="mt-2 text-text-muted">
+			Je gegevens, favorieten, winkelmand en bezorgadres zijn weg. Bedankt dat je bij ons hebt gewinkeld.
+			Je bent altijd welkom om een nieuw account aan te maken.
+		</p>
+		<div class="mt-6">
+			<Button href="/" size="lg">Naar de winkel</Button>
+		</div>
+	</div>
+</Layout>

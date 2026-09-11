@@ -180,6 +180,11 @@ export default defineConfig({
 			DATABASE_URL: envField.string({ context: 'server', access: 'secret' }),
 			// Ondertekent de sessiecookies van het beheerpaneel. Zie .env.example.
 			BETTER_AUTH_SECRET: envField.string({ context: 'server', access: 'secret' }),
+			// Mail via Resend. Zonder sleutel worden mails gelogd in plaats van
+			// verstuurd (zie src/lib/mail/server.ts). Alle drie optioneel.
+			RESEND_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+			MAIL_FROM: envField.string({ context: 'server', access: 'secret', optional: true }),
+			MAIL_MODUS: envField.string({ context: 'server', access: 'secret', optional: true }),
 		},
 		// `validateSecrets` blijft bewust op de standaard `false`. Geheimen
 		// worden dan pas gecontroleerd wanneer ze echt gelezen worden, en niet

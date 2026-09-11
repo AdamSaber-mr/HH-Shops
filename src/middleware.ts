@@ -30,17 +30,39 @@ import { lokaalPad } from './lib/klanten/pad.ts';
  * verversen.
  */
 
-/** Actions die zonder sessie mogen: inloggen, registreren, en de winkelmand en favorieten van gasten. */
-const OPEN_ACTIONS = new Set(['auth.inloggen', 'klant.inloggen', 'klant.registreren']);
+/** Actions die zonder sessie mogen: inloggen, registreren, wachtwoord vergeten, en de winkelmand en favorieten van gasten. */
+const OPEN_ACTIONS = new Set([
+	'auth.inloggen',
+	'auth.wachtwoordVergeten',
+	'auth.wachtwoordHerstellen',
+	'klant.inloggen',
+	'klant.registreren',
+	'klant.wachtwoordVergeten',
+	'klant.wachtwoordHerstellen',
+]);
 const OPEN_ACTION_GROEPEN = ['winkelmand.', 'favorieten.'];
 /** Klant-actions die van elke pagina mogen komen en waarvan de middleware de redirect doet. */
-const REDIRECT_ACTIES = new Set(['klant.uitloggen']);
+const REDIRECT_ACTIES = new Set(['klant.uitloggen', 'klant.verwijderen']);
 /** Actions waarvoor een sessie genoeg is, welke rol ook. */
 const KLANT_ACTIES = ['klant.'];
 
 const ADMIN_INLOG = '/admin/inloggen';
+/** Paneelpagina's zonder sessie: inloggen en wachtwoord vergeten. Ingelogde beheerders gaan door naar het paneel. */
+const ADMIN_OPEN = new Set([
+	ADMIN_INLOG,
+	'/admin/wachtwoord-vergeten',
+	'/admin/wachtwoord-herstellen',
+]);
 const KLANT_INLOG = '/account/inloggen';
-const KLANT_OPEN = new Set(['/account/inloggen', '/account/registreren']);
+/** Accountpagina's voor wie niet is ingelogd. Ingelogde bezoekers gaan door naar het account. */
+const KLANT_OPEN = new Set([
+	KLANT_INLOG,
+	'/account/registreren',
+	'/account/wachtwoord-vergeten',
+	'/account/wachtwoord-herstellen',
+]);
+/** Accountpagina's voor iedereen: de bevestiging van een e-mailadres komt ook van een ander apparaat. */
+const KLANT_VRIJ = new Set(['/account/bevestigd', '/account/verwijderd']);
 const GEEN_TOEGANG = '/geen-toegang';
 
 function onder(pathname: string, basis: string): boolean {
@@ -109,7 +131,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	}
 
 	if (isAdmin) {
-		if (pathname === ADMIN_INLOG) {
+		if (ADMIN_OPEN.has(pathname)) {
 			if (beheerder) return context.redirect('/admin');
 			if (user) return context.redirect(GEEN_TOEGANG);
 			return next();
@@ -120,6 +142,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	}
 
 	if (isAccount) {
+		if (KLANT_VRIJ.has(pathname)) return next();
 		if (KLANT_OPEN.has(pathname)) {
 			return user ? context.redirect('/account') : next();
 		}

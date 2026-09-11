@@ -1,7 +1,12 @@
 import { ActionError, defineAction } from 'astro:actions';
 import { z } from 'astro/zod';
 import { eq } from 'drizzle-orm';
-import { inloggenViaHandler, uitloggenViaApi } from '../auth/inloggen.ts';
+import {
+	herstellinkAanvragen,
+	inloggenViaHandler,
+	uitloggenViaApi,
+	wachtwoordHerstellen,
+} from '../auth/inloggen.ts';
 import { isBeheerder } from '../auth/sessie.ts';
 import { users } from '../db/auth-schema.ts';
 import { getDb } from '../db/client.ts';
@@ -9,7 +14,7 @@ import { veiligPad } from '../lib/admin/flash.ts';
 import { tekst } from './_helpers.ts';
 
 /*
- * Inloggen en uitloggen van het beheerpaneel.
+ * Inloggen, uitloggen en wachtwoord vergeten van het beheerpaneel.
  *
  * Alleen een account met de rol admin mag hier in. Dat wordt vooraf
  * gecontroleerd, met dezelfde melding als bij een fout wachtwoord: een klant
@@ -63,6 +68,62 @@ export const auth = {
 		handler: async (_input, context) => {
 			await uitloggenViaApi(context);
 			return { uitgelogd: true };
+		},
+	}),
+
+	/*
+	 * Wachtwoord vergeten werkt voor elk account, maar de link in de mail
+	 * wijst een beheerder naar /admin/wachtwoord-herstellen (zie herstelLink
+	 * in src/auth/create.ts). Voor een klantadres dat hier wordt ingevuld,
+	 * gaat de mail dus naar de klantpagina; dat is geen probleem.
+	 */
+	wachtwoordVergeten: defineAction({
+		accept: 'form',
+		input: z.object({ email: tekst() }).transform((v, ctx) => {
+			const email = (v.email ?? '').trim().toLowerCase();
+			if (!z.email().safeParse(email).success) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['email'],
+					message: 'Vul een geldig e-mailadres in.',
+				});
+			}
+			return { email };
+		}),
+		handler: async ({ email }, context) => {
+			await herstellinkAanvragen(context, email);
+			return { ok: true };
+		},
+	}),
+
+	wachtwoordHerstellen: defineAction({
+		accept: 'form',
+		input: z.object({ token: tekst(), nieuw: tekst(), herhaling: tekst() }).transform((v, ctx) => {
+			const nieuw = v.nieuw ?? '';
+			if (nieuw.length < 12) {
+				ctx.addIssue({ code: 'custom', path: ['nieuw'], message: 'Minstens 12 tekens.' });
+			}
+			if (nieuw.length > 128) {
+				ctx.addIssue({ code: 'custom', path: ['nieuw'], message: 'Maximaal 128 tekens.' });
+			}
+			if ((v.herhaling ?? '') !== nieuw) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['herhaling'],
+					message: 'De herhaling is niet gelijk aan het nieuwe wachtwoord.',
+				});
+			}
+			return { token: (v.token ?? '').trim(), nieuw };
+		}),
+		handler: async ({ token, nieuw }, context) => {
+			if (token === '' || token.length > 200) {
+				throw new ActionError({
+					code: 'BAD_REQUEST',
+					message: 'Deze link is niet compleet. Open hem opnieuw vanuit de mail.',
+				});
+			}
+			await wachtwoordHerstellen(context, token, nieuw);
+			return { ok: true };
 		},
 	}),
 };

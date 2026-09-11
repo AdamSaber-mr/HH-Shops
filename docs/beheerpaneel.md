@@ -78,12 +78,15 @@ netjes; de database weigert het sowieso.
    het paneel.
 4. Foto's uploaden heeft de Blob-sleutels nodig. Op Vercel staan die er
    automatisch; lokaal via `vercel env pull` (zie `.env.example`).
+5. Voor wachtwoord vergeten: `RESEND_API_KEY`, zie docs/klantaccounts.md.
 
 ## Wat er bewust niet in zit
 
-- Wachtwoord vergeten: er is geen e-mailverzending. Een beheerder die zijn
-  wachtwoord kwijt is, laat een collega zijn account verwijderen en opnieuw
-  aanmaken, of gebruikt het script.
+- Een eigen wachtwoord-vergeten is er wel (sinds 11 september 2026):
+  `/admin/wachtwoord-vergeten` stuurt een mail met een link naar
+  `/admin/wachtwoord-herstellen`, zelfde mechanisme als bij klanten (zie
+  docs/klantaccounts.md, onderdeel Mail). Als noodrem zonder mail:
+  `scripts/beheerder-wachtwoord.ts`.
 - Rollen binnen het beheer: elke beheerder mag alles. Bij meer dan een
   handvol beheerders is dat het eerste om te heroverwegen.
 - Bestellingen: die tabel bestaat nog niet (fase 4).
