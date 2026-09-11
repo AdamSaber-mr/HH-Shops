@@ -10,9 +10,14 @@ import { Icon } from 'astro-icon/components';
  * elkaar in plaats van een banner. Nu is het een vlak: producten bovenin, de
  * tekst eronder op een donkergroen verloop dat uit de onderrand opkomt.
  *
- * Op desktop houdt het blok de verhouding van de foto (2066 x 761), dus daar
- * wordt er niets weggesneden en ligt de tekst links op een verloop naar
- * rechts.
+ * Op desktop is het blok 8:3 en ligt de tekst links op een verloop naar
+ * rechts. Dat is de maat waarop nieuwe tussenbanners worden aangeleverd
+ * (2880 x 1080). De huidige foto is 2066 x 761 en dus een fractie breder;
+ * daar valt links en rechts samen zo'n 2% af, en dat is alleen achtergrond.
+ *
+ * Ook hier staat er op telefoon een vaste `sizes` in plaats van een
+ * percentage: door de zoom is de foto daar breder uitgetekend dan het
+ * venster, en anders haalt de browser een te kleine versie op.
  *
  * Op telefoon en tablet bepaalt een minimumhoogte het blok en snijdt
  * object-cover er een staande strook uit het midden: de knuffelbeer, de
@@ -40,17 +45,17 @@ const { eyebrow, title, text, cta, image, imageAlt } = Astro.props;
 
 <section class="mx-auto max-w-[1400px] px-4 sm:px-6" aria-labelledby="promo-titel">
 	<div
-		class="relative isolate flex min-h-[30rem] overflow-hidden rounded-card bg-accent-hover text-white sm:min-h-[24rem] lg:aspect-[2066/761] lg:min-h-0"
+		class="relative isolate flex min-h-[30rem] overflow-hidden rounded-card bg-accent-hover text-white sm:min-h-[24rem] lg:aspect-[8/3] lg:min-h-0"
 	>
 		<Image
 			src={image}
 			alt={imageAlt}
-			widths={[480, 768, 1080, 1400, 2066]}
-			sizes="(min-width: 1400px) 1352px, calc(100vw - 32px)"
+			widths={[640, 828, 1080, 1200, 1920]}
+			sizes="(min-width: 1400px) 1352px, (min-width: 1024px) calc(100vw - 48px), 1500px"
 			quality={72}
 			loading="lazy"
 			decoding="async"
-			class="absolute inset-0 size-full origin-[50%_45%] scale-[1.15] object-cover object-[38%_center] lg:origin-center lg:scale-100 lg:object-center"
+			class="absolute inset-0 size-full object-cover object-center max-lg:origin-[50%_45%] max-lg:scale-[1.15] max-lg:object-[38%_center]"
 		/>
 
 		<!-- Verloop over de foto, zodat witte tekst leesbaar blijft: op telefoon

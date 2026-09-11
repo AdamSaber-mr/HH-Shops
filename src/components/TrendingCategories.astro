@@ -37,7 +37,7 @@ const [featured, ...rest] = kaarten;
 ---
 
 <section
-	class="mx-auto max-w-[1400px] px-4 pt-12 sm:px-6 lg:pt-16"
+	class="mx-auto max-w-[1400px] px-4 pt-16 sm:px-6 lg:pt-24"
 	aria-labelledby="trending-titel"
 >
 	<div class="flex flex-wrap items-end justify-between gap-4">
@@ -54,7 +54,7 @@ const [featured, ...rest] = kaarten;
 	</div>
 
 	{featured ? (
-		<div class="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+		<div class="mt-6 grid grid-cols-2 gap-4 sm:mt-8 sm:gap-6 lg:grid-cols-4">
 			<CategoryCard
 				name={featured.name}
 				href={categoryHref(featured.slug)}

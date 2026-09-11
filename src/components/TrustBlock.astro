@@ -10,7 +10,7 @@ import RecensieKaart from './RecensieKaart.astro';
  * Bewust geen achtergrondtint en geen lijnen: Adam heeft een groene band, een
  * lichte tint en scheidingslijnen allemaal bekeken en vond de kale pagina het
  * mooist. De tussenbanner erboven is al groen; dat is het enige gekleurde
- * blok. De ruimte erboven is dezelfde als bij elke sectie (pt-12 lg:pt-16).
+ * blok. De ruimte erboven is dezelfde als bij elke sectie (pt-16 lg:pt-24).
  *
  * De recensies staan op desktop op vier kolommen, hetzelfde raster als de
  * productrijen. De teksten zijn kort, op twee kolommen werden de kaarten leeg.
@@ -22,10 +22,14 @@ import RecensieKaart from './RecensieKaart.astro';
  * niet te zien is; de tweede reeks is `aria-hidden`, anders zou een
  * schermlezer elke recensie dubbel voorlezen.
  *
- * De balk staat stil zodra je hem aanraakt of er met de muis op staat, en
- * beweegt helemaal niet voor wie in zijn toestel heeft gezegd geen animaties
- * te willen (`motion-safe`). In beide gevallen kun je er gewoon doorheen
- * vegen.
+ * De balk zit vast: je kunt er niet zelf doorheen vegen, alleen de animatie
+ * beweegt hem. Anders veegt een duim die de pagina omhoog wil scrollen de
+ * recensies per ongeluk opzij, en dat voelt alsof de hele pagina losschiet.
+ * Hij staat wel stil zodra je hem aanraakt of er met de muis op staat.
+ *
+ * Wie in zijn toestel heeft gezegd geen animaties te willen krijgt geen
+ * beweging (`motion-safe`), en mag dan juist wél vegen: anders zou hij nooit
+ * verder komen dan de eerste recensie.
  *
  * De inhoud komt uit src/lib/reviews.ts: echte recensies van de oude site,
  * met bol.com als bron. Het blok werkt met elke bron en elke schaal (10 op
@@ -46,7 +50,7 @@ const scoreStars = Math.round((ratingSource.score / ratingSource.max) * 5);
 ---
 
 <section aria-labelledby="reviews-titel">
-	<div class="mx-auto max-w-[1400px] px-4 pt-12 sm:px-6 lg:pt-16">
+	<div class="mx-auto max-w-[1400px] px-4 pt-16 sm:px-6 lg:pt-24">
 	<div class="mx-auto max-w-2xl text-center">
 		<p class="text-sm font-semibold tracking-wide text-accent uppercase">Wat onze klanten zeggen</p>
 		<h2 id="reviews-titel" class="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
@@ -81,7 +85,7 @@ const scoreStars = Math.round((ratingSource.score / ratingSource.max) * 5);
 
 	<!-- Op telefoon een lopende balk, op desktop een raster van vier. -->
 	<div
-		class="mt-10 max-lg:-mx-4 max-lg:overflow-x-auto max-lg:geen-schuifbalk sm:max-lg:-mx-6"
+		class="mt-10 max-lg:-mx-4 max-lg:overflow-hidden max-lg:geen-schuifbalk sm:max-lg:-mx-6 max-lg:motion-reduce:overflow-x-auto max-lg:motion-reduce:overscroll-x-contain"
 	>
 		<div
 			class="max-lg:flex max-lg:w-max max-lg:hover:[animation-play-state:paused] max-lg:motion-safe:animate-recensies"

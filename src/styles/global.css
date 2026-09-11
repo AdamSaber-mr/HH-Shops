@@ -104,17 +104,21 @@
 		"Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 
 	/*
-	  De recensiebalk op telefoon: de kaarten schuiven onafgebroken naar
-	  links. De baan bevat de recensies twee keer; op -50% staat de tweede
-	  reeks precies waar de eerste begon, dus de sprong terug naar 0 is
-	  onzichtbaar. 45 seconden is traag genoeg om mee te lezen.
+	  Balken die onafgebroken naar links schuiven: de recensies en de
+	  kernpunten, allebei op telefoon en tablet. De baan bevat de reeks twee
+	  keer; op -50% staat de tweede reeks precies waar de eerste begon, dus de
+	  sprong terug naar 0 is onzichtbaar.
+
+	  De recensies mogen traag, daar lees je hele zinnen. De kernpunten zijn
+	  vier korte regels en mogen iets vlotter.
 
 	  Alleen de animatie staat hier; of hij draait bepaalt het component met
 	  `motion-safe:`. Wie geen beweging wil, veegt zelf.
 	*/
-	--animate-recensies: recensies 45s linear infinite;
+	--animate-recensies: schuif-links 45s linear infinite;
+	--animate-kernpunten: schuif-links 32s linear infinite;
 
-	@keyframes recensies {
+	@keyframes schuif-links {
 		from {
 			transform: translateX(0);
 		}
@@ -158,7 +162,13 @@
 	  tabel is genoeg om de horizontale schuifbalk terug te brengen, en op
 	  een telefoon is dat meteen kapot. `clip` en niet `hidden`: clip maakt
 	  geen scrollcontainer, dus de plakkende kop blijft gewoon plakken.
+
+	  Het staat op html en op body. Alleen op body is het te fijngevoelig:
+	  de browser geeft de overloop van body door aan het venster, en of dat
+	  met `clip` goed gaat verschilt per browser. Op html gaat die doorgifte
+	  wel overal hetzelfde.
 	*/
+	html,
 	body {
 		overflow-x: clip;
 	}
@@ -215,5 +225,26 @@
 
 	&::-webkit-scrollbar {
 		display: none;
+	}
+}
+
+/*
+  Invoervelden zijn op telefoon minstens 16px.
+
+  Safari op de iPhone zoomt namelijk automatisch in zodra je een veld aanraakt
+  dat kleiner is. Daarna is het venster smaller dan de pagina en kun je heen en
+  weer schuiven, ook als de pagina zelf precies past. Dat lijkt op een
+  layoutfout maar is het niet; dit is de echte oplossing. Boven `lg` mag de
+  tekstgrootte gewoon weer met het ontwerp meebewegen.
+
+  Dit staat bewust buiten `@layer base`: regels zonder laag winnen het van
+  Tailwind-utilities, en anders wint een `text-sm` op het veld zelf. Het is de
+  enige regel in dit bestand die dat doet.
+*/
+@media (width < 64rem) {
+	input:not([type="checkbox"], [type="radio"]),
+	select,
+	textarea {
+		font-size: 1rem;
 	}
 }

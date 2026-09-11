@@ -6,26 +6,64 @@ import { usps } from '../lib/site.ts';
  * De vier kernpunten, direct onder de hero. Dit is het eerste wat een
  * bezoeker ziet na de banner, en het antwoord op de vraag "kan ik deze winkel
  * vertrouwen". Rustig gehouden: een icoon, een korte titel, een regel tekst.
+ *
+ * Op desktop staan ze naast elkaar op een rij. Op telefoon en tablet stonden
+ * ze onder elkaar, en dan is deze balk een half scherm hoog nog voordat je
+ * één product hebt gezien. Daarom schuiven ze daar als één balk langs het
+ * scherm, net als de recensies verderop: alle vier komen langs, maar de balk
+ * kost maar één regel.
+ *
+ * De reeks staat er twee keer zodat de sprong terug naar het begin niet te
+ * zien is; de tweede is `aria-hidden`, anders leest een schermlezer alles
+ * dubbel voor. De ruimte tussen de punten zit in de padding van de punten
+ * zelf en niet in een `gap`, want anders sluit de tweede reeks niet naadloos
+ * op de eerste aan.
+ *
+ * De balk zit vast: alleen de animatie beweegt hem, je kunt er niet zelf
+ * doorheen vegen. Hij staat stil zodra je hem aanraakt. Wie geen animaties
+ * wil krijgt geen beweging en mag dan juist wel vegen, anders zou hij alleen
+ * het eerste punt te zien krijgen.
  */
 ---
 
 <section class="border-b border-border bg-surface" aria-label="Waarom H&H Shops">
-	<ul
-		class="mx-auto grid max-w-[1400px] grid-cols-1 gap-x-6 gap-y-5 px-4 py-6 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:py-7"
+	<div
+		class="mx-auto max-w-[1400px] px-4 py-5 sm:px-6 lg:py-7 max-lg:overflow-hidden max-lg:geen-schuifbalk max-lg:px-0 max-lg:motion-reduce:overflow-x-auto max-lg:motion-reduce:overscroll-x-contain"
 	>
-		{usps.map((usp) => (
-			<li class="flex items-center gap-3">
-				<span
-					class="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent"
-					aria-hidden="true"
-				>
-					<Icon name={usp.icon} class="size-6" />
-				</span>
-				<span class="min-w-0">
-					<span class="block text-sm font-semibold">{usp.title}</span>
-					<span class="block text-xs text-text-muted sm:text-sm">{usp.text}</span>
-				</span>
-			</li>
-		))}
-	</ul>
+		<div
+			class="max-lg:flex max-lg:w-max max-lg:hover:[animation-play-state:paused] max-lg:motion-safe:animate-kernpunten"
+		>
+			<ul class="grid grid-cols-4 gap-x-6 gap-y-5 max-lg:flex max-lg:gap-0">
+				{usps.map((usp) => (
+					<li class="flex items-center gap-3 max-lg:shrink-0 max-lg:px-5">
+						<span
+							class="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent"
+							aria-hidden="true"
+						>
+							<Icon name={usp.icon} class="size-6" />
+						</span>
+						<span class="min-w-0 max-lg:whitespace-nowrap">
+							<span class="block text-sm font-semibold">{usp.title}</span>
+							<span class="block text-xs text-text-muted sm:text-sm">{usp.text}</span>
+						</span>
+					</li>
+				))}
+			</ul>
+			<ul class="hidden max-lg:flex" aria-hidden="true">
+				{usps.map((usp) => (
+					<li class="flex shrink-0 items-center gap-3 px-5">
+						<span
+							class="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent"
+						>
+							<Icon name={usp.icon} class="size-6" />
+						</span>
+						<span class="whitespace-nowrap">
+							<span class="block text-sm font-semibold">{usp.title}</span>
+							<span class="block text-xs text-text-muted sm:text-sm">{usp.text}</span>
+						</span>
+					</li>
+				))}
+			</ul>
+		</div>
+	</div>
 </section>

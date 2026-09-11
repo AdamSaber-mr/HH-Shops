@@ -20,6 +20,10 @@ import ProductCard from './ProductCard.astro';
  * De verticale `py-1 -my-1` is geen opsmuk: zodra `overflow-x` op `auto`
  * staat, knipt de browser ook verticaal. Zonder die ruimte valt de focusring
  * van een kaart weg.
+ *
+ * `overscroll-x-contain` houdt de veeg binnen de balk. Zonder dat geeft een
+ * telefoon een veeg die aan het eind van de rij komt door aan de pagina
+ * eronder, en dan lijkt het alsof de hele pagina heen en weer schuift.
  */
 
 export interface ProductEntry {
@@ -60,7 +64,7 @@ const {
 
 const houder =
 	vorm === 'balk'
-		? '-mx-4 -my-1 flex snap-x snap-mandatory scroll-p-4 gap-4 overflow-x-auto px-4 py-1 sm:-mx-6 sm:scroll-p-6 sm:gap-6 sm:px-6 lg:mx-0 lg:my-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0 lg:py-0'
+		? '-mx-4 -my-1 flex snap-x snap-mandatory scroll-p-4 gap-4 overflow-x-auto overscroll-x-contain px-4 py-1 sm:-mx-6 sm:scroll-p-6 sm:gap-6 sm:px-6 lg:mx-0 lg:my-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0 lg:py-0'
 		: 'grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4';
 
 // In de veegbalk bepaalt de kaartbreedte hoeveel je er ziet: ruim twee op een

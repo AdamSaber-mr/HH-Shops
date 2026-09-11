@@ -248,7 +248,7 @@ const voorraadTekst = soldOut
 									href={fotoLink(index)}
 									data-miniatuur={index + 1}
 									aria-current={index === fotoIndex ? 'true' : undefined}
-									class="block aspect-square overflow-hidden rounded-card bg-surface-hover p-2 ring-accent ring-offset-2 ring-offset-canvas transition-shadow hover:ring-2 aria-[current=true]:ring-2"
+									class="relative block aspect-square overflow-hidden rounded-card bg-surface-hover p-2 ring-accent ring-offset-2 ring-offset-canvas transition-shadow hover:ring-2 aria-[current=true]:ring-2"
 								>
 									<ProductImage
 										src={foto.url}
@@ -259,6 +259,9 @@ const voorraadTekst = soldOut
 										sizes="(min-width: 1024px) 180px, 22vw"
 										class="size-full object-contain mix-blend-multiply"
 									/>
+									<!-- `relative` op de link hierboven hoort bij deze regel: zonder
+									     dat hangt dit onzichtbare tekstje aan het venster in plaats van
+									     aan de miniatuur, en telt het mee in de breedte van de pagina. -->
 									<span class="sr-only">
 										Foto {index + 1} van {fotos.length}
 									</span>

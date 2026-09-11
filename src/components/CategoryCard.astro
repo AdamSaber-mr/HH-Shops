@@ -37,7 +37,9 @@ const { name, href, image, featured = false } = Astro.props;
 const sizes = featured
 	? '(min-width: 1400px) 665px, (min-width: 1024px) 48vw, calc(100vw - 32px)'
 	: '(min-width: 1400px) 320px, (min-width: 1024px) 23vw, 50vw';
-const widths = featured ? [640, 900, 1202] : [320, 480, 640, 900];
+// Alleen breedtes uit `imagesConfig.sizes` in astro.config.mjs: wat daar niet
+// in staat maakt Vercel niet, en verdwijnt zonder melding uit de srcset.
+const widths = featured ? [480, 640, 828, 1080, 1200] : [240, 320, 480, 640, 828];
 ---
 
 <a

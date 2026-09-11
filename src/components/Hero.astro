@@ -34,6 +34,22 @@ import Button from './Button.astro';
  * onderste kwart van de hero kale vloer en de bovenste kwart kale lucht. Met
  * de zoom staan de gele podia met de producten vol in beeld.
  *
+ * Twee dingen bepalen hier de scherpte, en ze gaan allebei gemakkelijk mis:
+ *
+ *  - `widths` moet getallen bevatten die in `imagesConfig.sizes` van
+ *    astro.config.mjs staan. Vercel maakt alleen die breedtes; al het andere
+ *    valt stilzwijgend uit de srcset. Vraag je alleen maar breedtes die er
+ *    niet in staan, dan houd je een srcset over met één kleine variant en
+ *    rekt de browser die uit over de volle breedte van het scherm.
+ *  - `sizes` staat op telefoon op 1350px en niet op 100vw. Door de zoom is de
+ *    foto daar namelijk zo'n 1350px breed uitgetekend binnen een venster van
+ *    390px. Met 100vw vraagt de browser een veel te kleine versie op.
+ *
+ * De zoom staat met opzet op `max-lg:` en niet als `lg:scale-100` erachteraan.
+ * Ook `scale: 1` is een transform, en dan zet de browser de banner op een
+ * eigen laag en tekent hem zachter. Op desktop hoort er helemaal geen
+ * transform op te staan.
+ *
  * De banner is de grootste afbeelding van de pagina en bepaalt de LCP.
  * Daarom: fetchpriority="high" en geen lazy loading. Het is nu ook nog maar
  * een afbeelding in plaats van twee, dus een telefoon haalt niet langer een
@@ -51,20 +67,20 @@ const { title, text, primary, secondary } = Astro.props;
 ---
 
 <section
-	class="relative isolate overflow-hidden bg-sky lg:h-[min(50vw,44rem)]"
+	class="relative overflow-hidden bg-sky lg:h-[min(50vw,44rem)]"
 	aria-labelledby="hero-titel"
 >
 	<div class="absolute inset-0" aria-hidden="true">
 		<Image
 			src={banner}
 			alt=""
-			widths={[480, 768, 1024, 1440, 1774]}
-			sizes="100vw"
+			widths={[640, 828, 1080, 1200, 1920]}
+			sizes="(min-width: 1024px) 100vw, 1350px"
 			quality={75}
 			loading="eager"
 			fetchpriority="high"
 			decoding="async"
-			class="size-full origin-[50%_42%] scale-[1.4] object-cover object-[72%_center] lg:origin-center lg:scale-100 lg:object-[right_40%]"
+			class="size-full object-cover object-[72%_center] max-lg:origin-[50%_42%] max-lg:scale-[1.4] lg:object-[right_40%]"
 		/>
 		<div
 			class="absolute inset-0 bg-gradient-to-b from-sky from-30% via-sky/85 via-60% to-transparent lg:hidden"
