@@ -44,6 +44,16 @@ const voorkeur = ['kinder-artikelen', 'huishoudelijke-artikelen', 'schoenen'];
 const collage = [...voorkeur.flatMap((slug) => metFoto.filter((c) => c.slug === slug)), ...metFoto]
 	.filter((c, index, alle) => alle.indexOf(c) === index)
 	.slice(0, 3);
+
+// De hoge foto links is staand (ongeveer 2:3), en de categoriefoto's zijn
+// liggend met de naam erin gebakken: bijgesneden valt daar de helft van af.
+// Daarom heeft dat vak een eigen staande foto van kinderartikelen, door Adam
+// gemaakt op dat formaat (src/assets/over-ons). Ontbreekt het bestand, dan
+// valt het vak terug op de eerste categoriefoto.
+const hoge = import.meta.glob<{ default: ImageMetadata }>(
+	'../assets/over-ons/kinderartikelen-staand.png',
+	{ eager: true },
+)['../assets/over-ons/kinderartikelen-staand.png']?.default;
 const score = ratingSource.score.toLocaleString('nl-NL', {
 	minimumFractionDigits: 1,
 	maximumFractionDigits: 1,
@@ -150,18 +160,31 @@ const waarden = [
 								index === 0 ? 'row-span-2' : 'aspect-[4/3]',
 							]}
 						>
-							<Image
-								src={categorie.foto.url}
-								width={categorie.foto.width}
-								height={categorie.foto.height}
-								alt=""
-								widths={[320, 480, 640]}
-								sizes="(min-width: 1024px) 320px, 50vw"
-								quality={72}
-								loading="eager"
-								decoding="async"
-								class="size-full object-cover"
-							/>
+							{index === 0 && hoge ? (
+								<Image
+									src={hoge}
+									alt=""
+									widths={[320, 480, 640, 960]}
+									sizes="(min-width: 1024px) 320px, 50vw"
+									quality={80}
+									loading="eager"
+									decoding="async"
+									class="size-full object-cover"
+								/>
+							) : (
+								<Image
+									src={categorie.foto.url}
+									width={categorie.foto.width}
+									height={categorie.foto.height}
+									alt=""
+									widths={[320, 480, 640]}
+									sizes="(min-width: 1024px) 320px, 50vw"
+									quality={72}
+									loading="eager"
+									decoding="async"
+									class="size-full object-cover"
+								/>
+							)}
 						</div>
 					))}
 				</div>
