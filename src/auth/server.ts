@@ -1,5 +1,6 @@
 import { getSecret } from 'astro:env/server';
 import { getDb } from '../db/client.ts';
+import { getMailer } from '../lib/mail/server.ts';
 import { type Auth, createAuth } from './create.ts';
 
 /*
@@ -25,6 +26,6 @@ export function getAuth(): Auth {
 		);
 	}
 
-	globalForAuth.__hhShopsAuth = createAuth({ db: getDb(), secret });
+	globalForAuth.__hhShopsAuth = createAuth({ db: getDb(), secret, mail: getMailer() });
 	return globalForAuth.__hhShopsAuth;
 }

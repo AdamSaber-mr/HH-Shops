@@ -32,13 +32,27 @@ export type VerwerktBeeld = {
 	bytesOut: number;
 };
 
-export async function verwerkBuffer(input: Buffer): Promise<VerwerktBeeld> {
+export type VerwerkOpties = {
+	/** Langste zijde. Productfoto's 1200; een banner over de volle breedte mag groter. */
+	maxEdge?: number;
+	/**
+	 * Een egale lichte achtergrond naar wit trekken. Goed voor productfoto's,
+	 * fout voor ontworpen beelden zoals categoriekaarten en banners, waar de
+	 * zandkleurige achtergrond juist de bedoeling is.
+	 */
+	achtergrond?: boolean;
+};
+
+export async function verwerkBuffer(
+	input: Buffer,
+	{ maxEdge = MAX_EDGE, achtergrond = true }: VerwerkOpties = {},
+): Promise<VerwerktBeeld> {
 	// Eerst een egale lichte achtergrond naar wit, dan pas verkleinen.
-	const { buffer: neutraal } = await neutraliseerAchtergrond(input);
-	const { data, info } = await sharp(neutraal)
+	const bron = achtergrond ? (await neutraliseerAchtergrond(input)).buffer : input;
+	const { data, info } = await sharp(bron)
 		.rotate()
 		.flatten({ background: '#ffffff' })
-		.resize({ width: MAX_EDGE, height: MAX_EDGE, fit: 'inside', withoutEnlargement: true })
+		.resize({ width: maxEdge, height: maxEdge, fit: 'inside', withoutEnlargement: true })
 		.webp({ quality: WEBP_QUALITY, effort: 5 })
 		.toBuffer({ resolveWithObject: true });
 	return {

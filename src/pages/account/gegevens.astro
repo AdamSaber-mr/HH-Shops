@@ -18,7 +18,13 @@ if (!user) return Astro.redirect('/account/inloggen?naar=%2Faccount%2Fgegevens')
 
 const gegevens = Astro.getActionResult(actions.klant.gegevens);
 if (gegevens && !gegevens.error) {
-	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Je gegevens zijn opgeslagen.' });
+	const naar = gegevens.data.bevestigingNaar;
+	zetFlash(Astro.cookies, {
+		soort: 'ok',
+		tekst: naar
+			? `Je gegevens zijn opgeslagen. Je nieuwe e-mailadres geldt zodra je op de link klikt in de mail die we naar ${naar} hebben gestuurd.`
+			: 'Je gegevens zijn opgeslagen.',
+	});
 	return Astro.redirect('/account/gegevens', 303);
 }
 const wachtwoord = Astro.getActionResult(actions.klant.wachtwoord);
@@ -62,7 +68,7 @@ const ingevuld = gegevens?.error ? (await leesFormulier(Astro.request)).velden :
 				autocomplete="email"
 				inputmode="email"
 				verplicht
-				hint="Hiermee log je in."
+				hint="Hiermee log je in. Een nieuw adres geldt pas nadat je het via een mail hebt bevestigd."
 				waarde={ingevuld.email ?? user.email}
 				fout={g.velden.email?.[0]}
 			/>
@@ -103,5 +109,15 @@ const ingevuld = gegevens?.error ? (await leesFormulier(Astro.request)).velden :
 			/>
 			<Button type="submit">Wachtwoord wijzigen</Button>
 		</form>
+	</section>
+
+	<section aria-labelledby="verwijderen-titel" class="mt-6 rounded-card border border-border bg-surface p-5 sm:p-6">
+		<h2 id="verwijderen-titel" class="text-lg font-semibold">Account verwijderen</h2>
+		<p class="mt-2 text-sm text-text-muted">
+			Wil je geen account meer? Je favorieten, winkelmand en bezorgadres verdwijnen dan ook.
+		</p>
+		<div class="mt-4">
+			<Button href="/account/verwijderen" variant="secondary">Account verwijderen</Button>
+		</div>
 	</section>
 </AccountPagina>

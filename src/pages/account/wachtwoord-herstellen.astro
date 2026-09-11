@@ -1,0 +1,94 @@
+---
+import { actions } from 'astro:actions';
+import Button from '../../components/Button.astro';
+import Formulierveld from '../../components/klant/Formulierveld.astro';
+import Melding from '../../components/klant/Melding.astro';
+import Layout from '../../layouts/Layout.astro';
+import { leesFormulier, veldfoutenUit } from '../../lib/admin/formulier.ts';
+import { zetFlash } from '../../lib/klanten/flash.ts';
+
+/*
+ * De pagina achter de link in de mail: ?token=... uit de URL gaat als
+ * verborgen veld mee met het formulier. Na een geslaagde wijziging is elke
+ * andere sessie ingetrokken en gaat de klant naar het inlogscherm.
+ */
+
+const result = Astro.getActionResult(actions.klant.wachtwoordHerstellen);
+if (result && !result.error) {
+	zetFlash(Astro.cookies, {
+		soort: 'ok',
+		tekst: 'Je wachtwoord is gewijzigd. Log in met je nieuwe wachtwoord.',
+	});
+	return Astro.redirect('/account/inloggen', 303);
+}
+
+// Bij de eerste weergave staat het token in de URL, bij een mislukte
+// verzending in het formulier (de action-URL heeft hem niet meer).
+const uitFormulier = result?.error ? (await leesFormulier(Astro.request)).velden.token : undefined;
+const token = (Astro.url.searchParams.get('token') ?? uitFormulier ?? '').trim();
+const { velden: fouten, algemeen } = veldfoutenUit(result?.error);
+Astro.response.headers.set('Cache-Control', 'no-store');
+// Het token staat in de URL en mag niet als referrer naar andere sites gaan.
+// Niet 'no-referrer': dan laat Chrome ook de Origin-header weg bij het
+// versturen van het formulier, en weigert Astro de POST als cross-site.
+Astro.response.headers.set('Referrer-Policy', 'same-origin');
+---
+
+<Layout title="Nieuw wachtwoord kiezen" noindex>
+	<div class="mx-auto max-w-md px-4 py-10 sm:px-6 lg:py-16">
+		<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Nieuw wachtwoord kiezen</h1>
+
+		{
+			token === '' ? (
+				<div class="mt-6">
+					<Melding
+						melding={{
+							soort: 'fout',
+							tekst: 'Deze link is niet compleet. Open hem opnieuw vanuit de mail, of vraag een nieuwe aan.',
+						}}
+					/>
+					<Button href="/account/wachtwoord-vergeten" variant="secondary">
+						Nieuwe link aanvragen
+					</Button>
+				</div>
+			) : (
+				<>
+					<p class="mt-2 text-text-muted">Kies een nieuw wachtwoord van minstens 12 tekens.</p>
+					<div class="mt-6">
+						<Melding melding={algemeen ? { soort: 'fout', tekst: algemeen } : null} />
+					</div>
+					<form method="POST" action={actions.klant.wachtwoordHerstellen} class="space-y-5" novalidate>
+						<input type="hidden" name="token" value={token} />
+						<Formulierveld
+							naam="nieuw"
+							label="Nieuw wachtwoord"
+							type="password"
+							autocomplete="new-password"
+							hint="Minstens 12 tekens. Een zin die je makkelijk onthoudt werkt goed."
+							verplicht
+							fout={fouten.nieuw?.[0]}
+						/>
+						<Formulierveld
+							naam="herhaling"
+							label="Nieuw wachtwoord, nog een keer"
+							type="password"
+							autocomplete="new-password"
+							verplicht
+							fout={fouten.herhaling?.[0]}
+						/>
+						<Button type="submit" block size="lg">
+							Wachtwoord opslaan
+						</Button>
+					</form>
+					{algemeen && (
+						<p class="mt-4 text-sm">
+							<a href="/account/wachtwoord-vergeten" class="font-medium text-accent hover:underline">
+								Nieuwe link aanvragen
+							</a>
+						</p>
+					)}
+				</>
+			)
+		}
+	</div>
+</Layout>

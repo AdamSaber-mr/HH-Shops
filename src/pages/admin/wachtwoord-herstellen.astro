@@ -1,0 +1,71 @@
+---
+import { actions } from 'astro:actions';
+import Veld from '../../components/admin/Veld.astro';
+import Button from '../../components/Button.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { zetFlash } from '../../lib/admin/flash.ts';
+import { leesFormulier, veldfoutenUit } from '../../lib/admin/formulier.ts';
+
+/*
+ * De pagina achter de link in de mail voor beheerders. Na de wijziging zijn
+ * alle sessies ingetrokken en gaat de beheerder naar het inlogscherm.
+ */
+
+const result = Astro.getActionResult(actions.auth.wachtwoordHerstellen);
+if (result && !result.error) {
+	zetFlash(Astro.cookies, {
+		soort: 'ok',
+		tekst: 'Je wachtwoord is gewijzigd. Log in met je nieuwe wachtwoord.',
+	});
+	return Astro.redirect('/admin/inloggen', 303);
+}
+
+// Bij de eerste weergave staat het token in de URL, bij een mislukte
+// verzending in het formulier (de action-URL heeft hem niet meer).
+const uitFormulier = result?.error ? (await leesFormulier(Astro.request)).velden.token : undefined;
+const token = (Astro.url.searchParams.get('token') ?? uitFormulier ?? '').trim();
+const { velden: fouten, algemeen } = veldfoutenUit(result?.error);
+Astro.response.headers.set('Cache-Control', 'no-store');
+// Het token staat in de URL en mag niet als referrer naar andere sites gaan.
+// Niet 'no-referrer': dan laat Chrome ook de Origin-header weg bij het
+// versturen van het formulier, en weigert Astro de POST als cross-site.
+Astro.response.headers.set('Referrer-Policy', 'same-origin');
+---
+
+<AdminLayout title="Nieuw wachtwoord kiezen" variant="kaal">
+	<div class="rounded-card border border-border bg-surface p-6 sm:p-8">
+		<h1 class="text-xl font-semibold">Nieuw wachtwoord kiezen</h1>
+		{
+			token === '' ? (
+				<>
+					<p role="alert" class="mt-5 rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">
+						Deze link is niet compleet. Open hem opnieuw vanuit de mail, of vraag een nieuwe aan.
+					</p>
+					<div class="mt-5">
+						<Button href="/admin/wachtwoord-vergeten" variant="secondary" block>
+							Nieuwe link aanvragen
+						</Button>
+					</div>
+				</>
+			) : (
+				<>
+					<p class="mt-1 text-sm text-text-muted">Minstens 12 tekens.</p>
+					{algemeen && (
+						<p role="alert" class="mt-5 rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">
+							{algemeen}{' '}
+							<a href="/admin/wachtwoord-vergeten" class="underline">Nieuwe link aanvragen</a>
+						</p>
+					)}
+					<form method="POST" action={actions.auth.wachtwoordHerstellen} class="mt-6 space-y-5" novalidate>
+						<input type="hidden" name="token" value={token} />
+						<Veld naam="nieuw" label="Nieuw wachtwoord" type="password" autocomplete="new-password" verplicht fout={fouten.nieuw} />
+						<Veld naam="herhaling" label="Nieuw wachtwoord, nog een keer" type="password" autocomplete="new-password" verplicht fout={fouten.herhaling} />
+						<Button type="submit" block>
+							Wachtwoord opslaan
+						</Button>
+					</form>
+				</>
+			)
+		}
+	</div>
+</AdminLayout>

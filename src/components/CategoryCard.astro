@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import type { CategorieFoto } from '../lib/catalog.ts';
 
 /*
  * Een categoriekaart voor "Populaire categorieen".
@@ -16,14 +17,16 @@ import { Image } from 'astro:assets';
  * Omdat de naam alleen in de pixels staat, krijgt de link een sr-only tekst
  * met de naam. Anders is het voor een schermlezer een link zonder naam.
  *
- * De foto komt uit src/assets en gaat via astro:assets, zodat de 1,7 MB grote
- * PNG als kleine WebP bij de bezoeker aankomt.
+ * De foto komt uit de database (geupload in het beheerpaneel, in Vercel
+ * Blob) en gaat via astro:assets door de beeldoptimalisatie van Vercel.
+ * Breedte en hoogte staan in de database, want voor een externe foto moet
+ * Astro die weten.
  */
 
 interface Props {
 	name: string;
 	href: string;
-	image: ImageMetadata;
+	image: CategorieFoto;
 	/** De grote kaart: twee kolommen en twee rijen in het raster. */
 	featured?: boolean;
 }
@@ -45,7 +48,9 @@ const widths = featured ? [640, 900, 1202] : [320, 480, 640, 900];
 	]}
 >
 	<Image
-		src={image}
+		src={image.url}
+		width={image.width}
+		height={image.height}
 		alt=""
 		widths={widths}
 		sizes={sizes}

@@ -1,6 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
-import { listCategories } from '../lib/catalog.ts';
+import { kaartFoto, listCategories } from '../lib/catalog.ts';
 import { categoryHref } from '../lib/navigation.ts';
 import CategoryCard from './CategoryCard.astro';
 
@@ -11,10 +11,10 @@ import CategoryCard from './CategoryCard.astro';
  * tussenruimte, en daarmee precies even hoog als het blok ernaast.
  *
  * Welke vijf: de categorieen uit de database op volgorde van `position`
- * (in te stellen in het beheerpaneel), maar alleen die met een foto in
- * src/assets/categorieen/<slug>.png. De eerste wordt de grote kaart. Zo kan
- * Adam de volgorde en de selectie sturen zonder code: een categorie zonder
- * foto staat er niet bij, en de eerste met foto is de blikvanger.
+ * (in te stellen in het beheerpaneel), maar alleen die met een kaartfoto
+ * (ook uit het paneel). De eerste wordt de grote kaart. Zo kan Adam de
+ * volgorde en de selectie sturen zonder code: een categorie zonder foto
+ * staat er niet bij, en de eerste met foto is de blikvanger.
  *
  * Zes op een rij bleek te klein (zo'n 215px per kaart) en drie per rij te
  * groot (zo'n 435px). Dit is de tussenweg die Adam koos: vijf kaarten, een
@@ -28,13 +28,9 @@ import CategoryCard from './CategoryCard.astro';
 
 const AANTAL = 5;
 
-const files = import.meta.glob<{ default: ImageMetadata }>('../assets/categorieen/*.png', {
-	eager: true,
-});
-
 const kaarten = (await listCategories())
-	.map((c) => ({ ...c, image: files[`../assets/categorieen/${c.slug}.png`]?.default }))
-	.filter((c): c is typeof c & { image: ImageMetadata } => c.image !== undefined)
+	.map((c) => ({ ...c, image: kaartFoto(c) }))
+	.filter((c): c is typeof c & { image: NonNullable<typeof c.image> } => c.image !== null)
 	.slice(0, AANTAL);
 
 const [featured, ...rest] = kaarten;

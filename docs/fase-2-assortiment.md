@@ -405,7 +405,7 @@ staat, zodat het resultaat convergeert en niet stapelt.
 
 | Tabel | Herkend op | Convergeert |
 |---|---|---|
-| `categories` | slug | Niet: categorieen verwijderen doet de import nooit |
+| `categories` | oud id via `legacy_urls`, anders slug | Niet: een bestaande categorie wordt niet bijgewerkt en nooit verwijderd. Naam, slug, foto's en bannertekst zijn sinds 11 september 2026 van het beheerpaneel |
 | `products` | `legacy_urls` op oud id, anders slug, anders nieuw | Alleen producten met een legacy-rij worden bijgewerkt |
 | `product_variants` | SKU | Varianten van een geimporteerd product die niet in de bron staan, gaan weg |
 | `product_images` | product plus URL | Idem voor afbeeldingen |

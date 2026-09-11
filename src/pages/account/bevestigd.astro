@@ -1,0 +1,57 @@
+---
+import Button from '../../components/Button.astro';
+import Melding from '../../components/klant/Melding.astro';
+import Layout from '../../layouts/Layout.astro';
+
+/*
+ * Waar de link uit de bevestigingsmail op uitkomt, nadat Better Auth het
+ * adres heeft bevestigd (of niet). Toegankelijk zonder sessie, want de klik
+ * komt vaak van een ander apparaat dan waarop is geregistreerd. Bij een fout
+ * hangt Better Auth ?error=... aan de URL.
+ */
+
+const fout = Astro.url.searchParams.get('error');
+const ingelogd = Boolean(Astro.locals.user);
+
+const meldingen: Record<string, string> = {
+	INVALID_TOKEN: 'Deze link is verlopen of al gebruikt.',
+	TOKEN_EXPIRED: 'Deze link is verlopen.',
+	USER_NOT_FOUND: 'Het account bij deze link bestaat niet meer.',
+	INVALID_USER: 'Je bent ingelogd met een ander account dan waar deze link bij hoort. Log uit en open de link opnieuw.',
+	EMAIL_NOT_VERIFIED: 'Het adres kon niet bevestigd worden.',
+};
+const foutTekst = fout ? (meldingen[fout] ?? 'Het adres kon niet bevestigd worden.') : null;
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<Layout title={foutTekst ? 'Bevestigen mislukt' : 'E-mailadres bevestigd'} noindex>
+	<div class="mx-auto max-w-md px-4 py-10 sm:px-6 lg:py-16">
+		<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">
+			{foutTekst ? 'Bevestigen mislukt' : 'E-mailadres bevestigd'}
+		</h1>
+		<div class="mt-6">
+			{
+				foutTekst ? (
+					<>
+						<Melding melding={{ soort: 'fout', tekst: foutTekst }} />
+						<p class="text-text-muted">
+							Vanuit je account kun je een nieuwe bevestigingsmail sturen.
+						</p>
+					</>
+				) : (
+					<>
+						<Melding melding={{ soort: 'ok', tekst: 'Bedankt, je e-mailadres is bevestigd.' }} />
+						<p class="text-text-muted">
+							Mails over je account en je bestellingen komen nu op dit adres aan.
+						</p>
+					</>
+				)
+			}
+		</div>
+		<div class="mt-6">
+			<Button href={ingelogd ? '/account' : '/account/inloggen'} size="lg">
+				{ingelogd ? 'Naar mijn account' : 'Inloggen'}
+			</Button>
+		</div>
+	</div>
+</Layout>

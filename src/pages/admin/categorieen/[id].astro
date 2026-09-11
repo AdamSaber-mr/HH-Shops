@@ -34,7 +34,37 @@ const { velden: veldfouten, algemeen } = veldfoutenUit(bijwerken?.error);
 const formulier = bijwerken?.error || fotoUploaden?.error ? await leesFormulier(Astro.request) : { velden: {}, lijsten: {} };
 const waarden = bijwerken?.error
 	? formulier.velden
-	: { naam: categorie.name, slug: categorie.slug, positie: String(categorie.position), beschrijving: categorie.description ?? '' };
+	: {
+			naam: categorie.name,
+			slug: categorie.slug,
+			positie: String(categorie.position),
+			bannerKop: categorie.bannerTitle ?? '',
+			beschrijving: categorie.description ?? '',
+		};
+const fotoSoort = fotoUploaden?.error || fotoVerwijderen?.error ? (formulier.velden.soort ?? '') : '';
+
+const fotos = [
+	{
+		soort: 'kaart',
+		titel: 'Kaartfoto',
+		uitleg: 'Voor de kaart op de startpagina en het categorieoverzicht. Verhouding 5:4, bijvoorbeeld 1400 bij 1120 pixels, zonder ronde hoeken of witte rand.',
+		url: categorie.imageUrl,
+		alt: categorie.imageAlt,
+		width: categorie.imageWidth ?? 5,
+		height: categorie.imageHeight ?? 4,
+		ratio: 'aspect-[5/4] w-40',
+	},
+	{
+		soort: 'banner',
+		titel: 'Bannerfoto',
+		uitleg: 'De brede foto bovenaan de categoriepagina. Verhouding 3:1, bijvoorbeeld 2100 bij 700 pixels, met links ruimte voor de tekst.',
+		url: categorie.bannerUrl,
+		alt: categorie.bannerAlt,
+		width: categorie.bannerWidth ?? 3,
+		height: categorie.bannerHeight ?? 1,
+		ratio: 'aspect-[3/1] w-full',
+	},
+] as const;
 const fotoFout = veldfoutenUit(fotoUploaden?.error ?? fotoVerwijderen?.error);
 const verwijderFout = verwijderen?.error?.message ?? null;
 
@@ -63,50 +93,59 @@ const veld = 'min-h-10 rounded-control border border-border-strong bg-surface px
 		</div>
 
 		<div class="space-y-8">
-			<section class="rounded-card border border-border bg-surface p-5">
-				<h2 class="text-lg font-semibold">Foto</h2>
-				<p class="mt-1 text-sm text-text-muted">Voor de categoriekaart op de startpagina. Vierkant werkt het best.</p>
-				{fotoFout.algemeen && Object.keys(fotoFout.velden).length === 0 && <p role="alert" class="mt-3 text-sm text-danger">{fotoFout.algemeen}</p>}
-				{
-					categorie.imageUrl && (
-						<div class="mt-4 flex gap-4">
-							<div class="size-28 shrink-0 overflow-hidden rounded-control border border-border bg-surface-hover">
-								<ProductImage src={categorie.imageUrl} alt="" width={300} height={300} widths={[224]} sizes="112px" class="size-full object-cover" />
-							</div>
-							<div class="min-w-0 text-sm">
-								<p class="text-text-muted">Alt-tekst</p>
-								<p>{categorie.imageAlt}</p>
-								<form method="POST" action={actions.categorieen.fotoVerwijderen} class="mt-3">
-									<input type="hidden" name="id" value={categorie.id} />
-									<button type="submit" class="inline-flex min-h-9 items-center gap-1 rounded-control border border-danger/40 bg-surface px-2 text-xs font-medium text-danger hover:bg-danger-subtle">
-										<Icon name="ph:trash" class="size-4" aria-hidden="true" />
-										Foto verwijderen
-									</button>
-								</form>
-							</div>
-						</div>
-					)
-				}
-				<form method="POST" action={actions.categorieen.fotoUploaden} enctype="multipart/form-data" class="mt-5 space-y-3 border-t border-border pt-5" novalidate data-max-bytes={MAX_BESTAND}>
-					<input type="hidden" name="id" value={categorie.id} />
-					<h3 class="text-sm font-semibold">{categorie.imageUrl ? 'Foto vervangen' : 'Foto toevoegen'}</h3>
-					<div>
-						<label for="upload-bestand" class="block text-xs font-medium">Bestand (JPG, PNG of WebP, maximaal 4 MB)</label>
-						<input id="upload-bestand" type="file" name="bestand" accept="image/jpeg,image/png,image/webp" required class="mt-1 block w-full text-sm file:mr-3 file:min-h-10 file:rounded-control file:border file:border-border-strong file:bg-surface file:px-3 file:text-sm file:font-medium" />
-						<p id="upload-bestand-fout" class="mt-1 text-sm text-danger" hidden></p>
-						{fotoFout.velden.bestand && <p class="mt-1 text-sm text-danger">{fotoFout.velden.bestand[0]}</p>}
-					</div>
-					<div>
-						<label for="upload-alt" class="block text-xs font-medium">Alt-tekst</label>
-						<input id="upload-alt" name="alt" value={fotoUploaden?.error ? (formulier.velden.alt ?? '') : (categorie.imageAlt ?? '')} class={`${veld} mt-1 w-full`} />
-						{fotoFout.velden.alt && <p class="mt-1 text-sm text-danger">{fotoFout.velden.alt[0]}</p>}
-					</div>
-					<button type="submit" class={knop}>
-						<Icon name="ph:upload-simple" class="size-4" aria-hidden="true" />
-						Uploaden
-					</button>
-				</form>
-			</section>
+			{
+				fotos.map((f) => {
+					const dezeFout = fotoSoort === f.soort ? fotoFout : { velden: {}, algemeen: null };
+					return (
+						<section class="rounded-card border border-border bg-surface p-5">
+							<h2 class="text-lg font-semibold">{f.titel}</h2>
+							<p class="mt-1 text-sm text-text-muted">{f.uitleg}</p>
+							{dezeFout.algemeen && Object.keys(dezeFout.velden).length === 0 && (
+								<p role="alert" class="mt-3 text-sm text-danger">{dezeFout.algemeen}</p>
+							)}
+							{f.url && (
+								<div class="mt-4 space-y-3">
+									<div class={`${f.ratio} shrink-0 overflow-hidden rounded-control border border-border bg-surface-hover`}>
+										<ProductImage src={f.url} alt="" width={f.width} height={f.height} widths={[640]} sizes="640px" class="size-full object-cover" />
+									</div>
+									<div class="min-w-0 text-sm">
+										<p class="text-text-muted">Alt-tekst</p>
+										<p>{f.alt}</p>
+										<form method="POST" action={actions.categorieen.fotoVerwijderen} class="mt-3">
+											<input type="hidden" name="id" value={categorie.id} />
+											<input type="hidden" name="soort" value={f.soort} />
+											<button type="submit" class="inline-flex min-h-9 items-center gap-1 rounded-control border border-danger/40 bg-surface px-2 text-xs font-medium text-danger hover:bg-danger-subtle">
+												<Icon name="ph:trash" class="size-4" aria-hidden="true" />
+												Foto verwijderen
+											</button>
+										</form>
+									</div>
+								</div>
+							)}
+							<form method="POST" action={actions.categorieen.fotoUploaden} enctype="multipart/form-data" class="mt-5 space-y-3 border-t border-border pt-5" novalidate data-max-bytes={MAX_BESTAND}>
+								<input type="hidden" name="id" value={categorie.id} />
+								<input type="hidden" name="soort" value={f.soort} />
+								<h3 class="text-sm font-semibold">{f.url ? 'Foto vervangen' : 'Foto toevoegen'}</h3>
+								<div>
+									<label for={`upload-${f.soort}-bestand`} class="block text-xs font-medium">Bestand (JPG, PNG of WebP, maximaal 4 MB)</label>
+									<input id={`upload-${f.soort}-bestand`} type="file" name="bestand" accept="image/jpeg,image/png,image/webp" required class="mt-1 block w-full text-sm file:mr-3 file:min-h-10 file:rounded-control file:border file:border-border-strong file:bg-surface file:px-3 file:text-sm file:font-medium" />
+									<p data-bestand-fout class="mt-1 text-sm text-danger" hidden></p>
+									{dezeFout.velden.bestand && <p class="mt-1 text-sm text-danger">{dezeFout.velden.bestand[0]}</p>}
+								</div>
+								<div>
+									<label for={`upload-${f.soort}-alt`} class="block text-xs font-medium">Alt-tekst</label>
+									<input id={`upload-${f.soort}-alt`} name="alt" value={fotoSoort === f.soort && fotoUploaden?.error ? (formulier.velden.alt ?? '') : (f.alt ?? '')} class={`${veld} mt-1 w-full`} />
+									{dezeFout.velden.alt && <p class="mt-1 text-sm text-danger">{dezeFout.velden.alt[0]}</p>}
+								</div>
+								<button type="submit" class={knop}>
+									<Icon name="ph:upload-simple" class="size-4" aria-hidden="true" />
+									Uploaden
+								</button>
+							</form>
+						</section>
+					);
+				})
+			}
 
 			<section class="rounded-card border border-border bg-surface p-5">
 				<h2 class="text-lg font-semibold">Verwijderen</h2>
@@ -136,10 +175,10 @@ const veld = 'min-h-10 rounded-control border border-border-strong bg-surface px
 				if (!window.confirm(form.dataset.bevestig)) event.preventDefault();
 			});
 		}
-		const upload = document.querySelector<HTMLFormElement>('form[data-max-bytes]');
-		const bestand = document.getElementById('upload-bestand') as HTMLInputElement | null;
-		const melding = document.getElementById('upload-bestand-fout');
-		if (upload && bestand && melding) {
+		for (const upload of document.querySelectorAll<HTMLFormElement>('form[data-max-bytes]')) {
+			const bestand = upload.querySelector<HTMLInputElement>('input[type="file"]');
+			const melding = upload.querySelector<HTMLElement>('[data-bestand-fout]');
+			if (!bestand || !melding) continue;
 			const max = Number(upload.dataset.maxBytes);
 			const controleer = () => {
 				const file = bestand.files?.[0];

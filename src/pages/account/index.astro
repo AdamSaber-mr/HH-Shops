@@ -1,10 +1,13 @@
 ---
+import { actions } from 'astro:actions';
 import { Icon } from 'astro-icon/components';
+import Button from '../../components/Button.astro';
 import AccountPagina from '../../components/klant/AccountPagina.astro';
+import Melding from '../../components/klant/Melding.astro';
 import { leesAdres } from '../../lib/klanten/account.ts';
 import { adresRegel } from '../../lib/klanten/adres.ts';
 import { leesFavorieten } from '../../lib/klanten/favorieten.ts';
-import { leesFlash } from '../../lib/klanten/flash.ts';
+import { leesFlash, zetFlash } from '../../lib/klanten/flash.ts';
 import { telWinkelmand } from '../../lib/klanten/winkelmand.ts';
 
 /*
@@ -14,6 +17,18 @@ import { telWinkelmand } from '../../lib/klanten/winkelmand.ts';
 
 const user = Astro.locals.user;
 if (!user) return Astro.redirect('/account/inloggen?naar=%2Faccount');
+
+const opnieuw = Astro.getActionResult(actions.klant.bevestigingOpnieuw);
+if (opnieuw && !opnieuw.error) {
+	zetFlash(Astro.cookies, {
+		soort: 'ok',
+		tekst: opnieuw.data.al
+			? 'Je e-mailadres was al bevestigd.'
+			: `We hebben een nieuwe bevestigingsmail gestuurd naar ${user.email}.`,
+	});
+	return Astro.redirect('/account', 303);
+}
+const opnieuwFout = opnieuw?.error?.message ?? null;
 
 const [favorieten, artikelen, adres] = await Promise.all([
 	leesFavorieten(Astro),
@@ -57,6 +72,25 @@ const kaarten = [
 ---
 
 <AccountPagina titel={`Hallo ${voornaam}`} huidig="/account" melding={leesFlash(Astro.cookies)}>
+	{
+		!user.emailVerified && (
+			<section
+				aria-labelledby="bevestig-titel"
+				class="mb-6 rounded-card border border-border bg-surface p-5"
+			>
+				<h2 id="bevestig-titel" class="font-semibold">Bevestig je e-mailadres</h2>
+				<p class="mt-1 text-sm text-text-muted">
+					We hebben een mail gestuurd naar {user.email}. Klik op de link daarin, dan weten we zeker dat
+					mails over je account en je bestellingen bij je aankomen. Niets ontvangen? Kijk in je spam,
+					of vraag een nieuwe.
+				</p>
+				<Melding melding={opnieuwFout ? { soort: 'fout', tekst: opnieuwFout } : null} class="mt-3" />
+				<form method="POST" action={actions.klant.bevestigingOpnieuw} class="mt-3">
+					<Button type="submit" variant="secondary">Bevestigingsmail opnieuw sturen</Button>
+				</form>
+			</section>
+		)
+	}
 	<ul class="grid gap-4 sm:grid-cols-2">
 		{
 			kaarten.map((k) => (

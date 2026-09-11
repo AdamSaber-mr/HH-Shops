@@ -12,7 +12,17 @@ fase 4 is besproken (zie `docs/fase-4-afrekenen.md`).
 - **Account**: registreren op `/account/registreren`, inloggen op
   `/account/inloggen`, en onder `/account` een overzicht, naam en e-mailadres
   wijzigen, wachtwoord wijzigen, een bezorgadres (alleen Nederland) en de
-  favorieten. Uitloggen kan vanuit het zijmenu.
+  favorieten. Uitloggen kan vanuit het zijmenu. Verwijderen op
+  `/account/verwijderen`, met het wachtwoord als bevestiging.
+- **Mail** (sinds 11 september 2026): bij registratie gaat een
+  bevestigingsmail naar het adres; inloggen mag ook zonder bevestiging, het
+  overzicht toont een herinnering met een knop om de mail opnieuw te sturen.
+  Wachtwoord vergeten op `/account/wachtwoord-vergeten`: een mail met een
+  link naar `/account/wachtwoord-herstellen`, een uur geldig, een keer te
+  gebruiken; daarna zijn alle sessies ingetrokken. Een nieuw e-mailadres
+  geldt pas nadat de link in de mail naar dat nieuwe adres is aangeklikt, ook
+  als het oude adres nooit bevestigd was. Beide links komen uit op
+  `/account/bevestigd`.
 - **Favorieten**: het hartje op elke productkaart en op de productpagina.
   Zonder account in een cookie, met account in de database. Terug te vinden
   op `/favorieten` (ook voor gasten) en onder het account, in hetzelfde
@@ -37,7 +47,9 @@ pagina te herladen; de rest is gewone formulieren.
 | Onderdeel | Waar |
 |---|---|
 | Rollen en toegang | `src/auth/sessie.ts`, `src/middleware.ts`, `src/actions/_helpers.ts` |
-| Inloggen en registreren via de Better Auth-handler (met rate limit) | `src/auth/inloggen.ts` |
+| Inloggen, registreren en wachtwoord herstellen via de Better Auth-handler (met rate limit) | `src/auth/inloggen.ts` |
+| Mail: sjablonen (zuiver, met tests), versturen via Resend of loggen, en de mailer binnen Astro | `src/lib/mail/sjablonen.ts`, `versturen.ts`, `server.ts` |
+| Wat Better Auth met de mails doet (herstellink, bevestiging, adreswijziging, verwijderen) | `src/auth/create.ts` |
 | Tabellen `favorites`, `cart_items`, `customer_addresses` | `src/db/klanten-schema.ts`, migratie `drizzle/0004_klanten.sql` |
 | Cookies van gasten (`hh_winkelmand`, `hh_favorieten`) | `src/lib/klanten/cookies.ts` |
 | Winkelmand lezen, opschonen, schrijven | `src/lib/klanten/winkelmand.ts` |
@@ -46,7 +58,7 @@ pagina te herladen; de rest is gewone formulieren.
 | Adresvalidatie | `src/lib/klanten/adres.ts` |
 | Actions | `src/actions/klant.ts`, `winkelmand.ts`, `favorieten.ts` |
 | Componenten | `src/components/klant/` (Hartje, WinkelmandKnop, Teller, FavorietenPaneel, FavorietenLijst, Formulierveld, Melding, AccountMenu, AccountPagina); het gedeelde hartjesscript in `src/scripts/hartje.ts` |
-| Pagina's | `src/pages/account/*`, `src/pages/favorieten/` (pagina en paneel-partial), `src/pages/winkelmand.astro`, `src/pages/geen-toegang.astro` |
+| Pagina's | `src/pages/account/*` (ook `wachtwoord-vergeten`, `wachtwoord-herstellen`, `bevestigd`, `verwijderen`, `verwijderd`), `src/pages/favorieten/` (pagina en paneel-partial), `src/pages/winkelmand.astro`, `src/pages/geen-toegang.astro` |
 
 **Een Better Auth voor klanten en beheerders.** Dezelfde tabel `auth_users`,
 kolom `role`: `klant` (elke zelfregistratie, via `defaultRole`) of `admin`
@@ -76,9 +88,15 @@ daarna worden de cookies gewist. Id's die niet bestaan worden overgeslagen.
 
 - Wachtwoorden minstens 12 tekens, gehasht door Better Auth. Wijzigen vraagt
   het huidige wachtwoord en logt andere apparaten uit.
-- Inloggen: vijf pogingen per minuut per IP. Registreren: drie per tien
-  minuten per IP, plus een honeypot-veld op het formulier. Geteld in de
-  database.
+- Inloggen: vijf pogingen per minuut per IP. Registreren en wachtwoord
+  vergeten: drie per tien minuten per IP, plus een honeypot-veld op het
+  formulier. Herstellen, adres wijzigen en verwijderen zijn ook begrensd.
+  Geteld in de database.
+- Wachtwoord vergeten zegt nooit of een adres bestaat; de melding is voor
+  iedereen gelijk. De herstelpagina stuurt geen referrer mee.
+- Account verwijderen en het wachtwoord wijzigen vragen het huidige
+  wachtwoord. Een beheerder kan zijn account niet via de klantkant
+  verwijderen.
 - Sessies zeven dagen, in de database, geen cookiecache: uitloggen geldt
   meteen.
 - CSRF via de origin-controle van Astro op elke POST.
@@ -91,14 +109,13 @@ daarna worden de cookies gewist. Id's die niet bestaan worden overgeslagen.
 
 ## Wat er bewust niet in zit
 
-- **Wachtwoord vergeten en e-mailbevestiging.** Er is nog geen mailkoppeling.
-  Een klant die zijn wachtwoord kwijt is, moet nu contact opnemen. Zodra
-  Resend (of een ander) gekoppeld is: `emailVerification` en
-  `sendResetPassword` in `src/auth/create.ts`, en dan ook `changeEmail`
-  weer via Better Auth in plaats van de directe update in
-  `src/lib/klanten/account.ts`.
-- **Account verwijderen.** Komt later; het is wel een AVG-verplichting voor
-  de livegang.
+- **Verplichte bevestiging voor het inloggen.** Een onbevestigd adres mag
+  inloggen en straks bestellen; de herinnering in het account volstaat.
+  Verplicht maken is een schakelaar (`requireEmailVerification`) in
+  `src/auth/create.ts`.
+- **Bestellingen bij een verwijderd account.** Zodra bestellingen bestaan
+  (fase 4) blijven die bewaard voor de boekhouding, losgekoppeld van het
+  account.
 - **Meerdere adressen, factuuradres, Belgie.** Een adres per klant, alleen
   Nederland.
 - **Bestelgeschiedenis.** Na fase 4.
@@ -108,7 +125,22 @@ daarna worden de cookies gewist. Id's die niet bestaan worden overgeslagen.
 
 ## Instellen
 
-Er komt niets bij: dezelfde `DATABASE_URL` en `BETTER_AUTH_SECRET` als het
-beheerpaneel. Migratie 0004 draaien met `npm run db:migrate` op elke
-database waar de shop tegen praat. Het script `scripts/beheerder-aanmaken.ts`
-zet na het registreren zelf de rol op admin.
+Dezelfde `DATABASE_URL` en `BETTER_AUTH_SECRET` als het beheerpaneel, plus
+voor de mail `RESEND_API_KEY` (alleen verzendrechten, uit het eigen
+Resend-account van HH Shops) in `.env` en in Vercel voor preview en
+productie. Zonder sleutel, of met `MAIL_MODUS=log`, komen de mails in
+`astro dev logs` in plaats van in een postvak; zo zijn de stromen lokaal te
+testen. `MAIL_FROM` blijft leeg tot hh-shops.nl bij Resend geverifieerd is
+(tot die tijd stuurt Resend alleen naar het eigen adres van de
+accounthouder); daarna `HH Shops <noreply@hh-shops.nl>`.
+
+Let op: Better Auth vangt een fout bij het versturen zelf af. Weigert
+Resend een mail (bijvoorbeeld omdat het domein nog niet geverifieerd is en
+het adres niet van de accounthouder is), dan ziet de bezoeker toch "we
+hebben een mail gestuurd" en staat de fout alleen in de logs (`astro dev
+logs`, op Vercel de runtime logs). Controleer na het omzetten van
+`MAIL_FROM` dus een keer echt een wachtwoord-vergeten.
+
+Migratie 0004 draaien met `npm run db:migrate` op elke database waar de
+shop tegen praat. Het script `scripts/beheerder-aanmaken.ts` zet na het
+registreren zelf de rol op admin.

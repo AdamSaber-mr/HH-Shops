@@ -1,0 +1,64 @@
+---
+import { actions } from 'astro:actions';
+import { isBeheerder } from '../../auth/sessie.ts';
+import Button from '../../components/Button.astro';
+import AccountPagina from '../../components/klant/AccountPagina.astro';
+import Formulierveld from '../../components/klant/Formulierveld.astro';
+import Melding from '../../components/klant/Melding.astro';
+import { veldfoutenUit } from '../../lib/admin/formulier.ts';
+import { leesFlash } from '../../lib/klanten/flash.ts';
+
+/*
+ * Account verwijderen. Het wachtwoord is de bevestiging; daarna is alles
+ * weg: account, favorieten, winkelmand en adres. De middleware voert de
+ * action uit en stuurt met een 303 door (zie REDIRECT_ACTIES in
+ * src/middleware.ts): na succes naar de startpagina, bij een fout terug
+ * hierheen met de melding in de flash-cookie.
+ */
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/account/inloggen?naar=%2Faccount%2Fverwijderen');
+
+const result = Astro.getActionResult(actions.klant.verwijderen);
+const { velden: fouten, algemeen } = veldfoutenUit(result?.error);
+const beheerder = isBeheerder(user);
+---
+
+<AccountPagina
+	titel="Account verwijderen"
+	huidig="/account/gegevens"
+	intro="Weet je het zeker? Je favorieten, winkelmand en bezorgadres verdwijnen dan ook. Dit is niet terug te draaien."
+	melding={leesFlash(Astro.cookies)}
+>
+	{
+		beheerder ? (
+			<Melding
+				melding={{
+					soort: 'fout',
+					tekst: 'Een beheerdersaccount verwijder je in het beheerpaneel, via een collega.',
+				}}
+			/>
+		) : (
+			<section class="rounded-card border border-danger/30 bg-surface p-5 sm:p-6">
+				<Melding melding={algemeen ? { soort: 'fout', tekst: algemeen } : null} class="mb-4" />
+				<form method="POST" action={actions.klant.verwijderen} class="space-y-5" novalidate>
+					<input type="hidden" name="naar" value="/account/verwijderen" />
+					<Formulierveld
+						naam="wachtwoord"
+						label="Je wachtwoord, ter bevestiging"
+						type="password"
+						autocomplete="current-password"
+						verplicht
+						fout={fouten.wachtwoord?.[0]}
+					/>
+					<div class="flex flex-wrap gap-3">
+						<Button type="submit">Mijn account definitief verwijderen</Button>
+						<Button href="/account/gegevens" variant="secondary">
+							Annuleren
+						</Button>
+					</div>
+				</form>
+			</section>
+		)
+	}
+</AccountPagina>

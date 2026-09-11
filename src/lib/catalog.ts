@@ -1,6 +1,6 @@
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { getDb } from '../db/client.ts';
-import { categories, products } from '../db/schema.ts';
+import { categories, categorySlugHistory, products } from '../db/schema.ts';
 
 /*
  * defaultVariant woont in categorie-filters.ts, zodat die zonder database te
@@ -48,6 +48,8 @@ export async function listCategories() {
 			description: categories.description,
 			imageUrl: categories.imageUrl,
 			imageAlt: categories.imageAlt,
+			imageWidth: categories.imageWidth,
+			imageHeight: categories.imageHeight,
 			position: categories.position,
 			// LET OP: bewust "categories"."id" als tekst en niet ${categories.id}.
 			// Drizzle schrijft die referentie in een enkelvoudige select als kale
@@ -68,6 +70,63 @@ export async function listCategories() {
 export async function getCategoryBySlug(slug: string) {
 	const db = getDb();
 	return db.query.categories.findFirst({ where: eq(categories.slug, slug) });
+}
+
+/** De foto van een categorie zoals een component hem wil: URL plus afmetingen, of null. */
+export type CategorieFoto = { url: string; alt: string; width: number; height: number };
+
+export function kaartFoto(c: {
+	imageUrl: string | null;
+	imageAlt: string | null;
+	imageWidth: number | null;
+	imageHeight: number | null;
+}): CategorieFoto | null {
+	if (!c.imageUrl || !c.imageWidth || !c.imageHeight) return null;
+	return { url: c.imageUrl, alt: c.imageAlt ?? '', width: c.imageWidth, height: c.imageHeight };
+}
+
+export function bannerFoto(c: {
+	bannerUrl: string | null;
+	bannerAlt: string | null;
+	bannerWidth: number | null;
+	bannerHeight: number | null;
+}): CategorieFoto | null {
+	if (!c.bannerUrl || !c.bannerWidth || !c.bannerHeight) return null;
+	return { url: c.bannerUrl, alt: c.bannerAlt ?? '', width: c.bannerWidth, height: c.bannerHeight };
+}
+
+/**
+ * De tekst in de banner van een categoriepagina: uit het beheerpaneel, met
+ * een nette terugval op de naam als er nog niets is ingevuld.
+ */
+export function bannerTekst(c: {
+	name: string;
+	bannerTitle: string | null;
+	description: string | null;
+}) {
+	return {
+		eyebrow: c.name,
+		titel: c.bannerTitle ?? `Alles uit ${c.name.toLowerCase()} op een rij.`,
+		tekst:
+			c.description ??
+			'Bekijk het volledige aanbod in deze categorie. Voor 15:00 besteld, morgen in huis.',
+		knop: 'Bekijk de producten',
+	};
+}
+
+/**
+ * Als een slug in het beheerpaneel is gewijzigd, blijft de oude bekend en
+ * verwijst /categorie/<oud> door naar de nieuwe. Geeft de nieuwe slug, of null.
+ */
+export async function verhuisdeCategorieSlug(oudeSlug: string): Promise<string | null> {
+	const db = getDb();
+	const [rij] = await db
+		.select({ slug: categories.slug })
+		.from(categorySlugHistory)
+		.innerJoin(categories, eq(categories.id, categorySlugHistory.categoryId))
+		.where(eq(categorySlugHistory.slug, oudeSlug))
+		.limit(1);
+	return rij?.slug ?? null;
 }
 
 /**

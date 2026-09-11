@@ -2,10 +2,19 @@ import type { ActionAPIContext } from 'astro:actions';
 import { ActionError, defineAction } from 'astro:actions';
 import type { AstroCookies } from 'astro';
 import { z } from 'astro/zod';
-import { inloggenViaHandler, registrerenViaHandler, uitloggenViaApi } from '../auth/inloggen.ts';
-import { getAuth } from '../auth/server.ts';
 import {
+	herstellinkAanvragen,
+	inloggenViaHandler,
+	registrerenViaHandler,
+	uitloggenViaApi,
+	wachtwoordHerstellen,
+} from '../auth/inloggen.ts';
+import { getAuth } from '../auth/server.ts';
+import { isBeheerder } from '../auth/sessie.ts';
+import {
+	bevestigingOpnieuw,
 	bewaarAdres,
+	verwijderAccount,
 	verwijderAdres,
 	wijzigEmail,
 	wijzigNaam,
@@ -19,7 +28,8 @@ import { normaliseWhitespace } from '../lib/tekst.ts';
 import { tekst, vereisKlant } from './_helpers.ts';
 
 /*
- * Het klantaccount: registreren, inloggen, uitloggen, gegevens en adres.
+ * Het klantaccount: registreren, inloggen, uitloggen, wachtwoord vergeten,
+ * e-mailbevestiging, gegevens, adres en verwijderen.
  *
  * Na inloggen of registreren wordt de sessie meteen opnieuw opgehaald zodat
  * neemGastMee() de cookies van de gast in het account kan zetten; de
@@ -149,8 +159,82 @@ export const klantActions = {
 		handler: async ({ naam, email }, context) => {
 			const user = vereisKlant(context);
 			if (naam !== user.name) await wijzigNaam(context, naam);
-			if (email !== user.email.toLowerCase()) await wijzigEmail(context, email);
+			const nieuwAdres = email !== user.email.toLowerCase();
+			if (nieuwAdres) await wijzigEmail(context, email);
+			// Het nieuwe adres geldt pas na de klik in de mail; de pagina legt dat uit.
+			return { ok: true, bevestigingNaar: nieuwAdres ? email : null };
+		},
+	}),
+
+	bevestigingOpnieuw: defineAction({
+		accept: 'form',
+		handler: async (_input, context) => {
+			const user = vereisKlant(context);
+			if (user.emailVerified) return { ok: true, al: true };
+			await bevestigingOpnieuw(context);
+			return { ok: true, al: false };
+		},
+	}),
+
+	wachtwoordVergeten: defineAction({
+		accept: 'form',
+		input: z.object({ email: tekst(), website: tekst() }).transform((v, ctx) => ({
+			email: emailUit(v.email, ctx),
+			honeypot: v.website ?? '',
+		})),
+		handler: async ({ email, honeypot }, context) => {
+			// Zelfde antwoord als bij een echte aanvraag, zonder mail.
+			if (honeypot === '') await herstellinkAanvragen(context, email);
 			return { ok: true };
+		},
+	}),
+
+	wachtwoordHerstellen: defineAction({
+		accept: 'form',
+		input: z.object({ token: tekst(), nieuw: tekst(), herhaling: tekst() }).transform((v, ctx) => {
+			const nieuw = wachtwoordUit(v.nieuw, ctx, 'nieuw');
+			if ((v.herhaling ?? '') !== nieuw) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['herhaling'],
+					message: 'De herhaling is niet gelijk aan het nieuwe wachtwoord.',
+				});
+			}
+			return { token: (v.token ?? '').trim(), nieuw };
+		}),
+		handler: async ({ token, nieuw }, context) => {
+			if (token === '' || token.length > 200) {
+				throw new ActionError({
+					code: 'BAD_REQUEST',
+					message: 'Deze link is niet compleet. Open hem opnieuw vanuit de mail.',
+				});
+			}
+			await wachtwoordHerstellen(context, token, nieuw);
+			return { ok: true };
+		},
+	}),
+
+	verwijderen: defineAction({
+		accept: 'form',
+		input: z.object({ wachtwoord: tekst(), naar: tekst() }).transform((v, ctx) => {
+			const wachtwoord = v.wachtwoord ?? '';
+			if (wachtwoord === '') {
+				ctx.addIssue({ code: 'custom', path: ['wachtwoord'], message: 'Vul je wachtwoord in.' });
+			}
+			return { wachtwoord };
+		}),
+		handler: async ({ wachtwoord }, context) => {
+			const user = vereisKlant(context);
+			if (isBeheerder(user)) {
+				throw new ActionError({
+					code: 'BAD_REQUEST',
+					message: 'Een beheerdersaccount verwijder je in het beheerpaneel, via een collega.',
+				});
+			}
+			await verwijderAccount(context, wachtwoord);
+			context.locals.user = null;
+			context.locals.session = null;
+			return { naar: '/account/verwijderd' };
 		},
 	}),
 
