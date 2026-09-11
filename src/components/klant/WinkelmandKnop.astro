@@ -3,9 +3,11 @@ import { actions } from 'astro:actions';
 import Button from '../Button.astro';
 
 /*
- * "In winkelmand": een formulier met een knop. De middleware voert de
- * action uit en stuurt door naar /winkelmand met een melding. Werkt zonder
- * JavaScript; een variant die op de pagina blijft kan er later bij.
+ * "In winkelmand": een formulier met een knop. Zonder JavaScript voert de
+ * middleware de action uit en stuurt hij door naar /winkelmand met een
+ * melding. Met JavaScript onderschept src/scripts/winkelmand.ts het
+ * formulier (data-winkelmand-toevoegen), voegt toe zonder herladen en
+ * opent het zijpaneel met de winkelmand.
  *
  * Twee gedaantes: `pil` voor de productkaart (de knop krijgt zijn klassen
  * van de kaart mee) en `blok` voor het koopblok op de productpagina.
@@ -23,7 +25,7 @@ interface Props {
 const { variantId, naam, naar, stijl, class: extraClass = '' } = Astro.props;
 ---
 
-<form method="POST" action={actions.winkelmand.toevoegen} class="contents">
+<form method="POST" action={actions.winkelmand.toevoegen} data-winkelmand-toevoegen class="contents">
 	<input type="hidden" name="variantId" value={variantId} />
 	<input type="hidden" name="aantal" value="1" />
 	<input type="hidden" name="naar" value={naar} />

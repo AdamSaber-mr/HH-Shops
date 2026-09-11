@@ -10,7 +10,7 @@ import { actions } from 'astro:actions';
  * wordt door meerdere componenten geimporteerd; Vite voert het een keer uit.
  */
 
-function zetTeller(naam: string, verschil: number): void {
+export function zetTeller(naam: string, verschil: number): void {
 	for (const teller of document.querySelectorAll<HTMLElement>(`[data-teller="${naam}"]`)) {
 		const huidig = Number.parseInt(teller.textContent ?? '0', 10) || 0;
 		teller.textContent = String(Math.max(0, huidig + verschil));

@@ -1,0 +1,65 @@
+---
+import { Icon } from 'astro-icon/components';
+import Button from '../Button.astro';
+
+/*
+ * Het zijpaneel van de winkelmand. Zit in de header, op elke pagina, maar is
+ * leeg tot het opengaat: dan haalt het script de inhoud op van
+ * /winkelmand/paneel. Het gaat open bij een klik op de winkelmand in de
+ * header en na elke "In winkelmand", zodat je meteen ziet wat erin zit en
+ * gewoon verder kunt winkelen. Zonder JavaScript is de winkelmand in de
+ * header een gewone link naar /winkelmand.
+ *
+ * Het paneel schuift van rechts in. Dat is een transition op `translate`
+ * met @starting-style; een browser die dat niet kent toont het paneel
+ * meteen, en wie geen beweging wil krijgt die ook niet (global.css).
+ */
+---
+
+<dialog
+	data-winkelmand-paneel
+	aria-labelledby="winkelmand-paneel-titel"
+	class="m-0 ml-auto h-dvh max-h-dvh w-full max-w-md translate-x-full bg-canvas p-0 text-text shadow-xl transition-[translate,display,overlay] transition-discrete duration-300 ease-out backdrop:bg-black/40 open:translate-x-0 starting:open:translate-x-full"
+>
+	<div class="flex h-full flex-col">
+		<div class="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
+			<h2 id="winkelmand-paneel-titel" class="text-lg font-semibold">
+				Winkelmand
+				<span data-paneel-aantal class="font-normal text-text-muted"></span>
+			</h2>
+			<button
+				type="button"
+				data-paneel-sluit
+				class="inline-flex size-10 items-center justify-center rounded-control text-text hover:bg-surface-hover"
+			>
+				<Icon name="ph:x" class="size-5" aria-hidden="true" />
+				<span class="sr-only">Sluiten</span>
+			</button>
+		</div>
+
+		<div data-paneel-inhoud class="flex-1 overflow-y-auto px-4 py-3" aria-live="polite">
+			<p class="py-6 text-center text-sm text-text-muted">Even geduld, we halen je winkelmand op.</p>
+		</div>
+
+		<div class="border-t border-border bg-surface px-4 py-4">
+			<div class="flex items-baseline justify-between gap-4 text-sm">
+				<span>Subtotaal</span>
+				<span data-paneel-subtotaal class="text-base font-semibold tabular-nums"></span>
+			</div>
+			<p class="mt-1 text-xs text-text-muted">Inclusief btw. Gratis verzending vanaf € 50.</p>
+			<Button href="/winkelmand" block size="lg" class="mt-4">Naar de winkelmand</Button>
+			<button
+				type="button"
+				data-paneel-sluit
+				class="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-control text-sm font-medium text-accent hover:underline"
+			>
+				<Icon name="ph:arrow-left" class="size-4" aria-hidden="true" />
+				Verder winkelen
+			</button>
+		</div>
+	</div>
+</dialog>
+
+<script>
+	import '../../scripts/winkelmand.ts';
+</script>

@@ -1,0 +1,137 @@
+---
+import { actions } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+import type { WinkelmandOverzicht } from '../../lib/klanten/winkelmand.ts';
+import { formatEuro } from '../../lib/price.ts';
+import Button from '../Button.astro';
+import Price from '../Price.astro';
+import ProductImage from '../ProductImage.astro';
+
+/*
+ * De compacte lijst voor het zijpaneel van de winkelmand: foto, naam, keuze,
+ * aantal met min en plus, regeltotaal en een prullenbak. Elke knop is een
+ * formulier naar dezelfde actions als de winkelmandpagina, dus zonder
+ * JavaScript werkt het ook (dan kom je op /winkelmand terecht). Met
+ * JavaScript onderschept src/scripts/winkelmand.ts de formulieren en laadt
+ * het de lijst opnieuw.
+ *
+ * Het aantal en het subtotaal staan als data-attributen op de wortel, zodat
+ * het script de teller in de header en de voet van het paneel kan bijwerken
+ * zonder ze uit de HTML te hoeven vissen.
+ */
+
+interface Props {
+	overzicht: WinkelmandOverzicht;
+}
+
+const { overzicht } = Astro.props;
+const naar = '/winkelmand';
+const knop =
+	'inline-flex size-8 items-center justify-center rounded-control border border-border-strong bg-surface text-text hover:bg-surface-hover disabled:cursor-not-allowed disabled:border-border disabled:text-text-disabled';
+---
+
+<div
+	data-winkelmand-lijst
+	data-aantal={overzicht.aantalArtikelen}
+	data-subtotaal={formatEuro(overzicht.subtotaalCents)}
+>
+	{overzicht.meldingen.map((tekst) => (
+		<p class="mb-3 rounded-card bg-danger-subtle px-3 py-2 text-sm text-danger">{tekst}</p>
+	))}
+
+	{overzicht.regels.length === 0 ? (
+		<div class="rounded-card border border-border bg-surface p-6 text-center">
+			<p class="font-medium">Je winkelmand is leeg</p>
+			<p class="mt-1 text-sm text-text-muted">Alles wat je toevoegt komt hier te staan.</p>
+			<Button href="/categorieen" variant="secondary" class="mt-4">Bekijk de categorieën</Button>
+		</div>
+	) : (
+		<ul class="divide-y divide-border">
+			{overzicht.regels.map((regel) => (
+				<li data-winkelmand-rij class="flex gap-3 py-3">
+					<a
+						href={`/product/${regel.product.slug}`}
+						class="block size-20 shrink-0 overflow-hidden rounded-card bg-surface-hover"
+					>
+						{regel.image && (
+							<ProductImage
+								src={regel.image.url}
+								alt={regel.image.alt}
+								width={regel.image.width}
+								height={regel.image.height}
+								widths={[80, 160]}
+								sizes="80px"
+								class="size-full object-cover mix-blend-multiply"
+							/>
+						)}
+					</a>
+					<div class="flex min-w-0 flex-1 flex-col gap-1">
+						<div class="flex items-start justify-between gap-2">
+							<a
+								href={`/product/${regel.product.slug}`}
+								class="text-sm leading-snug font-semibold hover:underline"
+							>
+								{regel.product.name}
+							</a>
+							<form
+								method="POST"
+								action={actions.winkelmand.verwijderen}
+								data-winkelmand-verwijderen
+								class="contents"
+							>
+								<input type="hidden" name="variantId" value={regel.variantId} />
+								<input type="hidden" name="naar" value={naar} />
+								<button
+									type="submit"
+									class="-mt-1 -mr-1 inline-flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-surface-hover hover:text-danger"
+								>
+									<Icon name="ph:trash" class="size-4" aria-hidden="true" />
+									<span class="sr-only">Verwijderen: {regel.product.name}</span>
+								</button>
+							</form>
+						</div>
+						{regel.optieTekst && <p class="text-xs text-text-muted">{regel.optieTekst}</p>}
+						<div class="mt-auto flex items-center justify-between gap-2">
+							<fieldset class="flex items-center gap-1.5">
+								<legend class="sr-only">Aantal van {regel.product.name}</legend>
+								<form
+									method="POST"
+									action={actions.winkelmand.aantal}
+									data-winkelmand-aantal
+									class="contents"
+								>
+									<input type="hidden" name="variantId" value={regel.variantId} />
+									<input type="hidden" name="aantal" value={regel.aantal - 1} />
+									<input type="hidden" name="naar" value={naar} />
+									<button type="submit" class={knop} aria-label={`Een minder van ${regel.product.name}`}>
+										<Icon name="ph:minus" class="size-3.5" aria-hidden="true" />
+									</button>
+								</form>
+								<span class="min-w-6 text-center text-sm font-medium tabular-nums">{regel.aantal}</span>
+								<form
+									method="POST"
+									action={actions.winkelmand.aantal}
+									data-winkelmand-aantal
+									class="contents"
+								>
+									<input type="hidden" name="variantId" value={regel.variantId} />
+									<input type="hidden" name="aantal" value={regel.aantal + 1} />
+									<input type="hidden" name="naar" value={naar} />
+									<button
+										type="submit"
+										class={knop}
+										disabled={regel.aantal >= regel.maxAantal}
+										aria-label={`Een meer van ${regel.product.name}`}
+									>
+										<Icon name="ph:plus" class="size-3.5" aria-hidden="true" />
+									</button>
+								</form>
+							</fieldset>
+							<Price cents={regel.regelTotaalCents} />
+						</div>
+					</div>
+				</li>
+			))}
+		</ul>
+	)}
+</div>
