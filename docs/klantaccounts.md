@@ -118,7 +118,8 @@ daarna worden de cookies gewist. Id's die niet bestaan worden overgeslagen.
   account.
 - **Meerdere adressen, factuuradres, Belgie.** Een adres per klant, alleen
   Nederland.
-- **Bestelgeschiedenis.** Na fase 4.
+- **Bestelgeschiedenis** staat sinds fase 4 onder `/account/bestellingen`,
+  zie docs/bestellen.md.
 - **Toevoegen aan de winkelmand zonder naar de winkelmand te gaan.** Nu
   altijd een redirect naar `/winkelmand` met "Verder winkelen" terug; een
   variant die op de pagina blijft is een kleine JavaScript-uitbreiding.

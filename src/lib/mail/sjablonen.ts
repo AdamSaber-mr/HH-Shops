@@ -33,16 +33,36 @@ export function escapeHtml(tekst: string): string {
 		.replaceAll("'", '&#39;');
 }
 
+/** Een tabel in de mail: bestelregels, bedragen, een adres. Elke rij is [label, waarde]. */
+export type Tabel = { kop?: string; rijen: [string, string][]; totaal?: [string, string] };
+
 type Opmaak = {
 	titel: string;
 	alineas: string[];
+	/** Tabellen tussen de alinea's en de knop. */
+	tabellen?: Tabel[];
 	knop?: { tekst: string; url: string };
 	/** Na de knop, bijvoorbeeld "Heb je dit niet aangevraagd, dan kun je deze mail negeren." */
 	naschrift?: string[];
 };
 
+function tabelHtml(t: Tabel): string {
+	const rij = (l: string, w: string, vet = false) =>
+		`<tr><td style="padding:6px 0;font-size:15px;line-height:1.4;color:${TEKST};${vet ? 'font-weight:600;border-top:1px solid ' + RAND + ';padding-top:10px' : ''}">${escapeHtml(l)}</td>` +
+		`<td align="right" style="padding:6px 0 6px 16px;font-size:15px;line-height:1.4;color:${TEKST};white-space:nowrap;${vet ? 'font-weight:600;border-top:1px solid ' + RAND + ';padding-top:10px' : ''}">${escapeHtml(w)}</td></tr>`;
+	return (
+		(t.kop
+			? `<p style="margin:16px 0 4px;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:${GEDEMPT}">${escapeHtml(t.kop)}</p>`
+			: '') +
+		`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px">` +
+		t.rijen.map(([l, w]) => rij(l, w)).join('') +
+		(t.totaal ? rij(t.totaal[0], t.totaal[1], true) : '') +
+		`</table>`
+	);
+}
+
 /** Het kader om elke mail heen, in HTML. Teksten worden hier ontsmet; geef ze als platte tekst mee. */
-export function opmaak({ titel, alineas, knop, naschrift = [] }: Opmaak): string {
+export function opmaak({ titel, alineas, tabellen = [], knop, naschrift = [] }: Opmaak): string {
 	const p = (t: string, kleur = TEKST) =>
 		`<p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:${kleur}">${escapeHtml(t)}</p>`;
 	const knopHtml = knop
@@ -59,6 +79,7 @@ export function opmaak({ titel, alineas, knop, naschrift = [] }: Opmaak): string
 		`<tr><td style="padding:28px 32px 8px;font-size:20px;font-weight:700;color:${ACCENT}">${escapeHtml(AFZENDER_NAAM)}</td></tr>` +
 		`<tr><td style="padding:8px 32px 0"><h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:${TEKST}">${escapeHtml(titel)}</h1>` +
 		alineas.map((a) => p(a)).join('') +
+		tabellen.map(tabelHtml).join('') +
 		knopHtml +
 		naschrift.map((a) => p(a, GEDEMPT)).join('') +
 		`</td></tr>` +
@@ -68,8 +89,20 @@ export function opmaak({ titel, alineas, knop, naschrift = [] }: Opmaak): string
 }
 
 /** De platte-tekstversie: dezelfde inhoud, zonder opmaak. */
-export function platteTekst({ titel, alineas, knop, naschrift = [] }: Opmaak): string {
+export function platteTekst({
+	titel,
+	alineas,
+	tabellen = [],
+	knop,
+	naschrift = [],
+}: Opmaak): string {
 	const delen = [titel, '', ...alineas];
+	for (const t of tabellen) {
+		delen.push('');
+		if (t.kop) delen.push(t.kop.toUpperCase());
+		for (const [l, w] of t.rijen) delen.push(`${l}: ${w}`);
+		if (t.totaal) delen.push(`${t.totaal[0]}: ${t.totaal[1]}`);
+	}
 	if (knop) delen.push('', `${knop.tekst}: ${knop.url}`);
 	if (naschrift.length > 0) delen.push('', ...naschrift);
 	delen.push('', AFZENDER_NAAM);
@@ -120,6 +153,90 @@ export function emailBevestigen(gegevens: { naam: string; url: string; geldigUre
 	};
 	return {
 		onderwerp: `Bevestig je e-mailadres bij ${AFZENDER_NAAM}`,
+		tekst: platteTekst(inhoud),
+		html: opmaak(inhoud),
+	};
+}
+
+/* ------------------------------------------------------------------ */
+/* Bestellingen                                                        */
+/* ------------------------------------------------------------------ */
+
+export type BestelmailGegevens = {
+	nummer: string;
+	naam: string;
+	email: string;
+	telefoon: string | null;
+	opmerking: string | null;
+	/** Regels als [omschrijving, bedrag], bijvoorbeeld ["2 x Zwemvest, Maat M", "€ 30,00"]. */
+	regels: [string, string][];
+	subtotaal: string;
+	verzending: string;
+	totaal: string;
+	btw: string;
+	adres: string[];
+	betaalmethode: string | null;
+	/** De statuspagina van de bestelling. */
+	url: string;
+};
+
+/** Naar de klant, zodra de betaling binnen is. */
+export function bestelbevestiging(g: BestelmailGegevens): Mail {
+	const inhoud: Opmaak = {
+		titel: `Bedankt voor je bestelling, ${g.nummer}`,
+		alineas: [
+			aanhef(g.naam),
+			`We hebben je betaling ontvangen en gaan je bestelling inpakken. Voor 15:00 uur besteld, dan is hij morgen in huis. Je krijgt bericht zodra het pakket onderweg is.`,
+		],
+		tabellen: [
+			{ kop: 'Je bestelling', rijen: g.regels },
+			{
+				kop: 'Bedragen',
+				rijen: [
+					['Subtotaal', g.subtotaal],
+					['Verzendkosten', g.verzending],
+					['Waarvan btw', g.btw],
+				],
+				totaal: ['Totaal betaald', g.totaal],
+			},
+			{ kop: 'Bezorgadres', rijen: g.adres.map((r) => [r, '']) },
+		],
+		knop: { tekst: 'Bekijk je bestelling', url: g.url },
+		naschrift: [
+			`Vragen over je bestelling? Mail naar info@hh-shops.nl en noem je bestelnummer ${g.nummer}. Je hebt 14 dagen bedenktijd na ontvangst.`,
+		],
+	};
+	return {
+		onderwerp: `Je bestelling ${g.nummer} bij ${AFZENDER_NAAM}`,
+		tekst: platteTekst(inhoud),
+		html: opmaak(inhoud),
+	};
+}
+
+/** Naar de eigenaar, zodra de betaling binnen is. */
+export function bestelmelding(g: BestelmailGegevens): Mail {
+	const inhoud: Opmaak = {
+		titel: `Nieuwe bestelling ${g.nummer}`,
+		alineas: [
+			`${g.naam} heeft betaald${g.betaalmethode ? ` via ${g.betaalmethode}` : ''}. De bestelling kan ingepakt worden.`,
+		],
+		tabellen: [
+			{ kop: 'Bestelling', rijen: g.regels, totaal: ['Totaal betaald', g.totaal] },
+			{
+				kop: 'Klant',
+				rijen: [
+					['Naam', g.naam],
+					['E-mail', g.email],
+					['Telefoon', g.telefoon ?? 'niet opgegeven'],
+					...(g.opmerking ? ([['Opmerking', g.opmerking]] as [string, string][]) : []),
+				],
+			},
+			{ kop: 'Bezorgadres', rijen: g.adres.map((r) => [r, '']) },
+		],
+		knop: { tekst: 'Open in het beheerpaneel', url: g.url },
+	};
+	return {
+		onderwerp: `Nieuwe bestelling ${g.nummer} (${g.totaal})`,
 		tekst: platteTekst(inhoud),
 		html: opmaak(inhoud),
 	};

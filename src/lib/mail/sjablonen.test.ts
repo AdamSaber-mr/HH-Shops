@@ -78,3 +78,39 @@ describe('ontwerpregels', () => {
 		expect(opmaak({ titel: 'T', alineas: ['a'] })).toContain('<h1');
 	});
 });
+
+describe('bestelmails', async () => {
+	const { bestelbevestiging, bestelmelding } = await import('./sjablonen.ts');
+	const g = {
+		nummer: 'HH-100001',
+		naam: 'Piet Jansen',
+		email: 'piet@voorbeeld.nl',
+		telefoon: null,
+		opmerking: 'Graag bij de <buren>',
+		regels: [['2 x Zwemvest Hond, Maat M', '€ 30,00']] as [string, string][],
+		subtotaal: '€ 30,00',
+		verzending: '€ 4,24',
+		totaal: '€ 34,24',
+		btw: '€ 5,94',
+		adres: ['Piet Jansen', 'Dorpsstraat 12', '1234 AB Dorp'],
+		betaalmethode: 'ideal',
+		url: 'https://x.test/bestelling/tok',
+	};
+	it('de klantmail noemt regels, bedragen, adres en de link', () => {
+		const m = bestelbevestiging(g);
+		expect(m.onderwerp).toBe('Je bestelling HH-100001 bij HH Shops');
+		expect(m.tekst).toContain('2 x Zwemvest Hond, Maat M: € 30,00');
+		expect(m.tekst).toContain('Totaal betaald: € 34,24');
+		expect(m.tekst).toContain('1234 AB Dorp');
+		expect(m.html).toContain('href="https://x.test/bestelling/tok"');
+		expect(m.html).not.toContain('<buren>');
+	});
+	it('de eigenaarmail noemt klantgegevens en opmerking', () => {
+		const m = bestelmelding(g);
+		expect(m.onderwerp).toBe('Nieuwe bestelling HH-100001 (€ 34,24)');
+		expect(m.tekst).toContain('E-mail: piet@voorbeeld.nl');
+		expect(m.tekst).toContain('Opmerking: Graag bij de <buren>');
+		expect(m.html).toContain('Graag bij de &lt;buren&gt;');
+		expect(m.tekst).toContain('via ideal');
+	});
+});

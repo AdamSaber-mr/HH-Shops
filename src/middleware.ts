@@ -40,9 +40,16 @@ const OPEN_ACTIONS = new Set([
 	'klant.wachtwoordVergeten',
 	'klant.wachtwoordHerstellen',
 ]);
-const OPEN_ACTION_GROEPEN = ['winkelmand.', 'favorieten.'];
-/** Klant-actions die van elke pagina mogen komen en waarvan de middleware de redirect doet. */
-const REDIRECT_ACTIES = new Set(['klant.uitloggen', 'klant.verwijderen']);
+const OPEN_ACTION_GROEPEN = ['winkelmand.', 'favorieten.', 'afrekenen.'];
+/** Actions die van elke pagina mogen komen en waarvan de middleware de redirect doet. */
+const REDIRECT_ACTIES = new Set([
+	'klant.uitloggen',
+	'klant.verwijderen',
+	'afrekenen.terugInWinkelmand',
+	'afrekenen.testBetaling',
+]);
+/** Open actions waarvan de pagina zelf het resultaat toont (fouten in het formulier). */
+const PAGINA_ACTIES = new Set(['afrekenen.plaatsen']);
 /** Actions waarvoor een sessie genoeg is, welke rol ook. */
 const KLANT_ACTIES = ['klant.'];
 
@@ -74,15 +81,43 @@ function metNaar(inlogpagina: string, url: URL): string {
 	return `${inlogpagina}?naar=${naar}`;
 }
 
+/*
+ * De CSRF-controle van Astro, hier nagebouwd omdat Astro geen uitzonderingen
+ * kent: een POST met een formulier-inhoudstype moet van deze site zelf komen
+ * (Origin-header gelijk aan onze oorsprong). De webhook van Mollie is de
+ * uitzondering: die POST komt van Mollie, zonder Origin, en bewijst zichzelf
+ * doordat wij de status daarna bij Mollie zelf navragen.
+ */
+const VEILIGE_METHODEN = new Set(['GET', 'HEAD', 'OPTIONS']);
+const FORMULIER_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data', 'text/plain'];
+const ZONDER_HERKOMSTCONTROLE = ['/api/mollie/'];
+
+function verbodenHerkomst(request: Request, url: URL): boolean {
+	if (VEILIGE_METHODEN.has(request.method)) return false;
+	if (ZONDER_HERKOMSTCONTROLE.some((p) => url.pathname.startsWith(p))) return false;
+	const zelfdeHerkomst = request.headers.get('origin') === url.origin;
+	const type = request.headers.get('content-type');
+	if (type) {
+		const formulier = FORMULIER_TYPES.some((t) => type.toLowerCase().includes(t));
+		return formulier && !zelfdeHerkomst;
+	}
+	return !zelfdeHerkomst;
+}
+
 export const onRequest = defineMiddleware(async (context, next) => {
 	context.locals.user = null;
 	context.locals.session = null;
 
 	if (context.isPrerendered) return next();
 
+	if (verbodenHerkomst(context.request, context.url)) {
+		return new Response('Cross-site POST form submissions are forbidden', { status: 403 });
+	}
+
 	const { pathname } = context.url;
-	// Better Auth beschermt zijn eigen endpoints.
-	if (pathname.startsWith('/api/auth')) return next();
+	// Better Auth beschermt zijn eigen endpoints; de webhook van Mollie
+	// controleert zichzelf (src/pages/api/mollie/webhook.ts).
+	if (pathname.startsWith('/api/auth') || pathname.startsWith('/api/mollie')) return next();
 
 	const { action, setActionResult, serializeActionResult } = getActionContext(context);
 	const isAdmin = onder(pathname, '/admin');
@@ -102,8 +137,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	if (action) {
 		const naam = action.name;
 		const viaMiddleware =
-			OPEN_ACTION_GROEPEN.some((g) => naam.startsWith(g)) ||
-			(REDIRECT_ACTIES.has(naam) && Boolean(user));
+			!PAGINA_ACTIES.has(naam) &&
+			(OPEN_ACTION_GROEPEN.some((g) => naam.startsWith(g)) ||
+				(REDIRECT_ACTIES.has(naam) && Boolean(user)));
 		if (viaMiddleware && action.calledFrom === 'form') {
 			const { data, error } = await action.handler();
 			setActionResult(naam, serializeActionResult({ data, error }));

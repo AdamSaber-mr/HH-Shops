@@ -129,15 +129,21 @@ export default defineConfig({
 					'arrow-right',
 					'envelope-simple',
 					'map-pin',
+					'receipt',
 				],
 			},
 		}),
 	],
 
-	// Foto-uploads in het beheerpaneel gaan als een action-body. Standaard is 1 MB;
-	// Vercel accepteert 4,5 MB per aanvraag, dus 4 MB laat ruimte voor de rest.
 	security: {
+		// Foto-uploads in het beheerpaneel gaan als een action-body. Standaard is 1 MB;
+		// Vercel accepteert 4,5 MB per aanvraag, dus 4 MB laat ruimte voor de rest.
 		actionBodySizeLimit: 4 * 1024 * 1024,
+		// De controle op de herkomst van formulieren (CSRF) doet src/middleware.ts
+		// zelf, met dezelfde regels als Astro, maar met een uitzondering voor de
+		// webhook van Mollie: die POST komt van Mollie, zonder Origin-header, en
+		// zou hier anders altijd een 403 krijgen. Astro kent geen uitzonderingen.
+		checkOrigin: false,
 	},
 
 	vite: {
@@ -185,6 +191,23 @@ export default defineConfig({
 			RESEND_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
 			MAIL_FROM: envField.string({ context: 'server', access: 'secret', optional: true }),
 			MAIL_MODUS: envField.string({ context: 'server', access: 'secret', optional: true }),
+			// Mollie. Zonder sleutel buiten productie: de nagebootste betaling
+			// (zie src/lib/bestellen/server.ts).
+			MOLLIE_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+			MOLLIE_API_TEST_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+			MOLLIE_MODUS: envField.string({ context: 'server', access: 'secret', optional: true }),
+			// Laat de webhook van Mollie een beveiligde preview bereiken.
+			VERCEL_AUTOMATION_BYPASS_SECRET: envField.string({
+				context: 'server',
+				access: 'secret',
+				optional: true,
+			}),
+			// Waar de eigenaar bericht krijgt van een bestelling; standaard info@hh-shops.nl.
+			BESTELLING_MAIL_NAAR: envField.string({
+				context: 'server',
+				access: 'secret',
+				optional: true,
+			}),
 		},
 		// `validateSecrets` blijft bewust op de standaard `false`. Geheimen
 		// worden dan pas gecontroleerd wanneer ze echt gelezen worden, en niet

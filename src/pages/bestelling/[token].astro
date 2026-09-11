@@ -1,0 +1,120 @@
+---
+import { actions } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+import Button from '../../components/Button.astro';
+import Melding from '../../components/klant/Melding.astro';
+import ProductImage from '../../components/ProductImage.astro';
+import Layout from '../../layouts/Layout.astro';
+import { adresRegels, bestellingOpToken } from '../../lib/bestellen/lezen.ts';
+import { STATUS_TEKST } from '../../lib/bestellen/status.ts';
+import { verwerkBetaling } from '../../lib/bestellen/verwerken.ts';
+import { formatEuro } from '../../lib/price.ts';
+
+/*
+ * De statuspagina van een bestelling, bereikbaar via het token uit de URL
+ * (niet via het bestelnummer, dat is te raden). Mollie stuurt de klant
+ * hierheen na het betalen. Wacht de bestelling nog op een betaling, dan
+ * vraagt de pagina de status een keer live bij Mollie op: bij iDEAL is de
+ * webhook regelmatig een paar seconden later dan de klant.
+ */
+
+const { token } = Astro.params;
+let order = await bestellingOpToken(token ?? '');
+if (!order) return new Response(null, { status: 404, statusText: 'Niet gevonden' });
+
+if (order.status === 'awaiting_payment' && order.molliePaymentId) {
+	try {
+		await verwerkBetaling(order.id, Astro.url.origin, 'statuspagina');
+		order = (await bestellingOpToken(token ?? '')) ?? order;
+	} catch (error) {
+		console.error('[bestelling] status ophalen mislukt', error);
+	}
+}
+
+const koppen = {
+	paid: { titel: 'Bedankt voor je bestelling!', icoon: 'ph:check' },
+	shipped: { titel: 'Je bestelling is onderweg', icoon: 'ph:truck' },
+	awaiting_payment: { titel: 'We wachten op je betaling', icoon: 'ph:clock' },
+	cancelled: { titel: 'De betaling is niet gelukt', icoon: 'ph:warning-circle' },
+} as const;
+const kop = koppen[order.status];
+const eigen = Boolean(Astro.locals.user && order.userId === Astro.locals.user.id);
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<Layout title={`Bestelling ${order.number}`} noindex>
+	<div class="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:py-16">
+		<div class="flex items-start gap-4">
+			<span class:list={['flex size-12 shrink-0 items-center justify-center rounded-full', order.status === 'cancelled' ? 'bg-danger-subtle text-danger' : 'bg-accent-subtle text-accent']}>
+				<Icon name={kop.icoon} class="size-6" aria-hidden="true" />
+			</span>
+			<div>
+				<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{kop.titel}</h1>
+				<p class="mt-1 text-text-muted">Bestelnummer {order.number}. Status: {STATUS_TEKST[order.status]}.</p>
+			</div>
+		</div>
+
+		<div class="mt-6">
+			{order.status === 'paid' && (
+				<Melding melding={{ soort: 'ok', tekst: `We hebben je betaling ontvangen en sturen een bevestiging naar ${order.email}. Voor 15:00 uur besteld, dan is je pakket morgen in huis.` }} />
+			)}
+			{order.status === 'shipped' && (
+				<Melding melding={{ soort: 'ok', tekst: 'Je pakket is verzonden en komt eraan.' }} />
+			)}
+			{order.status === 'awaiting_payment' && (
+				<div class="rounded-card border border-border bg-surface p-5">
+					<p class="text-sm">De betaling is nog niet bevestigd. Bij iDEAL duurt dat soms een paar seconden. Ververs deze pagina, of ga terug naar de bank-app als je de betaling nog niet hebt afgerond.</p>
+					<Button href={`/bestelling/${order.token}`} variant="secondary" class="mt-4">
+						<Icon name="ph:arrow-counter-clockwise" class="size-4" aria-hidden="true" />
+						Status vernieuwen
+					</Button>
+				</div>
+			)}
+			{order.status === 'cancelled' && (
+				<div class="rounded-card border border-danger/30 bg-surface p-5">
+					<p class="text-sm">De betaling is mislukt, geannuleerd of verlopen. Er is niets afgeschreven en de bestelling is niet geplaatst. Wil je het opnieuw proberen? Zet de artikelen terug in je winkelmand.</p>
+					<form method="POST" action={actions.afrekenen.terugInWinkelmand} class="mt-4">
+						<input type="hidden" name="token" value={order.token} />
+						<Button type="submit">Zet de artikelen terug in mijn winkelmand</Button>
+					</form>
+				</div>
+			)}
+		</div>
+
+		<section aria-labelledby="regels-titel" class="mt-8 rounded-card border border-border bg-surface p-5 sm:p-6">
+			<h2 id="regels-titel" class="text-lg font-semibold">Je bestelling</h2>
+			<ul class="mt-4 divide-y divide-border">
+				{order.items.map((i) => (
+					<li class="flex gap-3 py-3">
+						<div class="size-14 shrink-0 overflow-hidden rounded-control bg-surface-hover">
+							{i.imageUrl && <ProductImage src={i.imageUrl} alt="" width={200} height={200} widths={[112]} sizes="56px" class="size-full object-cover" />}
+						</div>
+						<div class="min-w-0 flex-1 text-sm">
+							<p class="font-medium">{i.productSlug ? <a href={`/product/${i.productSlug}`} class="hover:underline">{i.productName}</a> : i.productName}</p>
+							<p class="text-text-muted">{i.quantity} x {formatEuro(i.unitPriceCents)}{i.optionText ? `, ${i.optionText}` : ''} <span class="text-xs">({i.sku})</span></p>
+						</div>
+						<p class="text-sm font-medium tabular-nums">{formatEuro(i.lineTotalCents)}</p>
+					</li>
+				))}
+			</ul>
+			<dl class="mt-4 space-y-2 border-t border-border pt-4 text-sm">
+				<div class="flex justify-between gap-4"><dt>Subtotaal</dt><dd class="tabular-nums">{formatEuro(order.subtotalCents)}</dd></div>
+				<div class="flex justify-between gap-4"><dt>Verzendkosten</dt><dd class="tabular-nums">{order.shippingCents === 0 ? 'Gratis' : formatEuro(order.shippingCents)}</dd></div>
+				<div class="flex justify-between gap-4 border-t border-border pt-2 text-base font-semibold"><dt>Totaal</dt><dd class="tabular-nums">{formatEuro(order.totalCents)}</dd></div>
+				<div class="flex justify-between gap-4 text-xs text-text-muted"><dt>Waarvan btw</dt><dd class="tabular-nums">{formatEuro(order.vatCents)}</dd></div>
+			</dl>
+		</section>
+
+		<section aria-labelledby="adres-titel" class="mt-6 rounded-card border border-border bg-surface p-5 sm:p-6">
+			<h2 id="adres-titel" class="text-lg font-semibold">Bezorgadres</h2>
+			<p class="mt-2 text-sm">{adresRegels(order).map((r) => <span class="block">{r}</span>)}</p>
+			{order.phone && <p class="mt-2 text-sm text-text-muted">Telefoon: {order.phone}</p>}
+			{order.customerNote && <p class="mt-2 text-sm text-text-muted">Opmerking: {order.customerNote}</p>}
+		</section>
+
+		<p class="mt-8 text-sm text-text-muted">
+			Vragen? Mail naar <a href="mailto:info@hh-shops.nl" class="font-medium text-accent hover:underline">info@hh-shops.nl</a> en noem je bestelnummer.
+			{eigen && <>Al je bestellingen staan onder <a href="/account/bestellingen" class="font-medium text-accent hover:underline">Mijn account</a>.</>}
+		</p>
+	</div>
+</Layout>
