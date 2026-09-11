@@ -7,6 +7,7 @@ import { telWinkelmand } from '../lib/klanten/winkelmand.ts';
 import { categoryHref, mainNavigation } from '../lib/navigation.ts';
 import FavorietenPaneel from './klant/FavorietenPaneel.astro';
 import Teller from './klant/Teller.astro';
+import WinkelmandPaneel from './klant/WinkelmandPaneel.astro';
 
 /*
  * De kop van elke pagina: een smalle servicebalk, daaronder de navigatie.
@@ -174,6 +175,7 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 				</a>
 				<a
 					href="/winkelmand"
+					data-winkelmand-open
 					class="inline-flex min-h-11 items-center gap-2 rounded-control px-1.5 text-sm font-medium text-text hover:bg-surface-hover sm:px-3"
 				>
 					<span class="relative">
@@ -181,7 +183,7 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 						<Teller aantal={aantalInMand} naam="winkelmand" />
 					</span>
 					<span class="hidden sm:inline">Winkelmand</span>
-					<span class="sr-only">, {aantalInMand} {aantalInMand === 1 ? 'artikel' : 'artikelen'}</span>
+					<span class="sr-only" data-teller-tekst="winkelmand">, {aantalInMand} {aantalInMand === 1 ? 'artikel' : 'artikelen'}</span>
 				</a>
 				<a
 					href="/favorieten"
@@ -263,6 +265,7 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 </header>
 
 <FavorietenPaneel />
+<WinkelmandPaneel />
 
 <script>
 	/*

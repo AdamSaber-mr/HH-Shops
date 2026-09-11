@@ -9,7 +9,7 @@ import ProductSection from '../../components/ProductSection.astro';
 import Layout from '../../layouts/Layout.astro';
 import { defaultVariant, getProductBySlug, listProductsInCategory } from '../../lib/catalog.ts';
 import { leesFavorieten } from '../../lib/klanten/favorieten.ts';
-import { leesWinkelmand, MAX_AANTAL } from '../../lib/klanten/winkelmand.ts';
+import { MAX_AANTAL } from '../../lib/klanten/winkelmand.ts';
 import { kleurcode } from '../../lib/kleuren.ts';
 import { ontleedBeschrijving, tekstVan } from '../../lib/productinformatie.ts';
 import { gevraagdeWaarden, kiesVariant, paramVoor, waardenVoor } from '../../lib/productkeuze.ts';
@@ -25,9 +25,10 @@ import { usps } from '../../lib/site.ts';
  * (?foto=2). Prijs, voorraad en koopknop kloppen daardoor altijd bij wat er
  * geselecteerd staat, ook zonder JavaScript en ook als iemand de link deelt
  * of bewaart. Het script in src/scripts/productpagina.ts maakt het daarna
- * vlot: foto's wisselen zonder herladen, min en plus bij het aantal,
- * "In winkelmand" zonder de pagina te verlaten, en de beschrijving die in- en
- * uitklapt.
+ * vlot: foto's wisselen zonder herladen, min en plus bij het aantal, en de
+ * beschrijving die in- en uitklapt. "In winkelmand" voegt toe zonder de
+ * pagina te verlaten en opent het zijpaneel; dat doet src/scripts/winkelmand.ts
+ * voor de hele site. "Nu kopen" gaat wel meteen naar de winkelmand.
  *
  * Geen sterren en geen aantal beoordelingen zoals in het voorbeeld: er zijn
  * nog geen recensies per product, en verzonnen sterren zijn in een winkel
@@ -72,11 +73,8 @@ const soldOut = selected.stockQuantity === 0;
 const lowStock = !soldOut && selected.stockQuantity < 11;
 const maxAantal = Math.max(1, Math.min(MAX_AANTAL, selected.stockQuantity));
 
-const [favorieten, inMand] = await Promise.all([leesFavorieten(Astro), leesWinkelmand(Astro)]);
+const favorieten = await leesFavorieten(Astro);
 const favoriet = favorieten.includes(product.id);
-// Hoeveel er al in de winkelmand liggen, zodat het script de teller in de
-// header precies kan bijwerken na "In winkelmand".
-const alInMand = inMand.get(selected.id) ?? 0;
 
 // De foto in de URL telt vanaf 1. Alles wat niet klopt wordt de eerste.
 const fotos = product.images;
@@ -377,8 +375,7 @@ const voorraadTekst = soldOut
 					<form
 						method="POST"
 						action={actions.winkelmand.toevoegen}
-						data-koopformulier
-						data-in-mand={alInMand}
+						data-winkelmand-toevoegen
 						class="flex flex-col gap-5"
 					>
 						<input type="hidden" name="variantId" value={selected.id} />
@@ -438,31 +435,18 @@ const voorraadTekst = soldOut
 						<div class="grid gap-3 sm:grid-cols-2">
 							<button
 								type="submit"
+								data-direct
 								class="inline-flex min-h-12 items-center justify-center rounded-full bg-accent px-6 text-base font-medium text-white transition-colors hover:bg-accent-hover"
 							>
 								Nu kopen
 							</button>
 							<button
 								type="submit"
-								data-blijf
 								class="inline-flex min-h-12 items-center justify-center rounded-full border border-accent bg-surface px-6 text-base font-medium text-accent transition-colors hover:bg-accent-subtle disabled:cursor-wait disabled:opacity-70"
 							>
 								In winkelmand
 							</button>
 						</div>
-
-						<p
-							data-koopmelding
-							hidden
-							role="status"
-							class="flex items-start gap-2 rounded-card bg-accent-subtle px-4 py-3 text-sm text-text"
-						>
-							<Icon name="ph:check" class="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
-							<span>
-								{product.name} zit in je winkelmand.{' '}
-								<a href="/winkelmand" class="font-medium text-accent underline">Bekijk je winkelmand</a>
-							</span>
-						</p>
 					</form>
 				)}
 

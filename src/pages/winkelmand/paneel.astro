@@ -1,0 +1,16 @@
+---
+import WinkelmandLijst from '../../components/klant/WinkelmandLijst.astro';
+import { haalWinkelmand } from '../../lib/klanten/winkelmand.ts';
+
+/*
+ * De inhoud van het zijpaneel van de winkelmand, als los stuk HTML voor het
+ * script in src/scripts/winkelmand.ts. Geen layout, geen head: alleen de
+ * lijst. Dezelfde opbouw als /favorieten/paneel.
+ */
+export const partial = true;
+
+const overzicht = await haalWinkelmand(Astro);
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<WinkelmandLijst overzicht={overzicht} />

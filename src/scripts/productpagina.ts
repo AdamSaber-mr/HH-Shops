@@ -1,16 +1,13 @@
-import { actions } from 'astro:actions';
-import { zetTeller } from './hartje.ts';
-
 /*
  * De productpagina met JavaScript. Alles werkt ook zonder, zie de uitleg
  * bovenin src/pages/product/[slug].astro. Dit maakt het vlot:
  *
  *  - de miniaturen wisselen de grote foto zonder herladen;
  *  - min en plus bij het aantal, binnen de grenzen van het invoerveld;
- *  - "In winkelmand" voegt toe en blijft op de pagina, met een melding en de
- *    teller in de header bijgewerkt. "Nu kopen" blijft een gewone POST en
- *    gaat naar de winkelmand;
  *  - de beschrijving klapt in, met "Meer weergeven".
+ *
+ * "In winkelmand" en het zijpaneel van de winkelmand staan niet hier maar in
+ * src/scripts/winkelmand.ts, want die werken op elke pagina.
  */
 
 /* ------------------------------------------------------------------ */
@@ -69,38 +66,6 @@ minKnop?.addEventListener('click', () => zetAantal(huidigAantal() - 1));
 plusKnop?.addEventListener('click', () => zetAantal(huidigAantal() + 1));
 aantalInvoer?.addEventListener('change', () => zetAantal(huidigAantal()));
 if (aantalInvoer) zetAantal(huidigAantal());
-
-/* ------------------------------------------------------------------ */
-/* In winkelmand, zonder de pagina te verlaten                         */
-/* ------------------------------------------------------------------ */
-
-const koopformulier = document.querySelector<HTMLFormElement>('[data-koopformulier]');
-
-koopformulier?.addEventListener('submit', async (event) => {
-	const knop = event.submitter;
-	// "Nu kopen" heeft geen data-blijf: dat is de gewone weg, naar de winkelmand.
-	if (!(knop instanceof HTMLButtonElement) || !knop.hasAttribute('data-blijf')) return;
-	event.preventDefault();
-
-	const melding = koopformulier.querySelector<HTMLElement>('[data-koopmelding]');
-	knop.disabled = true;
-	knop.setAttribute('aria-busy', 'true');
-	try {
-		const { data, error } = await actions.winkelmand.toevoegen(new FormData(koopformulier));
-		if (error || !data) {
-			// Dan maar de gewone weg: de middleware toont de melding op de winkelmandpagina.
-			koopformulier.submit();
-			return;
-		}
-		const was = Number.parseInt(koopformulier.dataset.inMand ?? '', 10) || 0;
-		koopformulier.dataset.inMand = String(data.aantal);
-		zetTeller('winkelmand', data.aantal - was);
-		if (melding) melding.hidden = false;
-	} finally {
-		knop.disabled = false;
-		knop.removeAttribute('aria-busy');
-	}
-});
 
 /* ------------------------------------------------------------------ */
 /* Beschrijving inklappen                                              */
