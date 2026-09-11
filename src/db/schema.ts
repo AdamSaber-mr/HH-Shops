@@ -350,6 +350,30 @@ export const productVariants = pgTable(
 	],
 );
 
+/*
+ * Oude slugs van producten, om dezelfde reden als category_slug_history:
+ * een productlink staat in Google en in gedeelde berichten. Wordt de slug in
+ * het beheerpaneel gewijzigd, dan verwijst /product/<oud> door naar de nieuwe.
+ */
+export const productSlugHistory = pgTable(
+	'product_slug_history',
+	{
+		id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+		slug: text('slug').notNull().unique(),
+		productId: integer('product_id')
+			.notNull()
+			.references(() => products.id, { onDelete: 'cascade' }),
+		createdAt: createdAt(),
+	},
+	(t) => [
+		index('product_slug_history_product_idx').on(t.productId),
+		check(
+			'product_slug_history_slug_format',
+			sql`${t.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND length(${t.slug}) BETWEEN 2 AND 120`,
+		),
+	],
+);
+
 /* ------------------------------------------------------------------ */
 /* product_images                                                      */
 /* ------------------------------------------------------------------ */
@@ -410,11 +434,14 @@ export const productImages = pgTable(
 		// Blokkeert precies de rommel die in de oude bestandsnamen staat:
 		// Copilot_20260217_132555, Post-HH-Shops-15.jpg, 550x687.jpg. Zonder
 		// deze regel is "map bestandsnaam naar alt-tekst" de makkelijkste weg in
-		// fase 2, en dan is het probleem terug.
+		// fase 2, en dan is het probleem terug. Dezelfde regels als altProblems()
+		// in src/lib/tekst.ts; die is de vriendelijke melding, dit het slot.
 		check(
 			'product_images_alt_not_filename',
 			sql`${t.alt} !~ '^[0-9]+$'
-			    AND ${t.alt} !~* '^(img|image|afbeelding|foto|photo|dsc|copilot|chatgpt|post-hh-shops|[0-9]+x[0-9]+)[ _.-]*[0-9]*(\.(jpe?g|png|webp))?$'`,
+			    AND ${t.alt} !~* '^(img|image|afbeelding|foto|photo|dsc|copilot|chatgpt|post-hh-shops|thumbnail|[0-9]+x[0-9]+)[ _.-]*[0-9 _.-]*(\\.(jpe?g|png|webp))?$'
+			    AND ${t.alt} !~* '\\.(jpe?g|png|webp)$'
+			    AND position('|' in ${t.alt}) = 0`,
 		),
 		check(
 			'product_images_dimensions',

@@ -146,8 +146,19 @@ export default defineConfig({
 		checkOrigin: false,
 	},
 
+	build: {
+		// Stijlen altijd als los bestand, nooit inline: dan kan de
+		// Content-Security-Policy (src/middleware.ts) zonder 'unsafe-inline'
+		// voor scripts en blijft de cache van de browser zijn werk doen.
+		inlineStylesheets: 'never',
+	},
+
 	vite: {
 		plugins: [tailwindcss()],
+		build: {
+			// Kleine scripts niet inline in de HTML zetten, om dezelfde reden.
+			assetsInlineLimit: 0,
+		},
 		ssr: {
 			// sanitize-html is CommonJS en laadt htmlparser2, dat alleen nog als ESM
 			// bestaat. Node 24 kan dat lokaal (require van ESM), de Node-runtime van

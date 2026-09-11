@@ -1,6 +1,12 @@
 import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { Database } from '../../db/connection.ts';
-import { productCategories, productImages, products, productVariants } from '../../db/schema.ts';
+import {
+	productCategories,
+	productImages,
+	productSlugHistory,
+	products,
+	productVariants,
+} from '../../db/schema.ts';
 import { skuVoor, type Tx, volgendNummer } from './sku.ts';
 
 /*
@@ -54,7 +60,30 @@ export async function slugBezet(
 				: and(eq(products.slug, slug), ne(products.id, behalveId)),
 		)
 		.limit(1);
-	return rows.length > 0;
+	if (rows.length > 0) return true;
+	// Ook een oude slug van een ander product is bezet: die verwijst nog door.
+	const oud = await db
+		.select({ id: productSlugHistory.productId })
+		.from(productSlugHistory)
+		.where(
+			behalveId === undefined
+				? eq(productSlugHistory.slug, slug)
+				: and(eq(productSlugHistory.slug, slug), ne(productSlugHistory.productId, behalveId)),
+		)
+		.limit(1);
+	return oud.length > 0;
+}
+
+/** Na een slugwijziging: de oude slug blijft doorverwijzen, een teruggekeerde slug hoeft dat niet meer. */
+async function bewaarOudeSlug(
+	tx: Tx,
+	productId: number,
+	oud: string,
+	nieuw: string,
+): Promise<void> {
+	if (oud === nieuw) return;
+	await tx.delete(productSlugHistory).where(eq(productSlugHistory.slug, nieuw));
+	await tx.insert(productSlugHistory).values({ slug: oud, productId }).onConflictDoNothing();
 }
 
 async function synchroniseerCategorieen(
@@ -149,6 +178,7 @@ export async function werkProductBij(
 		if (!huidig) throw new InvoerFout('', 'Dit product bestaat niet meer.');
 		if (await slugBezet(tx, invoer.slug, id))
 			throw new InvoerFout('slug', 'Deze slug bestaat al. Kies een andere.');
+		await bewaarOudeSlug(tx, id, huidig.slug, invoer.slug);
 
 		const oudeOptie = huidig.optionNames[0] ?? null;
 		if (oudeOptie !== invoer.optieNaam) {

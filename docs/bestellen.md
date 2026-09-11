@@ -90,6 +90,23 @@ Voor de livegang: in het Mollie-dashboard de gegevens van de winkel
 (KvK, bankrekening, website) laten controleren, de livesleutel in Vercel
 zetten, en een bestelling van een paar euro echt doen en terugbetalen.
 
+## Voor de privacyverklaring
+
+Wat het bestelproces vastlegt, zodat de privacyverklaring (nog te maken)
+het kan noemen:
+
+- Per bestelling: naam, e-mailadres, bezorgadres, telefoonnummer en
+  opmerking als de klant die geeft, de bestelde artikelen en bedragen, het
+  betalingskenmerk van Mollie en de betaalmethode. Nodig om de bestelling
+  uit te voeren en wettelijk zeven jaar te bewaren voor de boekhouding.
+- Verwijdert een klant zijn account, dan verdwijnen account, favorieten,
+  winkelmand en bezorgadres. De bestellingen blijven bewaard, losgekoppeld
+  van het account (`user_id` wordt leeg), met de gegevens die erop staan.
+- Verwerkers: Vercel (hosting, Europa), Neon (database, Frankfurt), Mollie
+  (betaling; ziet naam, bedrag en omschrijving, nooit onze wachtwoorden),
+  Resend (mail).
+- Cookies: alleen functioneel (sessie, winkelmand, favorieten, meldingen).
+
 ## Wat er bewust niet in zit
 
 - Factuur-pdf en verzendlabels: later, bij het bestelbeheer.
