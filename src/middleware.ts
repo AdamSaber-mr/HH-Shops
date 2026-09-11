@@ -1,5 +1,6 @@
 import { getActionContext } from 'astro:actions';
 import { defineMiddleware } from 'astro:middleware';
+import type { APIContext, MiddlewareNext } from 'astro';
 import { getAuth } from './auth/server.ts';
 import { heeftSessieCookie, isBeheerder } from './auth/sessie.ts';
 import { zetFlash } from './lib/klanten/flash.ts';
@@ -104,7 +105,49 @@ function verbodenHerkomst(request: Request, url: URL): boolean {
 	return !zelfdeHerkomst;
 }
 
+/*
+ * Beveiligingsheaders op elk antwoord. De Content-Security-Policy staat
+ * alleen in productie: de dev-server van Vite werkt met inline scripts en
+ * een WebSocket, en die zou hij tegenhouden. Scripts en stijlen komen als
+ * losse bestanden (astro.config.mjs: inlineStylesheets 'never' en
+ * assetsInlineLimit 0), dus 'self' volstaat voor scripts. Stijlen houden
+ * 'unsafe-inline' voor style-attributen. form-action noemt Mollie, want
+ * het afrekenformulier eindigt met een doorverwijzing naar mollie.com en
+ * Chrome controleert die tegen form-action.
+ */
+const CSP = [
+	"default-src 'self'",
+	"script-src 'self'",
+	"style-src 'self' 'unsafe-inline'",
+	"img-src 'self' data: https://*.public.blob.vercel-storage.com",
+	"font-src 'self'",
+	"connect-src 'self'",
+	"form-action 'self' https://www.mollie.com https://*.mollie.com",
+	"frame-ancestors 'none'",
+	"base-uri 'self'",
+	"object-src 'none'",
+	'upgrade-insecure-requests',
+].join('; ');
+
+function zetBeveiligingsheaders(headers: Headers): void {
+	headers.set('X-Content-Type-Options', 'nosniff');
+	headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+	headers.set('X-Frame-Options', 'DENY');
+	headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+	// Strict-Transport-Security zet Vercel zelf, met preload.
+	if (import.meta.env.PROD) headers.set('Content-Security-Policy', CSP);
+}
+
 export const onRequest = defineMiddleware(async (context, next) => {
+	const antwoord = await afhandelen(context, next);
+	// Eigen Referrer-Policy van een pagina (de herstelpagina) blijft staan.
+	const eigenReferrer = antwoord.headers.get('Referrer-Policy');
+	zetBeveiligingsheaders(antwoord.headers);
+	if (eigenReferrer) antwoord.headers.set('Referrer-Policy', eigenReferrer);
+	return antwoord;
+});
+
+async function afhandelen(context: APIContext, next: MiddlewareNext): Promise<Response> {
 	context.locals.user = null;
 	context.locals.session = null;
 
@@ -186,4 +229,4 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	}
 
 	return next();
-});
+}

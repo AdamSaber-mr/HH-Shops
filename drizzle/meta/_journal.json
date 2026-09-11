@@ -50,6 +50,13 @@
 			"when": 1789123465239,
 			"tag": "0006_bestellingen",
 			"breakpoints": true
+		},
+		{
+			"idx": 7,
+			"version": "7",
+			"when": 1789132580822,
+			"tag": "0007_alt_en_productslugs",
+			"breakpoints": true
 		}
 	]
 }

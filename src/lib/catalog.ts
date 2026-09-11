@@ -1,6 +1,6 @@
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { getDb } from '../db/client.ts';
-import { categories, categorySlugHistory, products } from '../db/schema.ts';
+import { categories, categorySlugHistory, productSlugHistory, products } from '../db/schema.ts';
 
 /*
  * defaultVariant woont in categorie-filters.ts, zodat die zonder database te
@@ -151,6 +151,18 @@ export async function listProductsInCategory(slug: string) {
 			images: { orderBy: (i, { asc }) => [asc(i.position)] },
 		},
 	});
+}
+
+/** Als een productslug in het beheerpaneel is gewijzigd: de nieuwe slug voor een oude, of null. */
+export async function verhuisdeProductSlug(oudeSlug: string): Promise<string | null> {
+	const db = getDb();
+	const [rij] = await db
+		.select({ slug: products.slug })
+		.from(productSlugHistory)
+		.innerJoin(products, eq(products.id, productSlugHistory.productId))
+		.where(eq(productSlugHistory.slug, oudeSlug))
+		.limit(1);
+	return rij?.slug ?? null;
 }
 
 /** Een product op zijn slug, of undefined als het niet bestaat of niet zichtbaar is. */

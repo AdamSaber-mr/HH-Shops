@@ -7,7 +7,12 @@ import Price from '../../components/Price.astro';
 import ProductImage from '../../components/ProductImage.astro';
 import ProductSection from '../../components/ProductSection.astro';
 import Layout from '../../layouts/Layout.astro';
-import { defaultVariant, getProductBySlug, listProductsInCategory } from '../../lib/catalog.ts';
+import {
+	defaultVariant,
+	getProductBySlug,
+	listProductsInCategory,
+	verhuisdeProductSlug,
+} from '../../lib/catalog.ts';
 import { leesFavorieten } from '../../lib/klanten/favorieten.ts';
 import { MAX_AANTAL } from '../../lib/klanten/winkelmand.ts';
 import { kleurcode } from '../../lib/kleuren.ts';
@@ -38,6 +43,9 @@ import { usps } from '../../lib/site.ts';
 const { slug } = Astro.params;
 const product = slug ? await getProductBySlug(slug) : undefined;
 if (!product) {
+	// Een slug die in het beheerpaneel is gewijzigd, verwijst door naar de nieuwe.
+	const nieuw = slug ? await verhuisdeProductSlug(slug) : null;
+	if (nieuw) return Astro.redirect(`/product/${nieuw}${Astro.url.search}`, 301);
 	return new Response(null, { status: 404, statusText: 'Niet gevonden' });
 }
 
