@@ -3,9 +3,23 @@ import { optionSummary } from '../lib/catalog.ts';
 import ProductCard from './ProductCard.astro';
 
 /*
- * Het productraster: twee kolommen op telefoon, vier op desktop. De
- * startpagina (via ProductSection) en de categoriepagina gebruiken allebei
- * dit raster, zodat een productkaart overal dezelfde maat heeft.
+ * De productkaarten, in twee vormen.
+ *
+ *  - `raster` (standaard): twee kolommen op telefoon, vier op desktop. Voor
+ *    overzichtspagina's, waar je alles onder elkaar wilt kunnen aflopen.
+ *  - `balk`: op telefoon en tablet een rij waar je doorheen veegt, op desktop
+ *    hetzelfde raster van vier. Voor de rijen op de startpagina. Acht
+ *    producten onder elkaar maken een telefoonpagina eindeloos lang; in een
+ *    veegbalk is het een handbeweging.
+ *
+ * De veegbalk loopt met negatieve marges tot aan de schermrand door, zodat de
+ * kaarten aan de rand half in beeld blijven staan. Dat is het teken dat er
+ * meer is. `scroll-p-4` zet een geveegde kaart daarna netjes op dezelfde lijn
+ * als de rest van de pagina.
+ *
+ * De verticale `py-1 -my-1` is geen opsmuk: zodra `overflow-x` op `auto`
+ * staat, knipt de browser ook verticaal. Zonder die ruimte valt de focusring
+ * van een kaart weg.
  */
 
 export interface ProductEntry {
@@ -31,15 +45,35 @@ interface Props {
 	eagerCount?: number;
 	/** Product-id's die de bezoeker als favoriet heeft, voor het gevulde hartje. */
 	favorieten?: ReadonlySet<number>;
+	/** `balk` maakt er op telefoon en tablet een veegbalk van. */
+	vorm?: 'raster' | 'balk';
 	class?: string;
 }
 
-const { items, eagerCount = 0, favorieten = new Set<number>(), class: extraClass = '' } = Astro.props;
+const {
+	items,
+	eagerCount = 0,
+	favorieten = new Set<number>(),
+	vorm = 'raster',
+	class: extraClass = '',
+} = Astro.props;
+
+const houder =
+	vorm === 'balk'
+		? '-mx-4 -my-1 flex snap-x snap-mandatory scroll-p-4 gap-4 overflow-x-auto px-4 py-1 sm:-mx-6 sm:scroll-p-6 sm:gap-6 sm:px-6 lg:mx-0 lg:my-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0 lg:py-0'
+		: 'grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4';
+
+// In de veegbalk bepaalt de kaartbreedte hoeveel je er ziet: ruim twee op een
+// telefoon, met een randje van de derde erbij.
+const kaart =
+	vorm === 'balk'
+		? 'w-[42%] shrink-0 snap-start sm:w-[31%] md:w-[23.5%] lg:w-auto'
+		: '';
 // Waar het hartje en de winkelmandknop zonder JavaScript naar terugkeren.
 const naar = Astro.url.pathname + Astro.url.search;
 ---
 
-<div class={`grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4 ${extraClass}`}>
+<div class={`${houder} ${extraClass}`}>
 	{items.map(({ product, variant, image }, index) => (
 		<ProductCard
 			productId={product.id}
@@ -54,6 +88,7 @@ const naar = Astro.url.pathname + Astro.url.search;
 			stockQuantity={variant.stockQuantity}
 			optionSummary={optionSummary(product.optionNames, product.variants.length)}
 			loading={index < eagerCount ? 'eager' : 'lazy'}
+			class={kaart}
 		/>
 	))}
 </div>

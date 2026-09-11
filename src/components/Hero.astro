@@ -6,27 +6,38 @@ import Button from './Button.astro';
 /*
  * De hero bovenaan de startpagina.
  *
- * Op desktop ligt de tekst over de linkerhelft van de banner: daar is de
- * afbeelding leeg (alleen lucht en vloer), rechts staan de producten. Op
- * telefoon en tablet past dat niet, dan staat de tekst op een hemelsblauw vlak
- * en komt de banner eronder. Het vlak heeft precies de kleur van de linkerrand
- * van de banner, zodat het een geheel blijft.
+ * De banner is de achtergrond van de hele sectie, op elk formaat. De tekst
+ * ligt erover. Er is bewust geen tweede, losse afbeelding onder de tekst meer:
+ * dat gaf op telefoon een zichtbare naad tussen een blauw tekstvlak en een
+ * plaatje, en dat zag eruit als twee blokken in plaats van een banner.
+ *
+ * Om de tekst leesbaar te houden ligt er een verloop over de banner, in de
+ * kleur van de banner zelf (--color-sky, gemeten op de linkerrand):
+ *
+ *  - telefoon en tablet: van boven naar beneden. Bovenin dekkend, zodat de
+ *    kop en de knoppen op een rustig vlak staan; onderin doorzichtig, zodat de
+ *    gele podia met de producten er gewoon onder vandaan komen.
+ *  - desktop: van links naar rechts over de linkerhelft. Daar is de banner
+ *    toch al leeg, en rechts blijven de producten onaangeroerd.
  *
  * Op desktop is de sectie de helft van de vensterbreedte hoog (de banner is
  * 2:1), met een plafond van 44rem. Zo wordt er bij 1440px vrijwel niets
- * weggesneden; alleen op heel brede schermen gaat er wat lucht bovenaan en
- * vloer onderaan af. De beeldpositie ligt iets boven het midden, zodat het
- * kledingrek bovenin heel blijft.
+ * weggesneden.
  *
  * LET OP: dit is bewust een hoogte en geen `aspect-ratio` met een `max-h`.
  * Bij die combinatie rekent de browser de breedte terug uit de geknipte
  * hoogte, en dan is de sectie op een 1920px-scherm nog maar 1408px breed
  * met een witte strook rechts.
  *
+ * Op telefoon wordt er bovendien ingezoomd (scale 1,4). Zonder die zoom snijdt
+ * object-cover een staande strook uit een liggende banner, en dan is de
+ * onderste kwart van de hero kale vloer en de bovenste kwart kale lucht. Met
+ * de zoom staan de gele podia met de producten vol in beeld.
+ *
  * De banner is de grootste afbeelding van de pagina en bepaalt de LCP.
- * Daarom: fetchpriority="high" en geen lazy loading. De foto komt uit
- * src/assets en gaat via astro:assets, zodat de PNG van 1,7 MB als WebP in
- * de juiste breedte aankomt; breedte en hoogte zet astro:assets er zelf bij.
+ * Daarom: fetchpriority="high" en geen lazy loading. Het is nu ook nog maar
+ * een afbeelding in plaats van twee, dus een telefoon haalt niet langer een
+ * bureaubladversie op die hij toch niet laat zien.
  */
 
 interface Props {
@@ -40,33 +51,34 @@ const { title, text, primary, secondary } = Astro.props;
 ---
 
 <section
-	class="relative overflow-hidden bg-sky lg:h-[min(50vw,44rem)]"
+	class="relative isolate overflow-hidden bg-sky lg:h-[min(50vw,44rem)]"
 	aria-labelledby="hero-titel"
 >
-	<!-- Desktop: de banner vult de sectie, de tekst ligt erover -->
-	<div class="absolute inset-0 hidden lg:block" aria-hidden="true">
+	<div class="absolute inset-0" aria-hidden="true">
 		<Image
 			src={banner}
 			alt=""
-			widths={[1024, 1440, 1774]}
+			widths={[480, 768, 1024, 1440, 1774]}
 			sizes="100vw"
 			quality={75}
 			loading="eager"
 			fetchpriority="high"
 			decoding="async"
-			class="size-full object-cover object-[right_40%]"
+			class="size-full origin-[50%_42%] scale-[1.4] object-cover object-[72%_center] lg:origin-center lg:scale-100 lg:object-[right_40%]"
 		/>
-		<!-- Een zacht verloop links houdt de tekst leesbaar op brede schermen,
-		     waar de banner ver naar links wordt uitgerekt. -->
 		<div
-			class="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-sky via-sky/60 to-transparent"
+			class="absolute inset-0 bg-gradient-to-b from-sky from-30% via-sky/85 via-60% to-transparent lg:hidden"
+		>
+		</div>
+		<div
+			class="absolute inset-y-0 left-0 hidden w-1/2 bg-gradient-to-r from-sky via-sky/60 to-transparent lg:block"
 		>
 		</div>
 	</div>
 
 	<div class="relative mx-auto flex h-full max-w-[1400px] px-4 sm:px-6">
 		<div
-			class="flex min-h-[22rem] flex-col justify-center py-12 sm:py-16 lg:min-h-0 lg:max-w-xl lg:py-24"
+			class="flex min-h-[30rem] flex-col justify-start pt-10 pb-16 sm:min-h-[34rem] sm:pt-14 lg:min-h-0 lg:max-w-xl lg:justify-center lg:py-24"
 		>
 			<p class="text-sm font-semibold tracking-wide text-accent uppercase">H&amp;H Shops</p>
 			<h1
@@ -86,17 +98,4 @@ const { title, text, primary, secondary } = Astro.props;
 			</div>
 		</div>
 	</div>
-
-	<!-- Telefoon en tablet: de banner onder de tekst -->
-	<Image
-		src={banner}
-		alt="Speelgoed, tassen, schoenen, cosmetica en huishoudelijke artikelen op gele podia"
-		widths={[480, 768, 1024]}
-		sizes="100vw"
-		quality={75}
-		loading="eager"
-		fetchpriority="high"
-		decoding="async"
-		class="block w-full lg:hidden"
-	/>
 </section>

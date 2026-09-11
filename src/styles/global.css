@@ -102,6 +102,26 @@
 	*/
 	--font-sans:
 		"Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+	/*
+	  De recensiebalk op telefoon: de kaarten schuiven onafgebroken naar
+	  links. De baan bevat de recensies twee keer; op -50% staat de tweede
+	  reeks precies waar de eerste begon, dus de sprong terug naar 0 is
+	  onzichtbaar. 45 seconden is traag genoeg om mee te lezen.
+
+	  Alleen de animatie staat hier; of hij draait bepaalt het component met
+	  `motion-safe:`. Wie geen beweging wil, veegt zelf.
+	*/
+	--animate-recensies: recensies 45s linear infinite;
+
+	@keyframes recensies {
+		from {
+			transform: translateX(0);
+		}
+		to {
+			transform: translateX(-50%);
+		}
+	}
 }
 
 @layer base {
@@ -118,6 +138,29 @@
 		background-color: var(--color-canvas);
 		color: var(--color-text);
 		-webkit-text-size-adjust: 100%;
+	}
+
+	/*
+	  Lange woorden mogen de pagina niet breder maken dan het scherm.
+
+	  Een productnaam als "Babyfruitvoederfopspeen" past niet in een
+	  kaartkolom van 171px. Zonder deze regel schuift zo'n woord de kaart
+	  open, wordt de pagina breder dan de telefoon en kun je heen en weer
+	  vegen met een witte strook aan de rechterkant. Dit is de echte
+	  oplossing: het woord breekt af.
+	*/
+	body {
+		overflow-wrap: break-word;
+	}
+
+	/*
+	  En dit is het vangnet eronder. Eén vergeten `min-w-0` of een brede
+	  tabel is genoeg om de horizontale schuifbalk terug te brengen, en op
+	  een telefoon is dat meteen kapot. `clip` en niet `hidden`: clip maakt
+	  geen scrollcontainer, dus de plakkende kop blijft gewoon plakken.
+	*/
+	body {
+		overflow-x: clip;
 	}
 
 	/*
@@ -160,5 +203,17 @@
 			transition-duration: 0.01ms !important;
 			scroll-behavior: auto !important;
 		}
+	}
+}
+
+/*
+  De recensiebalk schuift vanzelf; een schuifbalk eronder zou alleen maar
+  meebewegen en rommelig staan. Vegen blijft gewoon werken.
+*/
+@utility geen-schuifbalk {
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		display: none;
 	}
 }

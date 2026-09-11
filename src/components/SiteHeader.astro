@@ -72,8 +72,18 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 			</button>
 
 			<!-- Logo. Het bestand is strak bijgesneden (6px rand), dus het lijnt links
-			     uit met de rest van de pagina zonder negatieve marges. -->
-			<a href="/" class="shrink-0 rounded-control" aria-label="H&H Shops, naar de startpagina">
+			     uit met de rest van de pagina zonder negatieve marges.
+
+			     Het logo mag krimpen (geen shrink-0, wel min-w-0). Op een scherm van
+			     320px passen hamburger, logo op ware breedte en de drie knoppen
+			     rechts er samen niet meer in, en dan werd de pagina breder dan de
+			     telefoon. `object-contain` houdt de verhouding heel; boven ~340px
+			     verandert er niets. -->
+			<a
+				href="/"
+				class="min-w-0 shrink rounded-control"
+				aria-label="H&H Shops, naar de startpagina"
+			>
 				<Image
 					src={logo}
 					alt=""
@@ -81,7 +91,7 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 					sizes="175px"
 					loading="eager"
 					fetchpriority="high"
-					class="h-8 w-auto sm:h-10"
+					class="h-8 w-auto max-w-full object-contain object-left sm:h-10"
 				/>
 			</a>
 

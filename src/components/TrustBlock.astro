@@ -1,6 +1,7 @@
 ---
 import { Icon } from 'astro-icon/components';
 import { ratingSource, reviews } from '../lib/reviews.ts';
+import RecensieKaart from './RecensieKaart.astro';
 
 /*
  * Het vertrouwensblok: de score als grote, gecentreerde kop, daaronder de
@@ -13,6 +14,18 @@ import { ratingSource, reviews } from '../lib/reviews.ts';
  *
  * De recensies staan op desktop op vier kolommen, hetzelfde raster als de
  * productrijen. De teksten zijn kort, op twee kolommen werden de kaarten leeg.
+ *
+ * Op telefoon en tablet schuiven ze in plaats daarvan onafgebroken naar links
+ * langs het scherm. Vier kaarten onder elkaar duwen de rest van de pagina ver
+ * weg, en dan leest niemand ze; in een lopende balk komen ze alle vier vanzelf
+ * voorbij. De reeks staat er twee keer, zodat de sprong terug naar het begin
+ * niet te zien is; de tweede reeks is `aria-hidden`, anders zou een
+ * schermlezer elke recensie dubbel voorlezen.
+ *
+ * De balk staat stil zodra je hem aanraakt of er met de muis op staat, en
+ * beweegt helemaal niet voor wie in zijn toestel heeft gezegd geen animaties
+ * te willen (`motion-safe`). In beide gevallen kun je er gewoon doorheen
+ * vegen.
  *
  * De inhoud komt uit src/lib/reviews.ts: echte recensies van de oude site,
  * met bol.com als bron. Het blok werkt met elke bron en elke schaal (10 op
@@ -30,9 +43,6 @@ const scoreLabel = ratingSource.score.toLocaleString('nl-NL', {
 });
 // Voor de sterren onder de kop: de score omgerekend naar een schaal van 5.
 const scoreStars = Math.round((ratingSource.score / ratingSource.max) * 5);
-
-/** De beginletter voor het avatar-rondje. */
-const initial = (name: string) => name.trim().charAt(0).toUpperCase();
 ---
 
 <section aria-labelledby="reviews-titel">
@@ -69,37 +79,20 @@ const initial = (name: string) => name.trim().charAt(0).toUpperCase();
 		)}
 	</div>
 
-	<ul class="mt-10 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4" aria-label="Recensies">
-		{reviews.map((review) => (
-			<li class="flex flex-col rounded-card border border-border bg-surface p-6">
-				<div class="flex items-center justify-between">
-					<Icon name="ph:quotes" class="size-7 text-accent/30" aria-hidden="true" />
-					<div class="flex gap-0.5 text-star" aria-hidden="true">
-						{stars.map((n) => (
-							<Icon name="ph:star-fill" class={`size-4 ${n <= review.rating ? '' : 'opacity-25'}`} />
-						))}
-					</div>
-					<span class="sr-only">{review.rating} van de 5 sterren</span>
-				</div>
-				<blockquote class="mt-4 flex-1 text-base leading-relaxed text-pretty">
-					<p>{review.text}</p>
-				</blockquote>
-				<div class="mt-6 flex items-center gap-3 border-t border-border pt-4">
-					<span
-						class="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-sm font-semibold text-accent"
-						aria-hidden="true"
-					>
-						{initial(review.author)}
-					</span>
-					<div class="min-w-0">
-						<p class="text-sm font-semibold">{review.author}</p>
-						<p class="text-xs text-text-muted">
-							{review.date ?? `Klant via ${ratingSource.name}`}
-						</p>
-					</div>
-				</div>
-			</li>
-		))}
-	</ul>
+	<!-- Op telefoon een lopende balk, op desktop een raster van vier. -->
+	<div
+		class="mt-10 max-lg:-mx-4 max-lg:overflow-x-auto max-lg:geen-schuifbalk sm:max-lg:-mx-6"
+	>
+		<div
+			class="max-lg:flex max-lg:w-max max-lg:hover:[animation-play-state:paused] max-lg:motion-safe:animate-recensies"
+		>
+			<ul class="grid grid-cols-4 gap-6 max-lg:flex max-lg:gap-4 max-lg:pr-4" aria-label="Recensies">
+				{reviews.map((review) => <RecensieKaart review={review} />)}
+			</ul>
+			<ul class="hidden max-lg:flex max-lg:gap-4 max-lg:pr-4" aria-hidden="true">
+				{reviews.map((review) => <RecensieKaart review={review} />)}
+			</ul>
+		</div>
+	</div>
 	</div>
 </section>

@@ -1,0 +1,47 @@
+---
+import { Icon } from 'astro-icon/components';
+import { ratingSource } from '../lib/reviews.ts';
+
+/*
+ * Een enkele recensie. Staat apart omdat TrustBlock de kaarten op telefoon
+ * twee keer neerzet: een lopende balk heeft een tweede reeks nodig om
+ * onzichtbaar terug te kunnen springen.
+ */
+
+interface Props {
+	review: { author: string; text: string; rating: number; date?: string };
+}
+
+const { review } = Astro.props;
+const stars = [1, 2, 3, 4, 5] as const;
+const initial = review.author.trim().charAt(0).toUpperCase();
+---
+
+<li
+	class="flex flex-col rounded-card border border-border bg-surface p-6 max-lg:w-[78vw] max-lg:max-w-[21rem] max-lg:shrink-0"
+>
+	<div class="flex items-center justify-between">
+		<Icon name="ph:quotes" class="size-7 text-accent/30" aria-hidden="true" />
+		<div class="flex gap-0.5 text-star" aria-hidden="true">
+			{stars.map((n) => (
+				<Icon name="ph:star-fill" class={`size-4 ${n <= review.rating ? '' : 'opacity-25'}`} />
+			))}
+		</div>
+		<span class="sr-only">{review.rating} van de 5 sterren</span>
+	</div>
+	<blockquote class="mt-4 flex-1 text-base leading-relaxed text-pretty">
+		<p>{review.text}</p>
+	</blockquote>
+	<div class="mt-6 flex items-center gap-3 border-t border-border pt-4">
+		<span
+			class="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-sm font-semibold text-accent"
+			aria-hidden="true"
+		>
+			{initial}
+		</span>
+		<div class="min-w-0">
+			<p class="text-sm font-semibold">{review.author}</p>
+			<p class="text-xs text-text-muted">{review.date ?? `Klant via ${ratingSource.name}`}</p>
+		</div>
+	</div>
+</li>

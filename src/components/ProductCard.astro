@@ -41,6 +41,8 @@ interface Props {
 	optionSummary?: string;
 	/** Eager voor de eerste kaarten boven de vouw. */
 	loading?: 'lazy' | 'eager';
+	/** Extra klassen, bijvoorbeeld de breedte in een veegbalk. */
+	class?: string;
 }
 
 const {
@@ -56,6 +58,7 @@ const {
 	stockQuantity,
 	optionSummary,
 	loading = 'lazy',
+	class: extraClass = '',
 } = Astro.props;
 
 const soldOut = stockQuantity <= 0;
@@ -67,7 +70,7 @@ const stockLabel = soldOut
 		: 'Op voorraad';
 ---
 
-<article class="group relative flex flex-col">
+<article class={`group @container relative flex flex-col ${extraClass}`}>
 	<div class="relative aspect-square overflow-hidden rounded-card bg-surface-hover">
 		<ProductImage
 			src={image.url}
@@ -98,8 +101,17 @@ const stockLabel = soldOut
 	</div>
 
 	<div class="flex flex-1 flex-col gap-1 pt-3">
-		<div class="flex items-start justify-between gap-3">
-			<h3 class="text-sm leading-snug font-semibold">
+		<!-- Naam en prijs naast elkaar zodra de kaart breed genoeg is, eronder als
+		     hij smal is. Dat hangt niet van het scherm af maar van de kaart zelf:
+		     in de veegbalk op de startpagina is een kaart 150px, in het raster op
+		     desktop ruim 300px. Vandaar een containerquery en geen breekpunt.
+		     Zonder dit hield de naam nog geen 90px over en brak "opbergsysteem"
+		     middenin. -->
+		<div class="flex flex-col gap-0.5 @min-[13rem]:flex-row @min-[13rem]:items-start @min-[13rem]:justify-between @min-[13rem]:gap-3">
+			<!-- min-w-0: zonder dit mag de titel niet krimpen onder zijn langste
+			     woord, en duwt een naam als "Babyfruitvoederfopspeen" de prijs
+			     de kaart uit. -->
+			<h3 class="min-w-0 text-sm leading-snug font-semibold">
 				<!-- Het uitgerekte anker maakt de hele kaart klikbaar. -->
 				<a href={`/product/${slug}`} class="after:absolute after:inset-0 after:rounded-card">
 					{name}

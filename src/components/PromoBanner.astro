@@ -3,17 +3,27 @@ import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 
 /*
- * De tussenbanner: de foto van Adam op ware verhouding, met een boodschap en
- * een knop erover.
+ * De tussenbanner: de foto vult het hele blok, de boodschap ligt erover.
  *
- * De foto wordt niet bijgesneden. Op desktop bepaalt de foto de hoogte van het
- * blok en ligt de tekst links erover, op een donkergroen verloop over de
- * linker 60%. De rechterkant van de foto blijft zoals hij is. Op telefoon en
- * tablet is de foto te laag voor de tekst; daar staat de tekst op een groen
- * vlak boven de foto.
+ * De foto is de achtergrond, op elk formaat. Op telefoon stond hij eerst als
+ * los plaatje onder een groen tekstvlak; dat leest als twee blokken onder
+ * elkaar in plaats van een banner. Nu is het een vlak: producten bovenin, de
+ * tekst eronder op een donkergroen verloop dat uit de onderrand opkomt.
+ *
+ * Op desktop houdt het blok de verhouding van de foto (2066 x 761), dus daar
+ * wordt er niets weggesneden en ligt de tekst links op een verloop naar
+ * rechts.
+ *
+ * Op telefoon en tablet bepaalt een minimumhoogte het blok en snijdt
+ * object-cover er een staande strook uit het midden: de knuffelbeer, de
+ * ringstapelaar en het houten autootje. Die staan in de onderste helft van de
+ * foto, dus de tekst staat daar bovenaan en het verloop komt van boven. Andersom
+ * (tekst onderaan) legt het verloop precies over de producten heen en houd je
+ * een groen vlak over.
  *
  * De foto komt uit src/assets en gaat via astro:assets, zodat de PNG van
- * 1,7 MB als kleine WebP bij de bezoeker aankomt.
+ * 1,7 MB als kleine WebP bij de bezoeker aankomt. Het is nu een afbeelding in
+ * plaats van twee.
  */
 
 interface Props {
@@ -29,27 +39,36 @@ const { eyebrow, title, text, cta, image, imageAlt } = Astro.props;
 ---
 
 <section class="mx-auto max-w-[1400px] px-4 sm:px-6" aria-labelledby="promo-titel">
-	<div class="relative overflow-hidden rounded-card bg-accent-hover text-white">
-		<!-- Desktop: de foto op ware verhouding, tekst erover -->
-		<div class="relative hidden lg:block">
-			<Image
-				src={image}
-				alt={imageAlt}
-				widths={[768, 1080, 1400, 2066]}
-				sizes="(min-width: 1400px) 1352px, calc(100vw - 48px)"
-				quality={72}
-				loading="lazy"
-				decoding="async"
-				class="block w-full"
-			/>
-			<div
-				class="absolute inset-y-0 left-0 w-3/5 bg-gradient-to-r from-accent-hover/90 via-accent-hover/60 to-transparent"
-				aria-hidden="true"
-			>
-			</div>
+	<div
+		class="relative isolate flex min-h-[30rem] overflow-hidden rounded-card bg-accent-hover text-white sm:min-h-[24rem] lg:aspect-[2066/761] lg:min-h-0"
+	>
+		<Image
+			src={image}
+			alt={imageAlt}
+			widths={[480, 768, 1080, 1400, 2066]}
+			sizes="(min-width: 1400px) 1352px, calc(100vw - 32px)"
+			quality={72}
+			loading="lazy"
+			decoding="async"
+			class="absolute inset-0 size-full origin-[50%_45%] scale-[1.15] object-cover object-[38%_center] lg:origin-center lg:scale-100 lg:object-center"
+		/>
+
+		<!-- Verloop over de foto, zodat witte tekst leesbaar blijft: op telefoon
+		     van onder naar boven, op desktop van links naar rechts. -->
+		<div
+			class="absolute inset-0 bg-gradient-to-b from-accent-hover from-35% via-accent-hover/85 via-65% to-accent-hover/10 lg:hidden"
+			aria-hidden="true"
+		>
+		</div>
+		<div
+			class="absolute inset-y-0 left-0 hidden w-3/5 bg-gradient-to-r from-accent-hover/95 via-accent-hover/65 to-transparent lg:block"
+			aria-hidden="true"
+		>
 		</div>
 
-		<div class="relative max-w-xl px-6 py-12 sm:px-10 sm:py-16 lg:absolute lg:inset-y-0 lg:left-0 lg:flex lg:flex-col lg:justify-center lg:px-14 lg:py-0">
+		<div
+			class="relative flex max-w-xl flex-col justify-start px-6 py-10 sm:px-10 sm:py-12 lg:justify-center lg:px-14"
+		>
 			{eyebrow && (
 				<p class="text-sm font-semibold tracking-wide text-white/80 uppercase">{eyebrow}</p>
 			)}
@@ -68,17 +87,5 @@ const { eyebrow, title, text, cta, image, imageAlt } = Astro.props;
 				<Icon name="ph:arrow-right" class="size-5" aria-hidden="true" />
 			</a>
 		</div>
-
-		<!-- Telefoon en tablet: de foto onder de tekst -->
-		<Image
-			src={image}
-			alt={imageAlt}
-			widths={[480, 768, 1080]}
-			sizes="calc(100vw - 32px)"
-			quality={72}
-			loading="lazy"
-			decoding="async"
-			class="block w-full lg:hidden"
-		/>
 	</div>
 </section>
