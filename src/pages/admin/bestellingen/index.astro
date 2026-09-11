@@ -1,0 +1,93 @@
+---
+import { Icon } from 'astro-icon/components';
+import Paginering from '../../../components/admin/Paginering.astro';
+import { getDb } from '../../../db/client.ts';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { leesPagina, metFilters, PER_PAGINA, pagineer } from '../../../lib/admin/paginering.ts';
+import { leesBestelfilter, telPerStatus, zoekBestellingen } from '../../../lib/bestellen/lezen.ts';
+import { type Bestelstatus, STATUS_TEKST } from '../../../lib/bestellen/status.ts';
+import { formatEuro } from '../../../lib/price.ts';
+
+/*
+ * De bestellingenlijst: filteren op status, zoeken op nummer, naam of
+ * e-mail, bladeren. Betaald en nog niet verzonden staat bovenaan in de
+ * telling, want dat is het werk.
+ */
+
+const PAD = '/admin/bestellingen';
+const params = Astro.url.searchParams;
+const db = getDb();
+const pagina = leesPagina(params.get('pagina'));
+const filter = leesBestelfilter(params, (pagina - 1) * PER_PAGINA, PER_PAGINA);
+const [{ rijen, totaal }, telling] = await Promise.all([zoekBestellingen(db, filter), telPerStatus(db)]);
+const paginering = pagineer(pagina, totaal);
+
+const statussen: { waarde: Bestelstatus | ''; label: string; n: number }[] = [
+	{ waarde: '', label: 'Alle', n: Object.values(telling).reduce((a, b) => a + b, 0) },
+	{ waarde: 'paid', label: 'Te verzenden', n: telling.paid },
+	{ waarde: 'shipped', label: 'Verzonden', n: telling.shipped },
+	{ waarde: 'awaiting_payment', label: 'Wacht op betaling', n: telling.awaiting_payment },
+	{ waarde: 'cancelled', label: 'Geannuleerd', n: telling.cancelled },
+];
+const datum = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const kleur: Record<Bestelstatus, string> = {
+	paid: 'bg-accent-subtle text-accent',
+	shipped: 'bg-surface-hover text-text-muted',
+	awaiting_payment: 'border border-border-strong bg-surface text-text',
+	cancelled: 'bg-danger-subtle text-danger',
+};
+---
+
+<AdminLayout title="Bestellingen">
+	<h1 class="text-2xl font-semibold">Bestellingen</h1>
+
+	<nav aria-label="Status" class="mt-5 flex flex-wrap gap-2">
+		{statussen.map((s) => (
+			<a href={metFilters(PAD, params, { status: s.waarde, pagina: '' })} aria-current={filter.status === s.waarde ? 'page' : undefined} class:list={['inline-flex min-h-10 items-center gap-2 rounded-control border px-3 text-sm font-medium', filter.status === s.waarde ? 'border-accent bg-accent-subtle text-accent' : 'border-border-strong bg-surface text-text hover:bg-surface-hover']}>
+				{s.label} <span class="text-xs text-text-muted">{s.n}</span>
+			</a>
+		))}
+	</nav>
+
+	<form method="GET" action={PAD} class="mt-4 flex flex-wrap gap-2">
+		{filter.status && <input type="hidden" name="status" value={filter.status} />}
+		<label for="zoek" class="sr-only">Zoeken</label>
+		<input id="zoek" name="q" type="search" value={filter.q} placeholder="Bestelnummer, naam of e-mail" class="min-h-10 w-72 max-w-full rounded-control border border-border-strong bg-surface px-3 text-sm" />
+		<button type="submit" class="inline-flex min-h-10 items-center gap-2 rounded-control border border-border-strong bg-surface px-3 text-sm font-medium hover:bg-surface-hover">
+			<Icon name="ph:magnifying-glass" class="size-4" aria-hidden="true" />
+			Zoeken
+		</button>
+	</form>
+
+	{rijen.length === 0 ? (
+		<p class="mt-8 rounded-card border border-border bg-surface p-6 text-sm text-text-muted">Geen bestellingen gevonden.</p>
+	) : (
+		<div class="mt-6 overflow-x-auto rounded-card border border-border bg-surface">
+			<table class="w-full text-sm">
+				<thead class="bg-surface-hover text-left text-xs uppercase tracking-wide text-text-muted">
+					<tr>
+						<th class="px-4 py-3 font-medium">Nummer</th>
+						<th class="px-4 py-3 font-medium">Datum</th>
+						<th class="px-4 py-3 font-medium">Klant</th>
+						<th class="px-4 py-3 font-medium text-right">Artikelen</th>
+						<th class="px-4 py-3 font-medium text-right">Totaal</th>
+						<th class="px-4 py-3 font-medium">Status</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-border">
+					{rijen.map((r) => (
+						<tr class="hover:bg-surface-hover">
+							<td class="px-4 py-3 font-medium"><a href={`${PAD}/${r.id}`} class="text-accent hover:underline">{r.number}</a></td>
+							<td class="px-4 py-3 whitespace-nowrap text-text-muted">{datum.format(r.createdAt)}</td>
+							<td class="px-4 py-3"><span class="block">{r.name}</span><span class="block text-xs text-text-muted">{r.email}</span></td>
+							<td class="px-4 py-3 text-right tabular-nums">{r.artikelen}</td>
+							<td class="px-4 py-3 text-right tabular-nums">{formatEuro(r.totalCents)}</td>
+							<td class="px-4 py-3"><span class:list={['inline-flex items-center rounded-control px-2 py-0.5 text-xs font-medium whitespace-nowrap', kleur[r.status]]}>{STATUS_TEKST[r.status]}</span></td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</div>
+	)}
+	<Paginering paginering={paginering} pad={PAD} params={params} eenheid="bestellingen" />
+</AdminLayout>

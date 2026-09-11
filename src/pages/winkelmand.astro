@@ -6,6 +6,7 @@ import Melding from '../components/klant/Melding.astro';
 import Price from '../components/Price.astro';
 import ProductImage from '../components/ProductImage.astro';
 import Layout from '../layouts/Layout.astro';
+import { verzendkosten } from '../lib/bestellen/bedragen.ts';
 import { leesFlash } from '../lib/klanten/flash.ts';
 import { lokaalPad } from '../lib/klanten/pad.ts';
 import { haalWinkelmand, MAX_AANTAL } from '../lib/klanten/winkelmand.ts';
@@ -16,10 +17,11 @@ import { formatEuro } from '../lib/price.ts';
  * door de middleware wordt afgehandeld en terugkomt op deze pagina. Werkt
  * zonder JavaScript.
  *
- * Afrekenen is er nog niet: die knop staat uit tot fase 4 is besloten.
+ * Afrekenen gaat via /afrekenen; de knop hieronder is een gewone link.
  */
 
 const overzicht = await haalWinkelmand(Astro);
+const verzendCents = verzendkosten(overzicht.subtotaalCents);
 const flash = leesFlash(Astro.cookies);
 const terug = lokaalPad(Astro.url.searchParams.get('terug'), '/categorieen');
 const naar = '/winkelmand';
@@ -150,16 +152,19 @@ const knop =
 								<dt>Subtotaal</dt>
 								<dd class="font-medium tabular-nums">{formatEuro(overzicht.subtotaalCents)}</dd>
 							</div>
-							<div class="flex justify-between gap-4 text-text-muted">
+							<div class="flex justify-between gap-4">
 								<dt>Verzendkosten</dt>
-								<dd>{overzicht.subtotaalCents >= 5000 ? 'Gratis' : 'Bij het afrekenen'}</dd>
+								<dd class="font-medium tabular-nums">{verzendCents === 0 ? 'Gratis' : formatEuro(verzendCents)}</dd>
+							</div>
+							<div class="flex justify-between gap-4 border-t border-border pt-2 text-base font-semibold">
+								<dt>Totaal</dt>
+								<dd class="tabular-nums">{formatEuro(overzicht.subtotaalCents + verzendCents)}</dd>
 							</div>
 						</dl>
 						<p class="mt-4 text-xs text-text-muted">Prijzen zijn inclusief btw. Gratis verzending vanaf € 50.</p>
-						<Button disabled block size="lg" class="mt-5">
+						<Button href="/afrekenen" block size="lg" class="mt-5">
 							Afrekenen
 						</Button>
-						<p class="mt-2 text-center text-xs text-text-muted">Afrekenen is binnenkort mogelijk.</p>
 						<a
 							href={terug}
 							class="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-control text-sm font-medium text-accent hover:underline"

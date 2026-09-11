@@ -1,5 +1,6 @@
 import { Pool } from '@neondatabase/serverless';
 import { drizzle, type NeonDatabase } from 'drizzle-orm/neon-serverless';
+import * as orders from './orders-schema.ts';
 import * as relations from './relations.ts';
 import * as tables from './schema.ts';
 
@@ -17,7 +18,9 @@ import * as tables from './schema.ts';
  * splitsing: hier staat wat beide gemeen hebben.
  */
 
-export const schema = { ...tables, ...relations };
+// De bestellingen zitten erbij zodat db.query.orders werkt; de auth- en
+// klantentabellen niet, die gaan overal via select().
+export const schema = { ...tables, ...relations, ...orders };
 
 export type Database = NeonDatabase<typeof schema>;
 

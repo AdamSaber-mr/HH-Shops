@@ -1,0 +1,47 @@
+---
+import Button from '../../components/Button.astro';
+import AccountPagina from '../../components/klant/AccountPagina.astro';
+import { bestellingenVanKlant } from '../../lib/bestellen/lezen.ts';
+import { STATUS_TEKST } from '../../lib/bestellen/status.ts';
+import { leesFlash } from '../../lib/klanten/flash.ts';
+import { formatEuro } from '../../lib/price.ts';
+
+/*
+ * De bestelgeschiedenis van een ingelogde klant. Elke regel linkt naar de
+ * statuspagina. Bestellingen van voor het account (als gast) staan er niet
+ * bij: die zijn niet aan het account gekoppeld.
+ */
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/account/inloggen?naar=%2Faccount%2Fbestellingen');
+
+const bestellingen = await bestellingenVanKlant(user.id);
+const datum = new Intl.DateTimeFormat('nl-NL', { dateStyle: 'long' });
+---
+
+<AccountPagina titel="Bestellingen" huidig="/account/bestellingen" melding={leesFlash(Astro.cookies)}>
+	{bestellingen.length === 0 ? (
+		<div class="rounded-card border border-border bg-surface p-8 text-center">
+			<p class="font-medium">Nog geen bestellingen</p>
+			<p class="mt-1 text-sm text-text-muted">Je bestellingen komen hier te staan, met de status en de artikelen.</p>
+			<Button href="/categorieen" class="mt-5">Bekijk de categorieën</Button>
+		</div>
+	) : (
+		<ul class="space-y-4">
+			{bestellingen.map((b) => (
+				<li>
+					<a href={`/bestelling/${b.token}`} class="block rounded-card border border-border bg-surface p-5 transition-colors hover:border-border-strong">
+						<div class="flex flex-wrap items-baseline justify-between gap-2">
+							<span class="font-semibold">{b.number}</span>
+							<span class="text-sm text-text-muted">{datum.format(b.createdAt)}</span>
+						</div>
+						<p class="mt-1 text-sm text-text-muted">{b.items.map((i) => `${i.quantity} x ${i.productName}`).join(', ')}</p>
+						<div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+							<span class:list={['inline-flex items-center rounded-control px-2 py-0.5 text-xs font-medium', b.status === 'cancelled' ? 'bg-danger-subtle text-danger' : 'bg-accent-subtle text-accent']}>{STATUS_TEKST[b.status]}</span>
+							<span class="font-medium tabular-nums">{formatEuro(b.totalCents)}</span>
+						</div>
+					</a>
+				</li>
+			))}
+		</ul>
+	)}
+</AccountPagina>

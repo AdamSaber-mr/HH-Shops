@@ -1,0 +1,134 @@
+---
+import { actions } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+import ProductImage from '../../../components/ProductImage.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { zetFlash } from '../../../lib/admin/flash.ts';
+import { adresRegels, bestellingOpId } from '../../../lib/bestellen/lezen.ts';
+import { STATUS_TEKST } from '../../../lib/bestellen/status.ts';
+import { formatEuro } from '../../../lib/price.ts';
+
+const id = Number.parseInt(Astro.params.id ?? '', 10);
+if (!Number.isFinite(id) || id <= 0) return new Response(null, { status: 404 });
+const pad = `/admin/bestellingen/${id}`;
+
+const verzonden = Astro.getActionResult(actions.bestellingen.verzonden);
+if (verzonden && !verzonden.error) {
+	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Bestelling op verzonden gezet.' });
+	return Astro.redirect(pad);
+}
+const controle = Astro.getActionResult(actions.bestellingen.controleren);
+if (controle && !controle.error) {
+	zetFlash(Astro.cookies, {
+		soort: 'ok',
+		tekst: `Gecontroleerd bij Mollie: ${controle.data.mollie ?? 'geen betaling'}, bestelling staat op ${STATUS_TEKST[controle.data.status]}.`,
+	});
+	return Astro.redirect(pad);
+}
+const fout = verzonden?.error?.message ?? controle?.error?.message ?? null;
+
+const order = await bestellingOpId(id);
+if (!order) return new Response(null, { status: 404 });
+
+const datum = new Intl.DateTimeFormat('nl-NL', { dateStyle: 'medium', timeStyle: 'short' });
+const knop = 'inline-flex min-h-10 items-center gap-2 rounded-control border border-border-strong bg-surface px-3 text-sm font-medium text-text hover:bg-surface-hover';
+const soorten: Record<string, string> = {
+	created: 'Geplaatst',
+	payment_created: 'Betaling aangemaakt',
+	payment_create_failed: 'Betaling aanmaken mislukt',
+	webhook: 'Webhook van Mollie',
+	controle: 'Status gecontroleerd',
+	status_changed: 'Status gewijzigd',
+	mail_sent: 'Mails verstuurd',
+	mail_failed: 'Mail mislukt',
+	conflict: 'Conflict',
+	nep_status: 'Testbetaling gekozen',
+	opschonen: 'Opschoonscript',
+};
+---
+
+<AdminLayout title={order.number}>
+	<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+		<a href="/admin/bestellingen" class="hover:text-accent hover:underline">Bestellingen</a>
+		<span aria-hidden="true"> / </span>
+		<span>{order.number}</span>
+	</nav>
+	<div class="mt-2 flex flex-wrap items-start justify-between gap-4">
+		<div>
+			<h1 class="text-2xl font-semibold">{order.number}</h1>
+			<p class="mt-1 text-sm text-text-muted">{datum.format(order.createdAt)}, status {STATUS_TEKST[order.status]}{order.paymentMethod ? `, betaald via ${order.paymentMethod}` : ''}</p>
+		</div>
+		<div class="flex flex-wrap gap-2">
+			{order.status === 'paid' && (
+				<form method="POST" action={actions.bestellingen.verzonden}>
+					<input type="hidden" name="id" value={order.id} />
+					<button type="submit" class="inline-flex min-h-10 items-center gap-2 rounded-control bg-accent px-3 text-sm font-medium text-white hover:bg-accent-hover">
+						<Icon name="ph:truck" class="size-4" aria-hidden="true" />
+						Markeer als verzonden
+					</button>
+				</form>
+			)}
+			{order.molliePaymentId && (
+				<form method="POST" action={actions.bestellingen.controleren}>
+					<input type="hidden" name="id" value={order.id} />
+					<button type="submit" class={knop}>
+						<Icon name="ph:arrow-counter-clockwise" class="size-4" aria-hidden="true" />
+						Controleer bij Mollie
+					</button>
+				</form>
+			)}
+		</div>
+	</div>
+	{fout && <p role="alert" class="mt-4 rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">{fout}</p>}
+
+	<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+		<section class="rounded-card border border-border bg-surface p-5">
+			<h2 class="text-lg font-semibold">Artikelen</h2>
+			<ul class="mt-4 divide-y divide-border">
+				{order.items.map((i) => (
+					<li class="flex gap-3 py-3 text-sm">
+						<div class="size-12 shrink-0 overflow-hidden rounded-control bg-surface-hover">
+							{i.imageUrl && <ProductImage src={i.imageUrl} alt="" width={200} height={200} widths={[96]} sizes="48px" class="size-full object-cover" />}
+						</div>
+						<div class="min-w-0 flex-1">
+							<p class="font-medium">{i.productId ? <a href={`/admin/producten/${i.productId}`} class="text-accent hover:underline">{i.productName}</a> : i.productName}</p>
+							<p class="text-text-muted">{i.quantity} x {formatEuro(i.unitPriceCents)}{i.optionText ? `, ${i.optionText}` : ''}, {i.sku}, {i.vatRate}% btw</p>
+						</div>
+						<p class="font-medium tabular-nums">{formatEuro(i.lineTotalCents)}</p>
+					</li>
+				))}
+			</ul>
+			<dl class="mt-4 space-y-1 border-t border-border pt-4 text-sm">
+				<div class="flex justify-between"><dt>Subtotaal</dt><dd class="tabular-nums">{formatEuro(order.subtotalCents)}</dd></div>
+				<div class="flex justify-between"><dt>Verzendkosten</dt><dd class="tabular-nums">{formatEuro(order.shippingCents)}</dd></div>
+				<div class="flex justify-between font-semibold"><dt>Totaal</dt><dd class="tabular-nums">{formatEuro(order.totalCents)}</dd></div>
+				<div class="flex justify-between text-text-muted"><dt>Waarvan btw</dt><dd class="tabular-nums">{formatEuro(order.vatCents)}</dd></div>
+			</dl>
+		</section>
+
+		<div class="space-y-6">
+			<section class="rounded-card border border-border bg-surface p-5 text-sm">
+				<h2 class="text-lg font-semibold">Klant</h2>
+				<p class="mt-3">{adresRegels(order).map((r) => <span class="block">{r}</span>)}</p>
+				<p class="mt-3"><a href={`mailto:${order.email}`} class="text-accent hover:underline">{order.email}</a></p>
+				<p class="text-text-muted">{order.phone ?? 'Geen telefoonnummer'}{order.userId ? ', heeft een account' : ', gast'}</p>
+				{order.customerNote && <p class="mt-3 rounded-control bg-surface-hover px-3 py-2">Opmerking: {order.customerNote}</p>}
+				<p class="mt-3 text-xs text-text-muted">Mollie-id: {order.molliePaymentId ?? 'geen'}. Bevestiging verstuurd: {order.confirmationSentAt ? datum.format(order.confirmationSentAt) : 'nee'}.</p>
+				<a href={`/bestelling/${order.token}`} class="mt-3 inline-flex items-center gap-1 text-accent hover:underline">Statuspagina van de klant <Icon name="ph:arrow-right" class="size-4" aria-hidden="true" /></a>
+			</section>
+
+			<section class="rounded-card border border-border bg-surface p-5 text-sm">
+				<h2 class="text-lg font-semibold">Logboek</h2>
+				<ol class="mt-3 space-y-2">
+					{order.events.map((e) => (
+						<li class:list={['rounded-control px-3 py-2', e.kind === 'conflict' || e.kind === 'mail_failed' ? 'bg-danger-subtle' : 'bg-surface-hover']}>
+							<span class="block text-xs text-text-muted">{datum.format(e.createdAt)}</span>
+							<span class="font-medium">{soorten[e.kind] ?? e.kind}</span>
+							{Object.keys(e.payload).length > 0 && <span class="block text-xs text-text-muted">{JSON.stringify(e.payload)}</span>}
+						</li>
+					))}
+				</ol>
+			</section>
+		</div>
+	</div>
+</AdminLayout>

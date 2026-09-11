@@ -1,5 +1,7 @@
+import { afrekenenActions } from './afrekenen.ts';
 import { auth } from './auth.ts';
 import { beheerdersActions } from './beheerders.ts';
+import { bestellingenActions } from './bestellingen.ts';
 import { categorieenActions } from './categorieen.ts';
 import { favorietenActions } from './favorieten.ts';
 import { fotosActions } from './fotos.ts';
@@ -23,4 +25,6 @@ export const server = {
 	klant: klantActions,
 	winkelmand: winkelmandActions,
 	favorieten: favorietenActions,
+	afrekenen: afrekenenActions,
+	bestellingen: bestellingenActions,
 };
