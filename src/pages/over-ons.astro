@@ -1,12 +1,9 @@
 ---
 import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
-import huishoudelijk from '../assets/categorieen/huishoudelijke-artikelen.png';
-import kinder from '../assets/categorieen/kinder-artikelen.png';
-import schoenen from '../assets/categorieen/schoenen.png';
 import Button from '../components/Button.astro';
 import Layout from '../layouts/Layout.astro';
-import { listActiveProducts, listCategories } from '../lib/catalog.ts';
+import { kaartFoto, listActiveProducts, listCategories } from '../lib/catalog.ts';
 import { ratingSource, reviews } from '../lib/reviews.ts';
 import { site } from '../lib/site.ts';
 
@@ -33,6 +30,20 @@ import { site } from '../lib/site.ts';
 const [producten, categorieen] = await Promise.all([listActiveProducts(), listCategories()]);
 const aantalProducten = producten.length;
 const aantalCategorieen = categorieen.filter((c) => c.productCount > 0).length;
+
+// De collage in de hero: drie categoriefoto's uit de database, dezelfde als
+// de kaarten op de startpagina. Het liefst kinderartikelen (de hoge foto
+// links), huishoudelijke artikelen en schoenen; ontbreekt daar een foto, dan
+// schuift de eerstvolgende categorie met foto in. De foto's worden in het
+// beheerpaneel beheerd, dus een nieuw beeld voor kinderartikelen komt
+// vanzelf ook hier terecht.
+const metFoto = categorieen
+	.map((c) => ({ slug: c.slug, name: c.name, foto: kaartFoto(c) }))
+	.filter((c): c is typeof c & { foto: NonNullable<typeof c.foto> } => c.foto !== null);
+const voorkeur = ['kinder-artikelen', 'huishoudelijke-artikelen', 'schoenen'];
+const collage = [...voorkeur.flatMap((slug) => metFoto.filter((c) => c.slug === slug)), ...metFoto]
+	.filter((c, index, alle) => alle.indexOf(c) === index)
+	.slice(0, 3);
 const score = ratingSource.score.toLocaleString('nl-NL', {
 	minimumFractionDigits: 1,
 	maximumFractionDigits: 1,
@@ -126,48 +137,33 @@ const waarden = [
 			</div>
 
 			<!--
-				Een collage van drie categoriefoto's, met een zwevend kaartje met de
-				beoordeling. Er zijn geen foto's van het team of het pand; de
-				producten zijn wat de winkel is, dus die laten we zien.
+				Een collage van drie categoriefoto's uit de database, met een zwevend
+				kaartje met de beoordeling. Er zijn geen foto's van het team of het
+				pand; de producten zijn wat de winkel is, dus die laten we zien.
 			-->
 			<div class="relative pb-6">
 				<div class="grid grid-cols-2 gap-3 sm:gap-4">
-					<div class="row-span-2 overflow-hidden rounded-card bg-surface-hover">
-						<Image
-							src={kinder}
-							alt=""
-							widths={[320, 480, 640]}
-							sizes="(min-width: 1024px) 320px, 50vw"
-							quality={72}
-							loading="eager"
-							decoding="async"
-							class="size-full object-cover"
-						/>
-					</div>
-					<div class="aspect-[4/3] overflow-hidden rounded-card bg-surface-hover">
-						<Image
-							src={huishoudelijk}
-							alt=""
-							widths={[320, 480, 640]}
-							sizes="(min-width: 1024px) 320px, 50vw"
-							quality={72}
-							loading="eager"
-							decoding="async"
-							class="size-full object-cover"
-						/>
-					</div>
-					<div class="aspect-[4/3] overflow-hidden rounded-card bg-surface-hover">
-						<Image
-							src={schoenen}
-							alt=""
-							widths={[320, 480, 640]}
-							sizes="(min-width: 1024px) 320px, 50vw"
-							quality={72}
-							loading="eager"
-							decoding="async"
-							class="size-full object-cover"
-						/>
-					</div>
+					{collage.map((categorie, index) => (
+						<div
+							class:list={[
+								'overflow-hidden rounded-card bg-surface-hover',
+								index === 0 ? 'row-span-2' : 'aspect-[4/3]',
+							]}
+						>
+							<Image
+								src={categorie.foto.url}
+								width={categorie.foto.width}
+								height={categorie.foto.height}
+								alt=""
+								widths={[320, 480, 640]}
+								sizes="(min-width: 1024px) 320px, 50vw"
+								quality={72}
+								loading="eager"
+								decoding="async"
+								class="size-full object-cover"
+							/>
+						</div>
+					))}
 				</div>
 				<div
 					class="absolute bottom-0 left-4 flex items-center gap-3 rounded-card border border-border bg-surface px-4 py-3 shadow-lg sm:left-6"
