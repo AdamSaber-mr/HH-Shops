@@ -1,0 +1,52 @@
+---
+import { actions } from 'astro:actions';
+import Button from '../../components/Button.astro';
+import Layout from '../../layouts/Layout.astro';
+import { getBetaalkoppeling } from '../../lib/bestellen/server.ts';
+
+/*
+ * De nagebootste betaalpagina van Mollie, alleen zonder sleutel en nooit in
+ * productie. Drie knoppen die elk een uitkomst kiezen; de action zet die
+ * uitkomst in het logboek en verwerkt de betaling precies zoals de webhook
+ * dat zou doen.
+ */
+
+if (getBetaalkoppeling(Astro.url.origin).modus !== 'nep') {
+	return new Response(null, { status: 404 });
+}
+const { id } = Astro.params;
+if (!id?.startsWith('nep_')) return new Response(null, { status: 404 });
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const keuzes = [
+	{ status: 'paid', tekst: 'Betaald', uitleg: 'De klant heeft betaald.' },
+	{ status: 'failed', tekst: 'Mislukt', uitleg: 'De bank weigerde de betaling.' },
+	{ status: 'expired', tekst: 'Verlopen', uitleg: 'De klant heeft niets gedaan en de betaling verliep.' },
+	{ status: 'canceled', tekst: 'Geannuleerd', uitleg: 'De klant brak af op de betaalpagina.' },
+] as const;
+---
+
+<Layout title="Testbetaling" noindex>
+	<div class="mx-auto max-w-md px-4 py-10 sm:px-6 lg:py-16">
+		<p class="text-sm font-semibold tracking-wide text-accent uppercase">Nagebootste Mollie</p>
+		<h1 class="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Hoe loopt deze betaling af?</h1>
+		<p class="mt-2 text-text-muted">
+			Dit is geen echte betaalpagina. Er is geen Mollie-sleutel ingesteld, dus kies je hier zelf de
+			uitkomst. Betaling {id}.
+		</p>
+		<div class="mt-6 space-y-3">
+			{
+				keuzes.map((k) => (
+					<form method="POST" action={actions.afrekenen.testBetaling}>
+						<input type="hidden" name="id" value={id} />
+						<input type="hidden" name="status" value={k.status} />
+						<Button type="submit" variant={k.status === 'paid' ? 'primary' : 'secondary'} block>
+							{k.tekst}
+						</Button>
+						<p class="mt-1 text-center text-xs text-text-muted">{k.uitleg}</p>
+					</form>
+				))
+			}
+		</div>
+	</div>
+</Layout>

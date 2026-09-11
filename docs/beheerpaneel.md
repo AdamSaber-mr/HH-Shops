@@ -32,6 +32,8 @@ zelfde deploy. Alleen bereikbaar na inloggen.
   gewijzigd, dan verwijst het oude adres door naar het nieuwe
   (`category_slug_history`, migratie 0005). Verwijderen kan alleen als er
   geen producten meer aan hangen.
+- **Bestellingen**: lijst, detail met logboek, op verzonden zetten en de
+  betaling bij Mollie controleren. Zie docs/bestellen.md.
 - **Beheerders**: toevoegen en verwijderen. Iedereen die kan inloggen mag
   alles.
 
@@ -100,5 +102,5 @@ netjes; de database weigert het sowieso.
   `scripts/beheerder-wachtwoord.ts`.
 - Rollen binnen het beheer: elke beheerder mag alles. Bij meer dan een
   handvol beheerders is dat het eerste om te heroverwegen.
-- Bestellingen: die tabel bestaat nog niet (fase 4).
+- Bestellingen zijn er wel, sinds fase 4: docs/bestellen.md.
 - Meerdere foto's tegelijk uploaden.
