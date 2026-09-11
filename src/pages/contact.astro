@@ -1,0 +1,326 @@
+---
+import { Icon } from 'astro-icon/components';
+import Button from '../components/Button.astro';
+import Formulierveld from '../components/klant/Formulierveld.astro';
+import Melding from '../components/klant/Melding.astro';
+import Layout from '../layouts/Layout.astro';
+import { type Contactfouten, MAX_BERICHT, ONDERWERPEN, valideerContact } from '../lib/contact.ts';
+import { type Flash, leesFlash, zetFlash } from '../lib/klanten/flash.ts';
+import { contactBericht } from '../lib/mail/contact.ts';
+import { getMailer } from '../lib/mail/server.ts';
+import { site, usps } from '../lib/site.ts';
+
+/*
+ * Contact. Een formulier dat een mail naar de winkel stuurt, de contactgegevens,
+ * en de antwoorden op de vragen die het vaakst komen.
+ *
+ * Het formulier post naar deze pagina zelf, niet naar een action: het hoeft
+ * geen sessie, geen winkelmand en geen JavaScript. De pagina controleert de
+ * velden (src/lib/contact.ts), stuurt de mail (src/lib/mail/contact.ts via de
+ * mailer van de site) en komt met een 303 terug op zichzelf met een melding
+ * in de flash-cookie. Zonder RESEND_API_KEY komt de mail in `astro dev logs`.
+ *
+ * Het veld "website" is een honeypot: een mens ziet het niet, een bot vult
+ * het in. Dan doen we alsof het gelukt is en sturen we niets.
+ */
+
+let fouten: Contactfouten = {};
+let ingevuld: Record<string, string> = {};
+let melding: Flash | null = null;
+
+if (Astro.request.method === 'POST') {
+	const formulier = await Astro.request.formData();
+	const velden: Record<string, string> = {};
+	for (const naam of ['naam', 'email', 'onderwerp', 'bestelnummer', 'bericht', 'website']) {
+		const waarde = formulier.get(naam);
+		velden[naam] = typeof waarde === 'string' ? waarde : '';
+	}
+
+	if (velden.website !== '') {
+		// Honeypot gevuld: een bot. Net doen alsof, zonder mail.
+		zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Bedankt, je bericht is verstuurd.' });
+		return Astro.redirect('/contact', 303);
+	}
+
+	const uitkomst = valideerContact(velden);
+	if (uitkomst.ok) {
+		try {
+			await getMailer().verstuur({ aan: site.email, ...contactBericht(uitkomst.bericht) });
+			zetFlash(Astro.cookies, {
+				soort: 'ok',
+				tekst: `Bedankt ${uitkomst.bericht.naam}, je bericht is verstuurd. We antwoorden op ${uitkomst.bericht.email}.`,
+			});
+			return Astro.redirect('/contact', 303);
+		} catch (fout) {
+			console.error('[contact] Mail versturen mislukt:', fout);
+			melding = {
+				soort: 'fout',
+				tekst: `Het versturen lukte niet. Probeer het nog eens, of mail ons direct op ${site.email}.`,
+			};
+			ingevuld = velden;
+		}
+	} else {
+		fouten = uitkomst.fouten;
+		ingevuld = velden;
+		melding = { soort: 'fout', tekst: 'Kijk de velden hieronder nog even na.' };
+	}
+} else {
+	melding = leesFlash(Astro.cookies);
+}
+
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const vragen = [
+	{
+		vraag: 'Wanneer komt mijn bestelling?',
+		antwoord:
+			'Voor 15:00 besteld is morgen in huis, bezorgd door heel Nederland. Je krijgt een mail zodra je pakket onderweg is.',
+	},
+	{
+		vraag: 'Wat kost verzenden?',
+		antwoord:
+			'Vanaf € 50 verzenden we gratis. Daaronder betaal je verzendkosten; die zie je in de winkelmand voordat je afrekent.',
+	},
+	{
+		vraag: 'Hoe kan ik iets retourneren?',
+		antwoord:
+			'Je hebt dertig dagen bedenktijd. Mail ons met je bestelnummer en wat je wilt terugsturen, dan krijg je meteen de stappen.',
+	},
+	{
+		vraag: 'Hoe kan ik betalen?',
+		antwoord: 'Veilig met iDEAL, creditcard of achteraf met Klarna. Je betaalt nooit meer dan het bedrag in je winkelmand.',
+	},
+	{
+		vraag: 'Kan ik mijn bestelling nog wijzigen?',
+		antwoord:
+			'Mail ons zo snel mogelijk met je bestelnummer. Zolang het pakket niet is ingepakt, passen we het graag aan.',
+	},
+];
+
+const veldKlassen = (fout?: string) =>
+	[
+		'mt-1.5 block w-full rounded-control border bg-surface px-3 text-base',
+		fout ? 'border-danger' : 'border-border-strong',
+	].join(' ');
+---
+
+<Layout
+	title="Contact"
+	description="Vragen over een product, je bestelling of een retour? Stuur H&H Shops een bericht of mail naar info@hh-shops.nl. Je krijgt persoonlijk antwoord."
+>
+	<div class="mx-auto max-w-[1400px] px-4 pt-5 sm:px-6">
+		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
+			<span aria-hidden="true" class="mx-2">/</span>
+			<span aria-current="page" class="text-text">Contact</span>
+		</nav>
+	</div>
+
+	<!-- Hero: de vraag links, de directe gegevens rechts -->
+	<section class="mx-auto max-w-[1400px] px-4 pt-8 sm:px-6 lg:pt-12" aria-labelledby="contact-titel">
+		<div class="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center lg:gap-16">
+			<div class="max-w-xl">
+				<p class="text-sm font-semibold tracking-wide text-accent uppercase">Contact</p>
+				<h1 id="contact-titel" class="mt-3 text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+					Vragen? We helpen je graag.
+				</h1>
+				<p class="mt-5 text-lg leading-relaxed text-pretty text-text-muted">
+					Over een product, je bestelling of een retour: stuur een bericht via het formulier of
+					mail ons direct. Je krijgt persoonlijk antwoord van de mensen achter de winkel.
+				</p>
+				<div class="mt-8 flex flex-wrap gap-3">
+					<Button href="#bericht" size="lg">Stuur een bericht</Button>
+					<Button href={`mailto:${site.email}`} size="lg" variant="secondary">Mail ons direct</Button>
+				</div>
+			</div>
+
+			<ul class="grid gap-3 sm:grid-cols-2">
+				<li class="flex items-start gap-4 rounded-card border border-border bg-surface p-5">
+					<span class="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent" aria-hidden="true">
+						<Icon name="ph:envelope-simple" class="size-6" />
+					</span>
+					<div class="min-w-0">
+						<p class="font-semibold">E-mail</p>
+						<a href={`mailto:${site.email}`} class="mt-0.5 block break-all text-sm text-accent hover:underline">{site.email}</a>
+						<p class="mt-1 text-xs text-text-muted">Persoonlijk antwoord, geen chatbot.</p>
+					</div>
+				</li>
+				<li class="flex items-start gap-4 rounded-card border border-border bg-surface p-5">
+					<span class="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent" aria-hidden="true">
+						<Icon name="ph:map-pin" class="size-6" />
+					</span>
+					<div class="min-w-0">
+						<p class="font-semibold">Adres</p>
+						<p class="mt-0.5 text-sm text-text-muted">
+							{site.address.street}<br />
+							{site.address.postalCode} {site.address.city}
+						</p>
+					</div>
+				</li>
+				<li class="flex items-start gap-4 rounded-card border border-border bg-surface p-5 sm:col-span-2">
+					<span class="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent" aria-hidden="true">
+						<Icon name="ph:check" class="size-6" />
+					</span>
+					<div class="min-w-0">
+						<p class="font-semibold">Ingeschreven bij de KVK</p>
+						<p class="mt-0.5 text-sm text-text-muted">KVK {site.kvk}</p>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</section>
+
+	<!-- Het bericht: links het formulier, rechts de antwoorden die je misschien al helpen -->
+	<section id="bericht" class="mx-auto mt-12 max-w-[1400px] scroll-mt-32 px-4 sm:px-6 lg:mt-16" aria-labelledby="bericht-titel">
+		<div class="border-t border-border pt-12 lg:pt-16">
+			<div class="max-w-2xl">
+				<p class="text-sm font-semibold tracking-wide text-accent uppercase">Stuur een bericht</p>
+				<h2 id="bericht-titel" class="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+					Vertel ons waar we mee kunnen helpen.
+				</h2>
+				<p class="mt-4 text-pretty text-text-muted">
+					Gaat het over een bestelling, zet dan je bestelnummer erbij. Dat staat in je
+					bevestigingsmail. Dan kunnen we meteen kijken.
+				</p>
+			</div>
+
+			<div class="mt-8 grid gap-10 lg:mt-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-16">
+				<div class="rounded-card border border-border bg-surface p-5 sm:p-8">
+					<Melding melding={melding} />
+
+					<form method="POST" action="/contact" class="space-y-5" novalidate>
+						<div class="grid gap-5 sm:grid-cols-2">
+							<Formulierveld
+								naam="naam"
+								label="Je naam"
+								autocomplete="name"
+								verplicht
+								maxlength={80}
+								waarde={ingevuld.naam ?? ''}
+								fout={fouten.naam}
+							/>
+							<Formulierveld
+								naam="email"
+								label="E-mailadres"
+								type="email"
+								autocomplete="email"
+								inputmode="email"
+								verplicht
+								waarde={ingevuld.email ?? ''}
+								fout={fouten.email}
+							/>
+						</div>
+
+						<div class="grid gap-5 sm:grid-cols-2">
+							<div>
+								<label for="veld-onderwerp" class="block text-sm font-medium">Onderwerp</label>
+								<select
+									id="veld-onderwerp"
+									name="onderwerp"
+									aria-invalid={fouten.onderwerp ? 'true' : undefined}
+									aria-describedby={fouten.onderwerp ? 'veld-onderwerp-fout' : undefined}
+									class:list={[veldKlassen(fouten.onderwerp), 'min-h-11']}
+								>
+									{ONDERWERPEN.map((onderwerp) => (
+										<option value={onderwerp} selected={ingevuld.onderwerp === onderwerp}>
+											{onderwerp}
+										</option>
+									))}
+								</select>
+								{fouten.onderwerp && (
+									<p id="veld-onderwerp-fout" class="mt-1 text-sm text-danger">{fouten.onderwerp}</p>
+								)}
+							</div>
+							<Formulierveld
+								naam="bestelnummer"
+								label="Bestelnummer"
+								hint="Staat in je bevestigingsmail."
+								autocomplete="off"
+								maxlength={40}
+								waarde={ingevuld.bestelnummer ?? ''}
+								fout={fouten.bestelnummer}
+							/>
+						</div>
+
+						<div>
+							<label for="veld-bericht" class="block text-sm font-medium">Je bericht</label>
+							<textarea
+								id="veld-bericht"
+								name="bericht"
+								rows="6"
+								required
+								maxlength={MAX_BERICHT}
+								aria-invalid={fouten.bericht ? 'true' : undefined}
+								aria-describedby={fouten.bericht ? 'veld-bericht-fout' : undefined}
+								class:list={[veldKlassen(fouten.bericht), 'min-h-40 py-2.5 leading-relaxed']}
+							>{ingevuld.bericht ?? ''}</textarea>
+							{fouten.bericht && (
+								<p id="veld-bericht-fout" class="mt-1 text-sm text-danger">{fouten.bericht}</p>
+							)}
+						</div>
+
+						<div class="absolute top-auto -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
+							<label for="veld-website">Website, laat dit veld leeg</label>
+							<input id="veld-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+						</div>
+
+						<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+							<p class="text-xs text-text-muted">
+								We gebruiken je gegevens alleen om je vraag te beantwoorden.{' '}
+								<a href="/privacy" class="underline hover:text-accent">Privacybeleid</a>
+							</p>
+							<Button type="submit" size="lg" class="sm:shrink-0">Verstuur bericht</Button>
+						</div>
+					</form>
+				</div>
+
+				<div>
+					<h3 class="text-lg font-semibold">Misschien staat je antwoord hier al</h3>
+					<div class="mt-3 divide-y divide-border rounded-card border border-border bg-surface">
+						{vragen.map((item) => (
+							<details class="group">
+								<summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 font-medium hover:bg-surface-hover sm:px-5 [&::-webkit-details-marker]:hidden">
+									{item.vraag}
+									<Icon
+										name="ph:caret-down"
+										class="size-5 shrink-0 text-text-muted transition-transform duration-200 group-open:rotate-180"
+										aria-hidden="true"
+									/>
+								</summary>
+								<p class="px-4 pb-5 text-sm leading-relaxed text-pretty text-text-muted sm:px-5">{item.antwoord}</p>
+							</details>
+						))}
+					</div>
+
+					<div class="mt-6 rounded-card bg-accent-subtle p-5">
+						<h3 class="font-semibold">Zo helpen we je het snelst</h3>
+						<ul class="mt-3 space-y-2 text-sm text-text-muted">
+							<li class="flex gap-2.5"><Icon name="ph:check" class="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" /><span>Zet je bestelnummer erbij als het over een bestelling gaat.</span></li>
+							<li class="flex gap-2.5"><Icon name="ph:check" class="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" /><span>Noem de naam van het product, of plak de link.</span></li>
+							<li class="flex gap-2.5"><Icon name="ph:check" class="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" /><span>Is er iets beschadigd? Mail dan een foto mee naar {site.email}.</span></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Waar je op kunt rekenen -->
+	<section class="mx-auto mt-12 max-w-[1400px] px-4 sm:px-6 lg:mt-16" aria-label="Waar je op kunt rekenen">
+		<div class="border-t border-border pt-12 lg:pt-16">
+			<ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+				{usps.map((usp) => (
+					<li class="flex items-start gap-3 rounded-card border border-border bg-surface p-5">
+						<span class="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent" aria-hidden="true">
+							<Icon name={usp.icon} class="size-5" />
+						</span>
+						<span class="min-w-0">
+							<span class="block text-sm font-semibold">{usp.title}</span>
+							<span class="block text-sm text-text-muted">{usp.text}</span>
+						</span>
+					</li>
+				))}
+			</ul>
+		</div>
+	</section>
+</Layout>
