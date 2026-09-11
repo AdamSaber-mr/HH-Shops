@@ -134,6 +134,13 @@ testen. `MAIL_FROM` blijft leeg tot hh-shops.nl bij Resend geverifieerd is
 (tot die tijd stuurt Resend alleen naar het eigen adres van de
 accounthouder); daarna `HH Shops <noreply@hh-shops.nl>`.
 
+Let op: Better Auth vangt een fout bij het versturen zelf af. Weigert
+Resend een mail (bijvoorbeeld omdat het domein nog niet geverifieerd is en
+het adres niet van de accounthouder is), dan ziet de bezoeker toch "we
+hebben een mail gestuurd" en staat de fout alleen in de logs (`astro dev
+logs`, op Vercel de runtime logs). Controleer na het omzetten van
+`MAIL_FROM` dus een keer echt een wachtwoord-vergeten.
+
 Migratie 0004 draaien met `npm run db:migrate` op elke database waar de
 shop tegen praat. Het script `scripts/beheerder-aanmaken.ts` zet na het
 registreren zelf de rol op admin.
