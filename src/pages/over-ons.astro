@@ -1,0 +1,397 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import huishoudelijk from '../assets/categorieen/huishoudelijke-artikelen.png';
+import kinder from '../assets/categorieen/kinder-artikelen.png';
+import schoenen from '../assets/categorieen/schoenen.png';
+import Button from '../components/Button.astro';
+import Layout from '../layouts/Layout.astro';
+import { listActiveProducts, listCategories } from '../lib/catalog.ts';
+import { ratingSource, reviews } from '../lib/reviews.ts';
+import { site } from '../lib/site.ts';
+
+/*
+ * Over ons.
+ *
+ * De oude pagina (hh-shops.nl/over-ons) had een intro, een verhaal in drie
+ * stapjes, drie kernwaarden, een tijdlijn en de contactgegevens. Die inhoud
+ * is hier in eigen woorden opnieuw geschreven, met toestemming van de
+ * eigenaar. De feiten blijven staan: het adres in Rhoon, het KVK-nummer, de
+ * beloftes uit src/lib/site.ts en de beoordeling uit src/lib/reviews.ts.
+ * Er staat niets in wat we niet weten: geen oprichtingsjaar, geen namen, geen
+ * verzonnen aantallen. De cijfers komen live uit de database.
+ *
+ * Van boven naar beneden: hero met een collage van categoriefoto's en de
+ * cijfers eronder, het verhaal als tijdlijn in drie stappen, vier waarden, de
+ * recensies en een afsluitend blok met de contactgegevens. Tussen de secties
+ * een tussenlijn met ruimte erboven en eronder, dezelfde maat als op de
+ * productpagina. Elke kop staat links, met dezelfde bovenregel en maat. De
+ * recensies staan hier bewust anders dan op de startpagina: als lijst met
+ * citaten naast de score, niet als vier kaarten.
+ */
+
+const [producten, categorieen] = await Promise.all([listActiveProducts(), listCategories()]);
+const aantalProducten = producten.length;
+const aantalCategorieen = categorieen.filter((c) => c.productCount > 0).length;
+const score = ratingSource.score.toLocaleString('nl-NL', {
+	minimumFractionDigits: 1,
+	maximumFractionDigits: 1,
+});
+
+const sterren = [1, 2, 3, 4, 5] as const;
+// De score omgerekend naar een schaal van 5, voor de sterren naast de score.
+const scoreSterren = Math.round((ratingSource.score / ratingSource.max) * 5);
+
+const cijfers = [
+	{ getal: String(aantalProducten), eenheid: 'producten', tekst: 'voor in en om het huis' },
+	{ getal: String(aantalCategorieen), eenheid: 'categorieën', tekst: 'van keuken tot kinderkamer' },
+	{ getal: score, eenheid: `op ${ratingSource.name}`, tekst: 'gemiddelde beoordeling' },
+	{ getal: '15:00', eenheid: 'besteltijd', tekst: 'morgen in huis' },
+];
+
+const verhaal = [
+	{
+		kop: 'Het begin',
+		tekst:
+			'H&H Shops begon met één idee: de spullen die je thuis elke dag gebruikt, moeten makkelijk te vinden zijn en snel in huis. Geen eindeloos zoeken, geen verrassingen achteraf.',
+	},
+	{
+		kop: 'De groei',
+		tekst:
+			'Van huishoudelijke artikelen groeide het assortiment door naar kinderspullen, tassen en rugzakken, schoenen, cosmetica en handige gadgets. Alles wat het leven thuis en onderweg een beetje makkelijker maakt.',
+	},
+	{
+		kop: 'Vandaag',
+		tekst:
+			'Vanuit Rhoon versturen we door heel Nederland. Voor 15:00 besteld is morgen in huis, betalen kan veilig en retourneren is eenvoudig. En heb je een vraag, dan mail je gewoon met de mensen achter de winkel.',
+	},
+];
+
+const waarden = [
+	{
+		icon: 'ph:tag',
+		kop: 'Betaalbaar',
+		tekst: 'Goede spullen hoeven niet duur te zijn. We houden de prijzen scherp, ook als je maar één ding bestelt.',
+	},
+	{
+		icon: 'ph:lock-simple',
+		kop: 'Betrouwbaar',
+		tekst: 'Veilig betalen met iDEAL, creditcard of Klarna, een duidelijk retourbeleid en geen kleine lettertjes.',
+	},
+	{
+		icon: 'ph:truck',
+		kop: 'Snel',
+		tekst: 'Voor 15:00 besteld, morgen in huis. Zorgvuldig ingepakt, en gratis verzending vanaf € 50.',
+	},
+	{
+		icon: 'ph:envelope-simple',
+		kop: 'Persoonlijk',
+		tekst: 'Een vraag over een product, je bestelling of een retour? Mail ons en je krijgt persoonlijk antwoord.',
+	},
+];
+---
+
+<Layout
+	title="Over ons"
+	description="H&H Shops is een Nederlandse webwinkel voor alles in en om het huis: huishoudelijke artikelen, kinderspullen, tassen, schoenen en cosmetica. Voor 15:00 besteld, morgen in huis."
+>
+	<div class="mx-auto max-w-[1400px] px-4 pt-5 sm:px-6">
+		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
+			<span aria-hidden="true" class="mx-2">/</span>
+			<span aria-current="page" class="text-text">Over ons</span>
+		</nav>
+	</div>
+
+	<!-- Hero -->
+	<section class="mx-auto max-w-[1400px] px-4 pt-8 sm:px-6 lg:pt-12" aria-labelledby="over-titel">
+		<div class="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
+			<div class="max-w-xl">
+				<p class="text-sm font-semibold tracking-wide text-accent uppercase">Over H&amp;H Shops</p>
+				<h1
+					id="over-titel"
+					class="mt-3 text-4xl font-bold tracking-tight text-balance sm:text-5xl"
+				>
+					Alles voor thuis, zonder gedoe.
+				</h1>
+				<p class="mt-5 text-lg leading-relaxed text-pretty text-text-muted">
+					H&amp;H Shops is een Nederlandse webwinkel voor de spullen die je thuis elke dag
+					gebruikt: van keukenhulpjes en speelgoed tot tassen, schoenen en cosmetica. Bestellen
+					is simpel, betalen is veilig, en voor 15:00 besteld is morgen in huis.
+				</p>
+				<div class="mt-8 flex flex-wrap gap-3">
+					<Button href="/producten" size="lg">Bekijk het assortiment</Button>
+					<Button href={`mailto:${site.email}`} size="lg" variant="secondary">Mail ons</Button>
+				</div>
+			</div>
+
+			<!--
+				Een collage van drie categoriefoto's, met een zwevend kaartje met de
+				beoordeling. Er zijn geen foto's van het team of het pand; de
+				producten zijn wat de winkel is, dus die laten we zien.
+			-->
+			<div class="relative pb-6">
+				<div class="grid grid-cols-2 gap-3 sm:gap-4">
+					<div class="row-span-2 overflow-hidden rounded-card bg-surface-hover">
+						<Image
+							src={kinder}
+							alt=""
+							widths={[320, 480, 640]}
+							sizes="(min-width: 1024px) 320px, 50vw"
+							quality={72}
+							loading="eager"
+							decoding="async"
+							class="size-full object-cover"
+						/>
+					</div>
+					<div class="aspect-[4/3] overflow-hidden rounded-card bg-surface-hover">
+						<Image
+							src={huishoudelijk}
+							alt=""
+							widths={[320, 480, 640]}
+							sizes="(min-width: 1024px) 320px, 50vw"
+							quality={72}
+							loading="eager"
+							decoding="async"
+							class="size-full object-cover"
+						/>
+					</div>
+					<div class="aspect-[4/3] overflow-hidden rounded-card bg-surface-hover">
+						<Image
+							src={schoenen}
+							alt=""
+							widths={[320, 480, 640]}
+							sizes="(min-width: 1024px) 320px, 50vw"
+							quality={72}
+							loading="eager"
+							decoding="async"
+							class="size-full object-cover"
+						/>
+					</div>
+				</div>
+				<div
+					class="absolute bottom-0 left-4 flex items-center gap-3 rounded-card border border-border bg-surface px-4 py-3 shadow-lg sm:left-6"
+				>
+					<span
+						class="inline-flex size-10 items-center justify-center rounded-full bg-accent-subtle text-accent"
+						aria-hidden="true"
+					>
+						<Icon name="ph:star-fill" class="size-5" />
+					</span>
+					<div>
+						<p class="flex items-baseline gap-1 leading-none">
+							<span class="text-2xl font-bold tracking-tight text-accent">{score}</span>
+							<span class="text-sm text-text-muted">/ {ratingSource.max}</span>
+						</p>
+						<p class="mt-1 text-xs text-text-muted">gemiddelde beoordeling op {ratingSource.name}</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Cijfers, direct onder de hero: dit hoort nog bij de introductie -->
+	<section class="mx-auto max-w-[1400px] px-4 pt-12 sm:px-6 lg:pt-16" aria-label="H&H Shops in cijfers">
+		<ul class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+			{cijfers.map((cijfer) => (
+				<li class="rounded-card border border-border bg-surface p-5 sm:p-6">
+					<p class="flex flex-wrap items-baseline gap-x-2">
+						<span class="text-3xl font-bold tracking-tight text-accent sm:text-4xl">{cijfer.getal}</span>
+						<span class="text-sm font-semibold sm:text-base">{cijfer.eenheid}</span>
+					</p>
+					<p class="mt-1 text-sm text-text-muted">{cijfer.tekst}</p>
+				</li>
+			))}
+		</ul>
+	</section>
+
+	<!-- Ons verhaal: kop links, daaronder drie stappen naast elkaar op een tijdlijn -->
+	<section class="mx-auto mt-12 max-w-[1400px] px-4 sm:px-6 lg:mt-16" aria-labelledby="verhaal-titel">
+		<div class="border-t border-border pt-12 lg:pt-16">
+			<div class="max-w-2xl">
+				<p class="text-sm font-semibold tracking-wide text-accent uppercase">Ons verhaal</p>
+				<h2 id="verhaal-titel" class="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+					Begonnen met één idee, gegroeid met onze klanten.
+				</h2>
+				<p class="mt-4 text-pretty text-text-muted">
+					Geen grote keten, maar een winkel die is gegroeid door goed te kijken naar wat mensen
+					thuis echt nodig hebben.
+				</p>
+			</div>
+
+			<!--
+				De lijn loopt over de drie stappen heen; elke stap heeft zijn nummer
+				op die lijn. Op telefoon staan de stappen onder elkaar, elk met een
+				eigen lijn erboven, zodat het ritme hetzelfde blijft.
+			-->
+			<ol class="mt-10 grid gap-10 md:grid-cols-3 md:gap-8 lg:mt-12">
+				{verhaal.map((stap, index) => (
+					<li class="relative border-t border-border pt-8">
+						<span
+							class="absolute -top-4 left-0 inline-flex size-8 items-center justify-center rounded-full bg-accent text-sm font-semibold text-white ring-4 ring-canvas"
+							aria-hidden="true"
+						>
+							{index + 1}
+						</span>
+						<h3 class="text-xl font-semibold tracking-tight">{stap.kop}</h3>
+						<p class="mt-2 leading-relaxed text-pretty text-text-muted">{stap.tekst}</p>
+					</li>
+				))}
+			</ol>
+		</div>
+	</section>
+
+	<!-- Waar we voor staan -->
+	<section class="mx-auto mt-12 max-w-[1400px] px-4 sm:px-6 lg:mt-16" aria-labelledby="waarden-titel">
+		<div class="border-t border-border pt-12 lg:pt-16">
+			<div class="max-w-2xl">
+				<p class="text-sm font-semibold tracking-wide text-accent uppercase">Waar we voor staan</p>
+				<h2 id="waarden-titel" class="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+					Vier dingen die je van ons mag verwachten.
+				</h2>
+			</div>
+			<ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:mt-10 lg:grid-cols-4">
+				{waarden.map((waarde) => (
+					<li class="rounded-card border border-border bg-surface p-5 sm:p-6">
+						<span
+							class="inline-flex size-11 items-center justify-center rounded-full bg-accent-subtle text-accent"
+							aria-hidden="true"
+						>
+							<Icon name={waarde.icon} class="size-6" />
+						</span>
+						<h3 class="mt-4 text-lg font-semibold tracking-tight">{waarde.kop}</h3>
+						<p class="mt-2 text-sm leading-relaxed text-pretty text-text-muted">{waarde.tekst}</p>
+					</li>
+				))}
+			</ul>
+		</div>
+	</section>
+
+	<!--
+		Wat klanten zeggen. Links de score, rechts de recensies als lijst met
+		citaten. Bewust geen kaarten: die vorm hebben de waarden hierboven al,
+		en de startpagina toont dezelfde recensies al als vier kaarten.
+		De inhoud komt uit src/lib/reviews.ts: echte recensies van de oude site.
+	-->
+	<section class="mx-auto mt-12 max-w-[1400px] px-4 sm:px-6 lg:mt-16" aria-labelledby="reviews-titel">
+		<div class="border-t border-border pt-12 lg:pt-16">
+			<div class="max-w-2xl">
+				<p class="text-sm font-semibold tracking-wide text-accent uppercase">Wat onze klanten zeggen</p>
+				<h2 id="reviews-titel" class="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+					Klanten geven ons een {score} op {ratingSource.name}.
+				</h2>
+			</div>
+
+			<div class="mt-8 grid gap-10 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
+				<div class="rounded-card bg-accent-subtle p-6 sm:p-8 lg:self-start">
+					<p class="flex items-baseline gap-1.5">
+						<span class="text-6xl font-bold tracking-tight text-accent">{score}</span>
+						<span class="text-lg text-text-muted">/ {ratingSource.max}</span>
+					</p>
+					<div class="mt-3 flex gap-1 text-star" aria-hidden="true">
+						{sterren.map((n) => (
+							<Icon name="ph:star-fill" class:list={['size-6', n <= scoreSterren ? '' : 'opacity-25']} />
+						))}
+					</div>
+					<p class="mt-3 text-sm text-text-muted">
+						Gemiddelde beoordeling van klanten op {ratingSource.name}.
+					</p>
+					{ratingSource.url && (
+						<a
+							href={ratingSource.url}
+							rel="noopener"
+							target="_blank"
+							class="mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-control text-sm font-medium text-accent hover:underline"
+						>
+							Bekijk alle beoordelingen
+							<Icon name="ph:arrow-right" class="size-4" aria-hidden="true" />
+							<span class="sr-only">(opent in een nieuw venster)</span>
+						</a>
+					)}
+				</div>
+
+				<ul class="divide-y divide-border">
+					{reviews.map((review) => (
+						<li class="py-6 first:pt-0 last:pb-0">
+							<div class="flex gap-0.5 text-star" aria-hidden="true">
+								{sterren.map((n) => (
+									<Icon name="ph:star-fill" class:list={['size-4', n <= review.rating ? '' : 'opacity-25']} />
+								))}
+							</div>
+							<span class="sr-only">{review.rating} van de 5 sterren</span>
+							<blockquote class="mt-3">
+								<p class="text-lg leading-relaxed text-pretty">"{review.text}"</p>
+							</blockquote>
+							<p class="mt-3 text-sm">
+								<span class="font-semibold">{review.author}</span>
+								<span class="text-text-muted"> · Klant via {ratingSource.name}</span>
+								{review.date && <span class="text-text-muted"> · {review.date}</span>}
+							</p>
+						</li>
+					))}
+				</ul>
+			</div>
+		</div>
+	</section>
+
+	<!-- Contact -->
+	<section class="mx-auto mt-12 max-w-[1400px] px-4 sm:px-6 lg:mt-16" aria-labelledby="contact-titel">
+		<div class="border-t border-border pt-12 lg:pt-16">
+		<div class="relative overflow-hidden rounded-card bg-accent text-white">
+			<div class="pointer-events-none absolute inset-0" aria-hidden="true">
+				<div class="absolute -top-24 -right-24 size-96 rounded-full bg-white/5"></div>
+				<div class="absolute -right-10 -bottom-40 size-[28rem] rounded-full bg-white/5"></div>
+			</div>
+			<div
+				class="relative grid gap-8 px-6 py-10 sm:px-10 sm:py-12 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center lg:px-14 lg:py-16"
+			>
+				<div>
+					<p class="text-sm font-semibold tracking-wide text-white/80 uppercase">Vragen?</p>
+					<h2 id="contact-titel" class="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+						We helpen je graag verder.
+					</h2>
+					<p class="mt-4 max-w-md text-pretty text-white/85">
+						Over een product, je bestelling of een retour: stuur een mail en je krijgt
+						persoonlijk antwoord.
+					</p>
+					<div class="mt-8 flex flex-wrap gap-3">
+						<a
+							href={`mailto:${site.email}`}
+							class="inline-flex min-h-12 items-center gap-2 rounded-control bg-white px-6 text-base font-medium text-accent transition-colors hover:bg-accent-subtle"
+						>
+							<Icon name="ph:envelope-simple" class="size-5" aria-hidden="true" />
+							{site.email}
+						</a>
+						<a
+							href="/producten"
+							class="inline-flex min-h-12 items-center gap-2 rounded-control border border-white/40 px-6 text-base font-medium text-white transition-colors hover:bg-white/10"
+						>
+							Bekijk het assortiment
+							<Icon name="ph:arrow-right" class="size-5" aria-hidden="true" />
+						</a>
+					</div>
+				</div>
+				<dl class="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-1">
+					<div class="rounded-card bg-white/10 p-4">
+						<dt class="flex items-center gap-2 font-semibold">
+							<Icon name="ph:map-pin" class="size-4" aria-hidden="true" />
+							Adres
+						</dt>
+						<dd class="mt-1 text-white/85">
+							{site.address.street}<br />
+							{site.address.postalCode} {site.address.city}
+						</dd>
+					</div>
+					<div class="rounded-card bg-white/10 p-4">
+						<dt class="flex items-center gap-2 font-semibold">
+							<Icon name="ph:check" class="size-4" aria-hidden="true" />
+							Ingeschreven bij de KVK
+						</dt>
+						<dd class="mt-1 text-white/85">KVK {site.kvk}</dd>
+					</div>
+				</dl>
+			</div>
+		</div>
+		</div>
+	</section>
+</Layout>

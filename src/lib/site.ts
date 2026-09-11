@@ -21,6 +21,12 @@ export const site = {
 	email: 'info@hh-shops.nl',
 	/** Overgenomen van de footer van de oude site. */
 	kvk: '95788468',
+	/** Overgenomen van de "Over ons"-pagina van de oude site (11 september 2026). */
+	address: {
+		street: 'Koperhoek 10 B',
+		postalCode: '3162 LA',
+		city: 'Rhoon',
+	},
 	/** INVULLEN: btw-nummer, zodra bekend. Leeg laat de regel weg. */
 	btw: '',
 } as const;
