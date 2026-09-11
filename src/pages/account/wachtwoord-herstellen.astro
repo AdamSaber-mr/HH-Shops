@@ -28,7 +28,10 @@ const uitFormulier = result?.error ? (await leesFormulier(Astro.request)).velden
 const token = (Astro.url.searchParams.get('token') ?? uitFormulier ?? '').trim();
 const { velden: fouten, algemeen } = veldfoutenUit(result?.error);
 Astro.response.headers.set('Cache-Control', 'no-store');
-Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+// Het token staat in de URL en mag niet als referrer naar andere sites gaan.
+// Niet 'no-referrer': dan laat Chrome ook de Origin-header weg bij het
+// versturen van het formulier, en weigert Astro de POST als cross-site.
+Astro.response.headers.set('Referrer-Policy', 'same-origin');
 ---
 
 <Layout title="Nieuw wachtwoord kiezen" noindex>
