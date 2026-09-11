@@ -1,204 +1,734 @@
 ---
-import Button from '../../components/Button.astro';
+import { actions } from 'astro:actions';
+import { Icon } from 'astro-icon/components';
+import BeschrijvingBlok from '../../components/BeschrijvingBlok.astro';
 import Hartje from '../../components/klant/Hartje.astro';
-import WinkelmandKnop from '../../components/klant/WinkelmandKnop.astro';
 import Price from '../../components/Price.astro';
 import ProductImage from '../../components/ProductImage.astro';
-import StockBadge from '../../components/StockBadge.astro';
+import ProductSection from '../../components/ProductSection.astro';
 import Layout from '../../layouts/Layout.astro';
-import { defaultVariant, getProductBySlug } from '../../lib/catalog.ts';
+import { defaultVariant, getProductBySlug, listProductsInCategory } from '../../lib/catalog.ts';
 import { leesFavorieten } from '../../lib/klanten/favorieten.ts';
+import { leesWinkelmand, MAX_AANTAL } from '../../lib/klanten/winkelmand.ts';
+import { kleurcode } from '../../lib/kleuren.ts';
+import { ontleedBeschrijving, tekstVan } from '../../lib/productinformatie.ts';
+import { gevraagdeWaarden, kiesVariant, paramVoor, waardenVoor } from '../../lib/productkeuze.ts';
+import { usps } from '../../lib/site.ts';
 
 /*
- * De productpagina.
+ * De productpagina, naar het voorbeeld van Adam: links de foto's met de
+ * miniaturen eronder, rechts het koopblok, en daaronder over de volle breedte
+ * de productinformatie.
  *
- * De maatkeuze loopt via de URL en niet via JavaScript. `?maat=S` wordt aan de
- * serverkant gerenderd, dus prijs, voorraad en de koopknop kloppen altijd bij
- * wat er geselecteerd staat, ook zonder JavaScript en ook als iemand de link
- * deelt of bewaart.
+ * Alles wat de bezoeker kiest staat in de URL en wordt aan de serverkant
+ * gerenderd: de kleur en de maat (?kleur=Blauw&maat=M) en de getoonde foto
+ * (?foto=2). Prijs, voorraad en koopknop kloppen daardoor altijd bij wat er
+ * geselecteerd staat, ook zonder JavaScript en ook als iemand de link deelt
+ * of bewaart. Het script in src/scripts/productpagina.ts maakt het daarna
+ * vlot: foto's wisselen zonder herladen, min en plus bij het aantal,
+ * "In winkelmand" zonder de pagina te verlaten, en de beschrijving die in- en
+ * uitklapt.
  *
- * Dat is bewust saai. Dit is het scherm waar iemand besluit geld uit te geven.
+ * Geen sterren en geen aantal beoordelingen zoals in het voorbeeld: er zijn
+ * nog geen recensies per product, en verzonnen sterren zijn in een winkel
+ * geen afwerking maar misleiding.
  */
 
 const { slug } = Astro.params;
 const product = slug ? await getProductBySlug(slug) : undefined;
-
 if (!product) {
 	return new Response(null, { status: 404, statusText: 'Niet gevonden' });
 }
 
-const optionName = product.optionNames[0];
-const requested = optionName ? Astro.url.searchParams.get(optionName.toLowerCase()) : null;
-
-const selected =
-	product.variants.find((v) => requested && v.options[optionName] === requested) ??
-	defaultVariant(product.variants);
-
+const gevraagd = gevraagdeWaarden(product.optionNames, Astro.url.searchParams);
+const selected = kiesVariant(product.variants, product.optionNames, gevraagd, defaultVariant);
 if (!selected) {
 	return new Response(null, { status: 404, statusText: 'Niet gevonden' });
 }
 
-const hasChoice = product.variants.length > 1 && Boolean(optionName);
-const soldOut = selected.stockQuantity <= 0;
-const favoriet = (await leesFavorieten(Astro)).includes(product.id);
-// Waar hartje en winkelmandknop zonder JavaScript naar terugkeren: deze maat.
-const hier = Astro.url.pathname + Astro.url.search;
-const cover = product.images[0];
-const rest = product.images.slice(1);
+// Een keuzerij per optienaam, alleen als er echt iets te kiezen valt.
+const keuzes =
+	product.variants.length > 1
+		? product.optionNames
+				.map((naam) => ({
+					naam,
+					isKleur: /kleur/i.test(naam),
+					waarden: waardenVoor(product.variants, product.optionNames, selected.options, naam),
+				}))
+				.filter((keuze) => keuze.waarden.length > 1)
+		: [];
 
-/** Bouwt de link naar een andere maat, zodat de rest van de URL blijft staan. */
-function linkFor(value: string): string {
+/** De link die een waarde kiest. De rest van de URL blijft staan, de foto springt terug naar de eerste. */
+const optieParams = product.optionNames.map(paramVoor);
+function keuzeLink(params: Record<string, string>): string {
 	const url = new URL(Astro.url);
-	url.searchParams.set(optionName.toLowerCase(), value);
+	for (const param of optieParams) url.searchParams.delete(param);
+	url.searchParams.delete('foto');
+	for (const [sleutel, waarde] of Object.entries(params)) url.searchParams.set(sleutel, waarde);
 	return `${url.pathname}${url.search}`;
 }
+
+const soldOut = selected.stockQuantity === 0;
+const lowStock = !soldOut && selected.stockQuantity < 11;
+const maxAantal = Math.max(1, Math.min(MAX_AANTAL, selected.stockQuantity));
+
+const [favorieten, inMand] = await Promise.all([leesFavorieten(Astro), leesWinkelmand(Astro)]);
+const favoriet = favorieten.includes(product.id);
+// Hoeveel er al in de winkelmand liggen, zodat het script de teller in de
+// header precies kan bijwerken na "In winkelmand".
+const alInMand = inMand.get(selected.id) ?? 0;
+
+// De foto in de URL telt vanaf 1. Alles wat niet klopt wordt de eerste.
+const fotos = product.images;
+const gevraagdeFoto = Number.parseInt(Astro.url.searchParams.get('foto') ?? '', 10);
+const fotoIndex = gevraagdeFoto > 1 && gevraagdeFoto <= fotos.length ? gevraagdeFoto - 1 : 0;
+
+function fotoLink(index: number): string {
+	const url = new URL(Astro.url);
+	if (index === 0) url.searchParams.delete('foto');
+	else url.searchParams.set('foto', String(index + 1));
+	return `${url.pathname}${url.search}`;
+}
+
+// Waar hartje en koopknop zonder JavaScript naar terugkeren: precies deze keuze.
+const hier = Astro.url.pathname + Astro.url.search;
+const categorieen = product.categories.map((pc) => pc.category);
+const categorie = categorieen[0];
+
+// Vier andere producten uit dezelfde categorie, leverbaar eerst, onder de
+// productinformatie. Zo loopt een bezoeker niet dood op een uitverkocht product.
+const verwant = categorie
+	? (await listProductsInCategory(categorie.slug))
+			.filter((p) => p.id !== product.id)
+			.map((p) => ({ product: p, variant: defaultVariant(p.variants), image: p.images[0] }))
+			.filter(
+				(e): e is typeof e & { variant: NonNullable<typeof e.variant> } =>
+					Boolean(e.variant && e.image),
+			)
+			.sort((a, b) => Number(b.variant.stockQuantity > 0) - Number(a.variant.stockQuantity > 0))
+			.slice(0, 4)
+	: [];
+
+// "Deze maat is uitverkocht" leest beter dan "deze variant".
+const ditArtikel =
+	keuzes.length === 0
+		? 'Dit product'
+		: keuzes.length > 1
+			? 'Deze combinatie'
+			: keuzes[0].isKleur
+				? 'Deze kleur'
+				: `Deze ${keuzes[0].naam.toLowerCase()}`;
+
+const omschrijving = product.seoDescription ?? product.shortDescription ?? undefined;
+const info = ontleedBeschrijving(product.description, product.shortDescription);
+// Bij een lange beschrijving staat de tweede productfoto naast de tekst: de
+// ingeklapte tekst en de foto zijn dan ongeveer even hoog. Bij een korte tekst
+// zou een foto ernaast juist lege ruimte onder de tekst maken, dus dan niet.
+const inleidingLengte = info.inleiding.reduce(
+	(n, blok) => n + (blok.soort === 'alinea' ? tekstVan(blok.html).length : blok.items.join(' ').length),
+	0,
+);
+const beschrijvingFoto = inleidingLengte >= 700 ? fotos[1] : undefined;
+const voorraadTekst = soldOut
+	? 'Uitverkocht'
+	: lowStock
+		? `Nog ${selected.stockQuantity} op voorraad`
+		: 'Op voorraad';
 ---
 
-<Layout title={product.name} description={product.seoDescription ?? undefined}>
-	<div class="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
+<Layout title={product.name} description={omschrijving}>
+	<div class="mx-auto max-w-[1400px] px-4 py-4 sm:px-6 lg:py-5">
 		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
-			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
-			<span aria-hidden="true" class="mx-2">/</span>
-			<span aria-current="page" class="text-text">{product.name}</span>
+			<ol class="flex flex-wrap items-center gap-x-2 gap-y-1">
+				<li><a href="/" class="rounded-control hover:text-text hover:underline">Home</a></li>
+				<li aria-hidden="true">/</li>
+				<li>
+					<a href="/categorieen" class="rounded-control hover:text-text hover:underline">Categorieën</a>
+				</li>
+				{categorie && (
+					<>
+						<li aria-hidden="true">/</li>
+						<li>
+							<a
+								href={`/categorie/${categorie.slug}`}
+								class="rounded-control hover:text-text hover:underline"
+							>
+								{categorie.name}
+							</a>
+						</li>
+					</>
+				)}
+				<li aria-hidden="true">/</li>
+				<li>
+					<span aria-current="page" class="font-semibold text-text">{product.name}</span>
+				</li>
+			</ol>
 		</nav>
 
-		<div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
-			<!-- Afbeeldingen -->
-			<div class="flex flex-col gap-3">
-				{cover && (
-						<div class="overflow-hidden rounded-card border border-border bg-surface">
+		<div
+			class="mt-6 lg:min-h-[min(calc(100dvh_-_10rem),52rem)]"
+		>
+			<!--
+				Op desktop vult dit deel minstens het eerste scherm (met een plafond
+				voor grote monitoren), zodat de productinformatie pas na scrollen
+				begint. De galerij en het koopblok blijven daarbij even hoog: alleen
+				de omhullende div groeit, niet de rij.
+			-->
+			<div class="grid gap-8 lg:grid-cols-[minmax(0,11fr)_minmax(0,9fr)] lg:gap-12 xl:gap-16"
+		>
+			<!--
+				Foto's. Op desktop is de galerij precies zo hoog als het koopblok
+				ernaast: de rij rekt de galerij mee, de miniaturen staan onderaan en
+				het fotovlak vult wat overblijft. Zo eindigen de miniaturen altijd op
+				dezelfde lijn als het bezorgblok, op elk scherm. Het fotovlak heeft
+				daardoor geen vaste verhouding; de foto past erin met object-contain.
+				Op telefoon is het vlak vierkant en staan de miniaturen eronder.
+			-->
+			<div data-galerij class="lg:flex lg:h-full lg:min-h-0 lg:flex-col">
+				<div class="relative aspect-square overflow-hidden rounded-card bg-surface-hover lg:aspect-auto lg:min-h-0 lg:flex-1">
+					{fotos.map((foto, index) => (
+						<div
+							data-foto={index + 1}
+							hidden={index !== fotoIndex}
+							class="absolute inset-0 p-3 sm:p-6"
+						>
 							<ProductImage
-								src={cover.url}
-								alt={cover.alt}
-								width={cover.width}
-								height={cover.height}
-								widths={[480, 640, 828]}
-								sizes="(min-width: 1024px) 640px, 100vw"
-								loading="eager"
-								class="w-full object-contain"
+								src={foto.url}
+								alt={foto.alt}
+								width={foto.width}
+								height={foto.height}
+								widths={[480, 640, 828, 1080]}
+								sizes="(min-width: 1400px) 760px, (min-width: 1024px) 55vw, 100vw"
+								loading={index === fotoIndex ? 'eager' : 'lazy'}
+								class={`size-full object-contain mix-blend-multiply ${soldOut ? 'opacity-50' : ''}`}
 							/>
 						</div>
+					))}
+
+					<Hartje
+						productId={product.id}
+						naam={product.name}
+						favoriet={favoriet}
+						naar={hier}
+						class="absolute top-4 right-4 z-10"
+					/>
+
+					{soldOut && (
+						<span
+							class="absolute bottom-4 left-4 rounded-control bg-surface px-2.5 py-1 text-sm font-medium text-danger shadow-sm"
+						>
+							Uitverkocht
+						</span>
 					)}
-				{rest.length > 0 && (
-						<ul class="grid grid-cols-4 gap-3">
-							{rest.map((image) => (
-								<li class="overflow-hidden rounded-card border border-border bg-surface">
+				</div>
+
+				<!--
+					Vier miniaturen naast elkaar, zoals in het voorbeeld. Zijn er meer,
+					dan schuif je de strook opzij. Een tweede rij zou de galerij hoger
+					maken dan het koopblok.
+				-->
+				{fotos.length > 1 && (
+					<ul
+						class:list={[
+							'-mx-1 -mb-1 mt-2 flex snap-x gap-3 overflow-x-auto scroll-px-1 p-1 sm:mt-3 sm:gap-4 lg:mt-5 lg:shrink-0',
+						]}
+						aria-label="Productfoto's"
+					>
+						{fotos.map((foto, index) => (
+							<li
+								class="shrink-0 snap-start basis-[calc((100%_-_3_*_0.75rem)_/_4)] sm:basis-[calc((100%_-_3_*_1rem)_/_4)]"
+							>
+								<a
+									href={fotoLink(index)}
+									data-miniatuur={index + 1}
+									aria-current={index === fotoIndex ? 'true' : undefined}
+									class="block aspect-square overflow-hidden rounded-card bg-surface-hover p-2 ring-accent ring-offset-2 ring-offset-canvas transition-shadow hover:ring-2 aria-[current=true]:ring-2"
+								>
 									<ProductImage
-										src={image.url}
-										alt={image.alt}
-										width={image.width}
-										height={image.height}
-										widths={[128, 240]}
-										sizes="120px"
-										class="aspect-square w-full object-cover"
+										src={foto.url}
+										alt={foto.alt}
+										width={foto.width}
+										height={foto.height}
+										widths={[128, 240, 320]}
+										sizes="(min-width: 1024px) 180px, 22vw"
+										class="size-full object-contain mix-blend-multiply"
 									/>
-								</li>
-							))}
-						</ul>
-					)}
+									<span class="sr-only">
+										Foto {index + 1} van {fotos.length}
+									</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				)}
 			</div>
 
 			<!-- Koopblok -->
-			<div class="flex flex-col gap-5">
+			<div>
+				<h1 class="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
+					{product.name}
+				</h1>
+				{product.shortDescription && (
+					<p class="mt-3 text-sm leading-snug text-pretty text-text-muted">
+						{product.shortDescription}
+					</p>
+				)}
+				{product.brand && (
+					<p class="mt-2 text-xs text-text-muted">
+						Merk <span class="font-medium text-text">{product.brand}</span>
+					</p>
+				)}
+
+				<hr class="my-5 border-border" />
+
 				<div>
-					<h1 class="text-2xl leading-tight font-semibold tracking-tight">
-						{product.name}
-					</h1>
-					{product.shortDescription && (
-							<p class="mt-2 text-sm leading-relaxed text-text-muted">
-								{product.shortDescription}
-							</p>
-						)}
+					<Price
+						cents={selected.priceCents}
+						compareAtCents={selected.compareAtPriceCents}
+						size="xl"
+					/>
+					<p class="mt-1 text-sm text-text-muted">Inclusief btw. Gratis verzending vanaf € 50.</p>
 				</div>
 
-				{hasChoice && (
+				{keuzes.map((keuze) => (
+					<>
+						<hr class="my-5 border-border" />
 						<fieldset>
-							<legend class="text-sm font-medium">
-								{optionName}
-								<span class="ml-1 font-normal text-text-muted">
-									({selected.options[optionName]} geselecteerd)
-								</span>
+							<legend class="text-base font-semibold">
+								Kies je {keuze.naam.toLowerCase()}
+								<span class="ml-2 font-normal text-text-muted">{selected.options[keuze.naam]}</span>
 							</legend>
-							<ul class="mt-2 flex flex-wrap gap-2">
-								{product.variants.map((variant) => {
-									const value = variant.options[optionName];
-									const isSelected = variant.id === selected.id;
-									// `=== 0` en niet `<= 0`: binnen een JSX-expressie leest de
-									// Astro-compiler `<=` als het begin van een fragment. Voorraad
-									// kan sowieso niet onder nul komen, dat weigert de database.
-									const out = variant.stockQuantity === 0;
+							<ul class="mt-3 flex flex-wrap gap-2.5">
+								{keuze.waarden.map((w) => {
+									const code = keuze.isKleur ? kleurcode(w.waarde) : undefined;
+									const href = keuzeLink(w.params);
 									return (
 										<li>
-											<a
-												href={linkFor(value)}
-												aria-current={isSelected ? 'true' : undefined}
-												class={[
-													'flex min-h-11 min-w-11 items-center justify-center rounded-control border px-3 text-sm font-medium transition-colors',
-													isSelected
-														? 'border-accent bg-accent text-white'
-														: 'border-border-strong bg-surface hover:bg-surface-hover',
-													out && !isSelected ? 'text-text-muted line-through' : '',
-												]
-													.filter(Boolean)
-													.join(' ')}
-											>
-												{value}
-												{out && <span class="sr-only">, uitverkocht</span>}
-											</a>
+											{code ? (
+												<a
+													href={href}
+													aria-current={w.geselecteerd ? 'true' : undefined}
+													title={w.waarde}
+													class:list={[
+														'relative flex size-10 items-center justify-center rounded-full border bg-surface p-1 transition-shadow',
+														w.geselecteerd
+															? 'border-accent ring-2 ring-accent ring-offset-2 ring-offset-canvas'
+															: 'border-border-strong hover:ring-2 hover:ring-border-strong hover:ring-offset-2 hover:ring-offset-canvas',
+														w.uitverkocht
+															? 'opacity-60 after:absolute after:top-1/2 after:right-1 after:left-1 after:h-px after:-rotate-45 after:bg-text'
+															: '',
+													]}
+												>
+													<span
+														class="block size-full rounded-full"
+														style={`background-color: ${code}`}
+														aria-hidden="true"
+													/>
+													<span class="sr-only">
+														{w.waarde}
+														{w.uitverkocht && ', uitverkocht'}
+													</span>
+												</a>
+											) : (
+												<a
+													href={href}
+													aria-current={w.geselecteerd ? 'true' : undefined}
+													class:list={[
+														'flex min-h-10 min-w-10 items-center justify-center rounded-control border px-3 text-sm font-medium transition-colors',
+														w.geselecteerd
+															? 'border-accent bg-accent text-white'
+															: 'border-border-strong bg-surface hover:bg-surface-hover',
+														w.uitverkocht && !w.geselecteerd ? 'text-text-muted line-through' : '',
+													]}
+												>
+													{w.waarde}
+													{w.uitverkocht && <span class="sr-only">, uitverkocht</span>}
+												</a>
+											)}
 										</li>
 									);
 								})}
 							</ul>
 						</fieldset>
-					)}
+					</>
+				))}
 
-				<div class="flex flex-col gap-4 rounded-card border border-border bg-surface p-4">
-					<Price
-						cents={selected.priceCents}
-						compareAtCents={selected.compareAtPriceCents}
-						size="lg"
-					/>
+				<hr class="my-5 border-border" />
 
-					<div class="flex items-center gap-2">
-						<StockBadge quantity={selected.stockQuantity} />
-						<span class="text-xs text-text-muted">Artikelnummer {selected.sku}</span>
-						<Hartje
-							productId={product.id}
-							naam={product.name}
-							favoriet={favoriet}
-							naar={hier}
-							class="ml-auto border border-border shadow-none"
-						/>
+				{soldOut ? (
+					<div>
+						<p class="font-semibold text-danger">Uitverkocht</p>
+						<p class="mt-1 text-sm text-text-muted">
+							{ditArtikel} is op dit moment niet leverbaar.{' '}
+							{keuzes.length > 0 ? 'Kies een andere, of kom later terug.' : 'Kom later nog eens terug.'}
+						</p>
+						<button
+							type="button"
+							disabled
+							class="mt-5 inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center rounded-full border border-border bg-surface px-6 text-base font-medium text-text-disabled"
+						>
+							Uitverkocht
+						</button>
 					</div>
+				) : (
+					<form
+						method="POST"
+						action={actions.winkelmand.toevoegen}
+						data-koopformulier
+						data-in-mand={alInMand}
+						class="flex flex-col gap-5"
+					>
+						<input type="hidden" name="variantId" value={selected.id} />
+						<input type="hidden" name="naar" value={hier} />
 
-					{soldOut ? (
-							<>
-								<Button disabled block size="lg">Uitverkocht</Button>
-								<p class="text-sm text-text-muted">
-									Deze maat is op dit moment niet leverbaar. Kies een andere maat
-									of kom later terug.
-								</p>
-							</>
-						) : (
-							<>
-								<WinkelmandKnop variantId={selected.id} naam={product.name} naar={hier} stijl="blok" />
-								<p class="text-sm text-text-muted">
-									Voor 16.00 uur besteld, morgen in huis. Dertig dagen bedenktijd.
-								</p>
-							</>
-						)}
+						<div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+							<div
+								class="inline-flex h-12 items-center rounded-full border border-border-strong bg-surface"
+								data-aantal
+							>
+								<button
+									type="button"
+									data-min
+									class="inline-flex size-12 items-center justify-center rounded-full text-text hover:bg-surface-hover disabled:cursor-not-allowed disabled:text-text-disabled disabled:hover:bg-transparent"
+								>
+									<Icon name="ph:minus" class="size-4" aria-hidden="true" />
+									<span class="sr-only">Een minder</span>
+								</button>
+								<label for="aantal" class="sr-only">Aantal</label>
+								<input
+									id="aantal"
+									type="number"
+									name="aantal"
+									value="1"
+									min="1"
+									max={maxAantal}
+									inputmode="numeric"
+									class="h-full w-12 bg-transparent text-center text-base font-semibold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+								/>
+								<button
+									type="button"
+									data-plus
+									class="inline-flex size-12 items-center justify-center rounded-full text-text hover:bg-surface-hover disabled:cursor-not-allowed disabled:text-text-disabled disabled:hover:bg-transparent"
+								>
+									<Icon name="ph:plus" class="size-4" aria-hidden="true" />
+									<span class="sr-only">Een meer</span>
+								</button>
+							</div>
+
+							<p class="text-sm">
+								{lowStock ? (
+									<>
+										<span class="block">
+											Nog <strong class="text-accent">{selected.stockQuantity}</strong> op voorraad
+										</span>
+										<span class="block text-text-muted">Wees er snel bij</span>
+									</>
+								) : (
+									<>
+										<span class="block font-semibold text-accent">Op voorraad</span>
+										<span class="block text-text-muted">Voor 15:00 besteld, morgen in huis</span>
+									</>
+								)}
+							</p>
+						</div>
+
+						<div class="grid gap-3 sm:grid-cols-2">
+							<button
+								type="submit"
+								class="inline-flex min-h-12 items-center justify-center rounded-full bg-accent px-6 text-base font-medium text-white transition-colors hover:bg-accent-hover"
+							>
+								Nu kopen
+							</button>
+							<button
+								type="submit"
+								data-blijf
+								class="inline-flex min-h-12 items-center justify-center rounded-full border border-accent bg-surface px-6 text-base font-medium text-accent transition-colors hover:bg-accent-subtle disabled:cursor-wait disabled:opacity-70"
+							>
+								In winkelmand
+							</button>
+						</div>
+
+						<p
+							data-koopmelding
+							hidden
+							role="status"
+							class="flex items-start gap-2 rounded-card bg-accent-subtle px-4 py-3 text-sm text-text"
+						>
+							<Icon name="ph:check" class="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
+							<span>
+								{product.name} zit in je winkelmand.{' '}
+								<a href="/winkelmand" class="font-medium text-accent underline">Bekijk je winkelmand</a>
+							</span>
+						</p>
+					</form>
+				)}
+
+				<div class="mt-5 divide-y divide-border rounded-card border border-border bg-surface">
+					<div class="flex gap-3 px-4 py-3.5">
+						<Icon name="ph:truck" class="mt-0.5 size-5 shrink-0 text-accent" aria-hidden="true" />
+						<div>
+							<p class="text-sm font-semibold">Gratis verzending vanaf € 50</p>
+							<p class="mt-0.5 text-sm text-text-muted">
+								Voor 15:00 besteld, morgen in huis.{' '}
+								<a href="/klantenservice/verzenden" class="underline hover:text-accent">
+									Meer over bezorgen
+								</a>
+							</p>
+						</div>
+					</div>
+					<div class="flex gap-3 px-4 py-3.5">
+						<Icon
+							name="ph:arrow-counter-clockwise"
+							class="mt-0.5 size-5 shrink-0 text-accent"
+							aria-hidden="true"
+						/>
+						<div>
+							<p class="text-sm font-semibold">Eenvoudig retourneren</p>
+							<p class="mt-0.5 text-sm text-text-muted">
+								Dertig dagen bedenktijd. Niet goed? Stuur het terug.{' '}
+								<a href="/klantenservice/retourneren" class="underline hover:text-accent">
+									Meer over retourneren
+								</a>
+							</p>
+						</div>
+					</div>
 				</div>
-
-				<!--
-					Deze beschrijving komt uit de database en bevat HTML uit de oude
-					WooCommerce-teksten. In fase 2 wordt hij opgeschoond voordat hij
-					wordt weggeschreven, want vanaf hier is het te laat.
-				-->
-				<div
-					class="prose-sm max-w-none text-sm leading-relaxed [&_li]:mt-1 [&_p]:mt-3 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-5"
-					set:html={product.description}
-				/>
 			</div>
 		</div>
+		</div>
+
+		<!--
+			Productinformatie, over de volle breedte onder de foto's en het koopblok.
+
+			Eerst een rij tegels met de pluspunten uit de beschrijving. Daaronder
+			uitklapblokken: de beschrijving (open, met de tweede foto ernaast), elk
+			onderwerp uit de tekst als eigen blok, de specificaties (open) en
+			verzenden en retourneren. De blokken zijn details/summary, dus ze werken
+			ook zonder JavaScript. Hoe de lap tekst uit de database wordt opgedeeld
+			staat in src/lib/productinformatie.ts.
+		-->
+		<section class="mt-12 border-t border-border pt-10 lg:mt-16 lg:pt-12" aria-labelledby="info-titel">
+			<div class="max-w-2xl">
+				<h2 id="info-titel" class="text-2xl font-bold tracking-tight sm:text-3xl">Productinformatie</h2>
+				<p class="mt-2 text-text-muted">
+					Alles over {product.name.toLowerCase().startsWith('de ') ? product.name : `de ${product.name}`}: wat je krijgt, de specificaties en hoe we leveren.
+				</p>
+			</div>
+
+			{info.kenmerken.length > 0 && (
+				<ul
+					class:list={[
+						'mt-8 grid gap-3 sm:grid-cols-2 sm:gap-4',
+						info.kenmerken.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3',
+					]}
+					aria-label="In het kort"
+				>
+					{info.kenmerken.map((kenmerk) => (
+						<li class="flex items-start gap-3 rounded-card border border-border bg-surface p-4">
+							<span
+								class="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent"
+								aria-hidden="true"
+							>
+								<Icon name="ph:check" class="size-4" />
+							</span>
+							<span class="text-sm leading-snug font-medium">{kenmerk}</span>
+						</li>
+					))}
+				</ul>
+			)}
+
+			<div class="mt-8 divide-y divide-border rounded-card border border-border bg-surface">
+				{info.inleiding.length > 0 && (
+					<details class="group" open>
+						<summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 text-lg font-semibold hover:bg-surface-hover sm:px-6 [&::-webkit-details-marker]:hidden">
+							Beschrijving
+							<Icon
+								name="ph:caret-down"
+								class="size-5 shrink-0 text-text-muted transition-transform duration-200 group-open:rotate-180"
+								aria-hidden="true"
+							/>
+						</summary>
+						<div
+							class:list={[
+								'grid gap-8 px-5 pb-8 sm:px-6',
+								beschrijvingFoto ? 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12' : '',
+							]}
+						>
+							<div data-inklap class="max-w-3xl scroll-mt-32">
+								<div class="relative">
+									<div data-inklap-tekst>
+										{info.inleiding.map((blok, index) => (
+											<BeschrijvingBlok blok={blok} inleiding={index === 0} />
+										))}
+									</div>
+									<div
+										data-inklap-vervaging
+										hidden
+										class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface to-transparent"
+										aria-hidden="true"
+									>
+									</div>
+								</div>
+								<button
+									type="button"
+									data-inklap-knop
+									hidden
+									aria-expanded="false"
+									class="group/knop mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-control font-medium text-accent hover:underline"
+								>
+									<span data-label="dicht">Meer weergeven</span>
+									<span data-label="open" hidden>Minder weergeven</span>
+									<Icon
+										name="ph:caret-down"
+										class="size-4 transition-transform duration-200 group-aria-expanded/knop:rotate-180"
+										aria-hidden="true"
+									/>
+								</button>
+							</div>
+							{beschrijvingFoto && (
+								<div class="hidden self-start overflow-hidden rounded-card bg-surface-hover lg:sticky lg:top-28 lg:block">
+									<div class="aspect-[4/3] p-6">
+										<ProductImage
+											src={beschrijvingFoto.url}
+											alt={beschrijvingFoto.alt}
+											width={beschrijvingFoto.width}
+											height={beschrijvingFoto.height}
+											widths={[480, 640]}
+											sizes="(min-width: 1400px) 480px, 36vw"
+											class="size-full object-contain mix-blend-multiply"
+										/>
+									</div>
+								</div>
+							)}
+						</div>
+					</details>
+				)}
+
+				{info.secties.map((sectie) => (
+					<details class="group">
+						<summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 text-lg font-semibold hover:bg-surface-hover sm:px-6 [&::-webkit-details-marker]:hidden">
+							{sectie.titel}
+							<Icon
+								name="ph:caret-down"
+								class="size-5 shrink-0 text-text-muted transition-transform duration-200 group-open:rotate-180"
+								aria-hidden="true"
+							/>
+						</summary>
+						<div class="max-w-3xl px-5 pb-8 sm:px-6 [&>:first-child]:mt-0">
+							{sectie.blokken.map((blok) => (
+								<BeschrijvingBlok blok={blok} />
+							))}
+						</div>
+					</details>
+				))}
+
+				<details class="group" open>
+					<summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 text-lg font-semibold hover:bg-surface-hover sm:px-6 [&::-webkit-details-marker]:hidden">
+						Specificaties
+						<Icon
+							name="ph:caret-down"
+							class="size-5 shrink-0 text-text-muted transition-transform duration-200 group-open:rotate-180"
+							aria-hidden="true"
+						/>
+					</summary>
+					<dl class="grid gap-x-12 px-5 pt-1 pb-8 text-sm sm:px-6 lg:grid-cols-2">
+						{product.brand && (
+							<div class="flex justify-between gap-4 border-b border-border py-3">
+								<dt class="text-text-muted">Merk</dt>
+								<dd class="text-right font-medium">{product.brand}</dd>
+							</div>
+						)}
+						<div class="flex justify-between gap-4 border-b border-border py-3">
+							<dt class="text-text-muted">Artikelnummer</dt>
+							<dd class="text-right font-medium">{selected.sku}</dd>
+						</div>
+						{keuzes.map((keuze) => (
+							<div class="flex justify-between gap-4 border-b border-border py-3">
+								<dt class="text-text-muted">{keuze.naam}</dt>
+								<dd class="text-right font-medium">{keuze.waarden.map((w) => w.waarde).join(', ')}</dd>
+							</div>
+						))}
+						{categorieen.length > 0 && (
+							<div class="flex justify-between gap-4 border-b border-border py-3">
+								<dt class="text-text-muted">{categorieen.length === 1 ? 'Categorie' : 'Categorieën'}</dt>
+								<dd class="text-right font-medium">
+									{categorieen.map((c, i) => (
+										<>
+											{i > 0 && ', '}
+											<a href={`/categorie/${c.slug}`} class="hover:text-accent hover:underline">
+												{c.name}
+											</a>
+										</>
+									))}
+								</dd>
+							</div>
+						)}
+						<div class="flex justify-between gap-4 border-b border-border py-3">
+							<dt class="text-text-muted">Beschikbaarheid</dt>
+							<dd class:list={['text-right font-medium', soldOut ? 'text-danger' : 'text-accent']}>{voorraadTekst}</dd>
+						</div>
+						<div class="flex justify-between gap-4 border-b border-border py-3">
+							<dt class="text-text-muted">Prijs</dt>
+							<dd class="text-right font-medium">
+								<Price cents={selected.priceCents} compareAtCents={selected.compareAtPriceCents} class="justify-end" />
+							</dd>
+						</div>
+						<div class="flex justify-between gap-4 border-b border-border py-3">
+							<dt class="text-text-muted">Levering</dt>
+							<dd class="text-right font-medium">Voor 15:00 besteld, morgen in huis</dd>
+						</div>
+					</dl>
+				</details>
+
+				<details class="group">
+					<summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 text-lg font-semibold hover:bg-surface-hover sm:px-6 [&::-webkit-details-marker]:hidden">
+						Verzenden, betalen en retourneren
+						<Icon
+							name="ph:caret-down"
+							class="size-5 shrink-0 text-text-muted transition-transform duration-200 group-open:rotate-180"
+							aria-hidden="true"
+						/>
+					</summary>
+					<ul class="grid gap-6 px-5 pt-3 pb-8 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+						{usps.map((usp) => (
+							<li class="flex gap-3">
+								<span
+									class="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent"
+									aria-hidden="true"
+								>
+									<Icon name={usp.icon} class="size-5" />
+								</span>
+								<span class="min-w-0">
+									<span class="block text-sm font-semibold">{usp.title}</span>
+									<span class="block text-sm text-text-muted">{usp.text}</span>
+								</span>
+							</li>
+						))}
+					</ul>
+				</details>
+			</div>
+		</section>
 	</div>
+
+	{verwant.length > 0 && categorie && (
+		<div class="mt-12 lg:mt-16">
+			<!-- De tussenlijn staat binnen de paginarand, net als die boven de productinformatie. -->
+			<div class="mx-auto max-w-[1400px] px-4 sm:px-6">
+				<hr class="border-border" />
+			</div>
+			<div class="mt-10 lg:mt-12">
+			<ProductSection
+				id="verwant"
+				title={`Meer uit ${categorie.name}`}
+				link={{ label: 'Bekijk de hele categorie', href: `/categorie/${categorie.slug}` }}
+				items={verwant}
+				favorieten={new Set(favorieten)}
+			/>
+			</div>
+		</div>
+	)}
 </Layout>
+
+<script>
+	import '../../scripts/productpagina.ts';
+</script>

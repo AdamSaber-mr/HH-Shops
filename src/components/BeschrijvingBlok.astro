@@ -1,0 +1,55 @@
+---
+import { Icon } from 'astro-icon/components';
+import { type Blok, tekstVan } from '../lib/productinformatie.ts';
+
+/*
+ * Een blok uit de productbeschrijving: een alinea of een lijst. De inleiding
+ * (het eerste blok) staat iets groter. Een lijst met korte punten staat in
+ * twee kolommen, met een vinkje per punt; een lijst met lange punten in een.
+ * Een genummerde lijst blijft genummerd, want daar is de volgorde de inhoud.
+ *
+ * De HTML komt uit de database en is bij het importeren opgeschoond tot p, ul,
+ * ol, li, strong, em, br en h3 zonder attributen (src/lib/tekst.ts).
+ */
+
+interface Props {
+	blok: Blok;
+	inleiding?: boolean;
+}
+
+const { blok, inleiding = false } = Astro.props;
+const korteItems =
+	blok.soort === 'lijst' && blok.items.every((item) => tekstVan(item).length <= 45);
+---
+
+{
+	blok.soort === 'alinea' ? (
+		<p
+			class:list={[
+				'mt-3 leading-relaxed [&_strong]:font-semibold',
+				inleiding ? 'text-lg text-text' : 'text-base',
+			]}
+			set:html={blok.html}
+		/>
+	) : blok.genummerd ? (
+		<ol class="mt-3 list-decimal space-y-1.5 pl-5 leading-relaxed [&_strong]:font-semibold">
+			{blok.items.map((item) => (
+				<li set:html={item} />
+			))}
+		</ol>
+	) : (
+		<ul class:list={['mt-3 grid gap-2', korteItems ? 'sm:grid-cols-2' : '']}>
+			{blok.items.map((item) => (
+				<li class="flex gap-2.5 leading-relaxed [&_strong]:font-semibold">
+					<span
+						class="mt-1 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent"
+						aria-hidden="true"
+					>
+						<Icon name="ph:check" class="size-3" />
+					</span>
+					<span set:html={item} />
+				</li>
+			))}
+		</ul>
+	)
+}
