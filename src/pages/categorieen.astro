@@ -2,24 +2,19 @@
 import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import Layout from '../layouts/Layout.astro';
-import { listCategories } from '../lib/catalog.ts';
+import { kaartFoto, listCategories } from '../lib/catalog.ts';
 import { categoryHref } from '../lib/navigation.ts';
 
 /*
  * Het overzicht van alle categorieen: een raster van kaarten met de foto, de
  * naam en het aantal producten.
  *
- * De foto's zijn dezelfde als op de startpagina (src/assets/categorieen).
- * Niet elke categorie heeft er een; die krijgt een kaart met alleen de naam
- * op een groen vlak, zodat het raster compleet blijft.
+ * De foto's zijn dezelfde als op de startpagina: de kaartfoto uit het
+ * beheerpaneel. Niet elke categorie heeft er een; die krijgt een kaart met
+ * alleen de naam op een groen vlak, zodat het raster compleet blijft.
  */
 
 const categorieen = await listCategories();
-
-const files = import.meta.glob<{ default: ImageMetadata }>('../assets/categorieen/*.png', {
-	eager: true,
-});
-const fotoVoor = (slug: string) => files[`../assets/categorieen/${slug}.png`]?.default;
 
 const aantal = (n: number) => (n === 1 ? '1 product' : `${n} producten`);
 ---
@@ -42,14 +37,16 @@ const aantal = (n: number) => (n === 1 ? '1 product' : `${n} producten`);
 
 		<ul class="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
 			{categorieen.map((c) => {
-				const foto = fotoVoor(c.slug);
+				const foto = kaartFoto(c);
 				return (
 					<li>
 						<a href={categoryHref(c.slug)} class="group block rounded-card">
 							<div class="aspect-[5/4] overflow-hidden rounded-card bg-accent shadow-sm transition-[transform,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:shadow-lg">
 								{foto ? (
 									<Image
-										src={foto}
+										src={foto.url}
+										width={foto.width}
+										height={foto.height}
 										alt=""
 										widths={[320, 480, 640, 900]}
 										sizes="(min-width: 1400px) 435px, (min-width: 1024px) 31vw, 50vw"

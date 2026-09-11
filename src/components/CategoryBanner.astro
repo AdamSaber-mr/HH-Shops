@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
+import type { CategorieFoto } from '../lib/catalog.ts';
 import Button from './Button.astro';
 
 /*
@@ -14,12 +15,10 @@ import Button from './Button.astro';
  * te smal voor tekst: daar staat de tekst op een zandkleurig vlak (token sand,
  * dezelfde kleur als de rand van de foto's) en komt de foto eronder.
  *
- * De foto komt uit src/assets/categorie-banners/<slug>.png. Ontbreekt hij, dan
- * is de banner een bosgroen vlak met witte tekst; de pagina werkt dus ook
- * voor een categorie die nog geen foto heeft. Dat is anders dan bij de
- * categoriekaarten op de startpagina, waar een ontbrekende foto de build laat
- * omvallen: daar is een lege kaart een fout, hier is een banner zonder foto
- * een tussenstand.
+ * De foto komt uit de database: de bannerfoto die in het beheerpaneel bij de
+ * categorie is geupload. Ontbreekt hij, dan is de banner een bosgroen vlak
+ * met witte tekst; de pagina werkt dus ook voor een categorie die nog geen
+ * foto heeft.
  *
  * De kop is bewust een <p> met kopstijl en geen heading: de h1 van de pagina
  * staat lager, bij het raster, en een h2 boven de h1 is verkeerd voor
@@ -27,21 +26,14 @@ import Button from './Button.astro';
  */
 
 interface Props {
-	slug: string;
+	image: CategorieFoto | null;
 	eyebrow?: string;
 	title: string;
 	text: string;
 	cta: { label: string; href: string };
-	imageAlt?: string;
 }
 
-const { slug, eyebrow, title, text, cta, imageAlt = '' } = Astro.props;
-
-const files = import.meta.glob<{ default: ImageMetadata }>(
-	'../assets/categorie-banners/*.png',
-	{ eager: true },
-);
-const image = files[`../assets/categorie-banners/${slug}.png`]?.default;
+const { image, eyebrow, title, text, cta } = Astro.props;
 ---
 
 <section class="mx-auto max-w-[1400px] px-4 sm:px-6" aria-label="Over deze categorie">
@@ -65,8 +57,10 @@ const image = files[`../assets/categorie-banners/${slug}.png`]?.default;
 				</div>
 			</div>
 			<Image
-				src={image}
-				alt={imageAlt}
+				src={image.url}
+				width={image.width}
+				height={image.height}
+				alt={image.alt}
 				widths={[768, 1080, 1400, 2170]}
 				sizes="(min-width: 1400px) 1352px, calc(100vw - 32px)"
 				quality={72}

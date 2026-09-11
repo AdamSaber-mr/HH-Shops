@@ -36,6 +36,13 @@
 			"when": 1789046239097,
 			"tag": "0004_klanten",
 			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "7",
+			"when": 1789120736000,
+			"tag": "0005_categorie_banners",
+			"breakpoints": true
 		}
 	]
 }

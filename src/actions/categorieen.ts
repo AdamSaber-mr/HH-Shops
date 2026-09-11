@@ -28,8 +28,11 @@ const velden = z.object({
 	naam: tekst(),
 	slug: tekst(),
 	beschrijving: tekst(),
+	bannerKop: tekst(),
 	positie: tekst(),
 });
+
+const SOORTEN = ['kaart', 'banner'] as const;
 
 function naarInvoer(v: z.infer<typeof velden>, ctx: z.RefinementCtx): categorieen.CategorieInvoer {
 	const naam = cleanName(v.naam ?? '');
@@ -50,6 +53,13 @@ function naarInvoer(v: z.infer<typeof velden>, ctx: z.RefinementCtx): categoriee
 	}
 
 	const beschrijving = normaliseWhitespace(v.beschrijving ?? '');
+	const bannerKop = cleanName(v.bannerKop ?? '');
+	if (bannerKop !== '') {
+		if (bannerKop.length < 3 || bannerKop.length > 120)
+			ctx.addIssue({ code: 'custom', path: ['bannerKop'], message: '3 tot 120 tekens.' });
+		for (const p of nameProblems(bannerKop))
+			ctx.addIssue({ code: 'custom', path: ['bannerKop'], message: `De kop ${p}.` });
+	}
 	const positie = parseGeheel(v.positie ?? '0');
 	if (positie === null)
 		ctx.addIssue({ code: 'custom', path: ['positie'], message: 'Vul een heel getal in.' });
@@ -58,6 +68,7 @@ function naarInvoer(v: z.infer<typeof velden>, ctx: z.RefinementCtx): categoriee
 		naam,
 		slug,
 		beschrijving: beschrijving === '' ? null : beschrijving,
+		bannerKop: bannerKop === '' ? null : bannerKop,
 		positie: positie ?? 0,
 	};
 }
@@ -95,7 +106,12 @@ export const categorieenActions = {
 	fotoUploaden: defineAction({
 		accept: 'form',
 		input: z
-			.object({ id: z.coerce.number().int().positive(), bestand: z.instanceof(File), alt: tekst() })
+			.object({
+				id: z.coerce.number().int().positive(),
+				soort: z.enum(SOORTEN),
+				bestand: z.instanceof(File),
+				alt: tekst(),
+			})
 			.transform((v, ctx) => {
 				if (v.bestand.size === 0)
 					ctx.addIssue({ code: 'custom', path: ['bestand'], message: 'Kies een bestand.' });
@@ -113,13 +129,13 @@ export const categorieenActions = {
 				else
 					for (const p of altProblems(alt))
 						ctx.addIssue({ code: 'custom', path: ['alt'], message: `De alt-tekst ${p}.` });
-				return { id: v.id, bestand: v.bestand, alt };
+				return { id: v.id, soort: v.soort, bestand: v.bestand, alt };
 			}),
-		handler: async ({ id, bestand, alt }, context) => {
+		handler: async ({ id, soort, bestand, alt }, context) => {
 			vereisBeheerder(context);
 			try {
 				const buffer = Buffer.from(await bestand.arrayBuffer());
-				await categorieen.fotoUploaden(getDb(), id, { buffer, naam: bestand.name }, alt);
+				await categorieen.fotoUploaden(getDb(), id, soort, { buffer, naam: bestand.name }, alt);
 				return { id };
 			} catch (error) {
 				return gooi(error);
@@ -129,11 +145,11 @@ export const categorieenActions = {
 
 	fotoVerwijderen: defineAction({
 		accept: 'form',
-		input: z.object({ id: z.coerce.number().int().positive() }),
-		handler: async ({ id }, context) => {
+		input: z.object({ id: z.coerce.number().int().positive(), soort: z.enum(SOORTEN) }),
+		handler: async ({ id, soort }, context) => {
 			vereisBeheerder(context);
 			try {
-				await categorieen.fotoVerwijderen(getDb(), id);
+				await categorieen.fotoVerwijderen(getDb(), id, soort);
 				return { id };
 			} catch (error) {
 				return gooi(error);

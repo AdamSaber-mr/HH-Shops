@@ -58,45 +58,50 @@ export async function schrijf(
 	};
 
 	await db.transaction(async (tx) => {
-		/* Categorieen, herkend op slug. */
+		/* Bestaande koppelingen van oud naar nieuw. */
+		const existingLegacy = await tx.select().from(legacyUrls);
+
+		/*
+		 * Categorieen, herkend op het oude WooCommerce-id via legacy_urls, en
+		 * anders op slug. Een categorie die al bestaat wordt NIET bijgewerkt:
+		 * naam, slug, volgorde, foto's en bannertekst zijn van het beheerpaneel,
+		 * en de import mag niet terugzetten wat Adam daar heeft gewijzigd. De
+		 * import maakt alleen aan wat er nog niet is.
+		 */
 		const categoryIdBySlug = new Map<string, number>();
 		const existingCategories = await tx.select().from(categories);
 		for (const c of model.categories) {
-			const wanted = {
-				name: c.name,
-				description: null,
-				imageUrl: c.imageFile ? requireFile(files, c.imageFile).url : null,
-				imageAlt: c.imageAlt,
-				parentId: null,
-				position: c.position,
-			};
-			// Op de nieuwe slug, anders op de oude: een categorie die nog onder
-			// zijn WooCommerce-slug staat wordt overgenomen en hernoemd, niet
-			// verdubbeld.
+			const legacy = existingLegacy.find(
+				(row) => row.sourceKind === 'category' && row.sourceId === c.oudId,
+			);
 			const current =
+				(legacy?.categoryId !== null && legacy?.categoryId !== undefined
+					? existingCategories.find((row) => row.id === legacy.categoryId)
+					: undefined) ??
 				existingCategories.find((row) => row.slug === c.slug) ??
 				existingCategories.find((row) => row.slug === c.oudeSlug);
-			if (!current) {
-				const [row] = await tx
-					.insert(categories)
-					.values({ slug: c.slug, ...wanted })
-					.returning({ id: categories.id });
-				categoryIdBySlug.set(c.slug, row.id);
-				tellingen.categorieen.toegevoegd++;
-			} else {
+			if (current) {
 				categoryIdBySlug.set(c.slug, current.id);
-				if (differs(current, { slug: c.slug, ...wanted })) {
-					await tx
-						.update(categories)
-						.set({ slug: c.slug, ...wanted })
-						.where(eq(categories.id, current.id));
-					tellingen.categorieen.bijgewerkt++;
-				}
+				continue;
 			}
+			const foto = c.imageFile ? requireFile(files, c.imageFile) : null;
+			const [row] = await tx
+				.insert(categories)
+				.values({
+					slug: c.slug,
+					name: c.name,
+					description: null,
+					imageUrl: foto?.url ?? null,
+					imageAlt: foto ? c.imageAlt : null,
+					imageWidth: foto?.width ?? null,
+					imageHeight: foto?.height ?? null,
+					parentId: null,
+					position: c.position,
+				})
+				.returning({ id: categories.id });
+			categoryIdBySlug.set(c.slug, row.id);
+			tellingen.categorieen.toegevoegd++;
 		}
-
-		/* Bestaande koppelingen van oud naar nieuw. */
-		const existingLegacy = await tx.select().from(legacyUrls);
 		const productIdByOldId = new Map<number, number>();
 		for (const row of existingLegacy) {
 			if (row.sourceKind === 'product' && row.productId !== null)

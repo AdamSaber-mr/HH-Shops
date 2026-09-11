@@ -4,7 +4,13 @@ import CategoryBanner from '../../components/CategoryBanner.astro';
 import FilterBar from '../../components/FilterBar.astro';
 import ProductGrid from '../../components/ProductGrid.astro';
 import Layout from '../../layouts/Layout.astro';
-import { getCategoryBySlug, listProductsInCategory } from '../../lib/catalog.ts';
+import {
+	bannerFoto,
+	bannerTekst,
+	getCategoryBySlug,
+	listProductsInCategory,
+	verhuisdeCategorieSlug,
+} from '../../lib/catalog.ts';
 import {
 	beschikbareOpties,
 	defaultVariant,
@@ -12,16 +18,16 @@ import {
 	heeftActieveFilters,
 	leesFilter,
 } from '../../lib/categorie-filters.ts';
-import { tekstVoor } from '../../lib/categorie-teksten.ts';
 import { leesFavorieten } from '../../lib/klanten/favorieten.ts';
 
 /*
  * De categoriepagina: banner, filterbalk, kop met teller en het raster.
  *
- * Een pagina voor alle categorieen. De slug bepaalt de categorie, de tekst in
- * de banner komt uit categorie-teksten.ts, de foto uit
- * src/assets/categorie-banners. Filters en sortering staan in de querystring
- * en worden in categorie-filters.ts uitgerekend.
+ * Een pagina voor alle categorieen. De slug bepaalt de categorie; de tekst en
+ * de foto in de banner komen uit de database (in te vullen in het
+ * beheerpaneel). Is de slug in het paneel gewijzigd, dan verwijst de oude
+ * door naar de nieuwe. Filters en sortering staan in de querystring en
+ * worden in categorie-filters.ts uitgerekend.
  *
  * Twee lege staten: een categorie zonder producten (dan ook geen filterbalk,
  * er valt niets te filteren) en filters die niets opleveren (dan blijft de
@@ -32,7 +38,11 @@ const { slug } = Astro.params;
 if (!slug) return new Response(null, { status: 404, statusText: 'Niet gevonden' });
 
 const [category, alle] = await Promise.all([getCategoryBySlug(slug), listProductsInCategory(slug)]);
-if (!category) return new Response(null, { status: 404, statusText: 'Niet gevonden' });
+if (!category) {
+	const nieuw = await verhuisdeCategorieSlug(slug);
+	if (nieuw) return Astro.redirect(`/categorie/${nieuw}${Astro.url.search}`, 301);
+	return new Response(null, { status: 404, statusText: 'Niet gevonden' });
+}
 
 const opties = beschikbareOpties(alle);
 const filter = leesFilter(
@@ -53,10 +63,7 @@ const entries = gefilterd
 	);
 const favorieten = new Set(await leesFavorieten(Astro));
 
-// De vaste tekst per categorie, tenzij er in het beheerpaneel een
-// beschrijving is ingevuld: die wint, want die kan de klant zelf aanpassen.
-const tekst = tekstVoor(category.slug, category.name);
-const bannerTekst = category.description ?? tekst.tekst;
+const tekst = bannerTekst(category);
 const pad = `/categorie/${category.slug}`;
 const gefilterdActief = heeftActieveFilters(filter);
 // Gefilterde en gesorteerde varianten van de pagina horen niet in Google.
@@ -68,7 +75,7 @@ const teller = gefilterdActief
 	: aantal(alle.length);
 ---
 
-<Layout title={category.name} description={bannerTekst} noindex={noindex}>
+<Layout title={category.name} description={tekst.tekst} noindex={noindex}>
 	<div class="mx-auto max-w-[1400px] px-4 pt-5 sm:px-6">
 		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
 			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
@@ -81,12 +88,11 @@ const teller = gefilterdActief
 
 	<div class="mt-4">
 		<CategoryBanner
-			slug={category.slug}
+			image={bannerFoto(category)}
 			eyebrow={tekst.eyebrow}
 			title={tekst.titel}
-			text={bannerTekst}
+			text={tekst.tekst}
 			cta={{ label: tekst.knop, href: '#producten' }}
-			imageAlt={category.imageAlt ?? ''}
 		/>
 	</div>
 

@@ -79,11 +79,21 @@ export const categories = pgTable(
 		slug: text('slug').notNull().unique(),
 		name: text('name').notNull(),
 		description: text('description'),
-		// Alle 9 oude categorieen hebben een afbeelding. Zonder deze kolommen
-		// laat de import ze stilzwijgend vallen en doet iemand het werk in
-		// fase 3 opnieuw.
+		// De kaartfoto (5:4) voor de startpagina en het categorieoverzicht,
+		// in Vercel Blob. Breedte en hoogte zijn nodig voor de beeldoptimalisatie
+		// van externe foto's en tegen verspringen tijdens het laden.
 		imageUrl: text('image_url'),
 		imageAlt: text('image_alt'),
+		imageWidth: integer('image_width'),
+		imageHeight: integer('image_height'),
+		// De brede bannerfoto (3:1) bovenaan de categoriepagina, met de kop die
+		// erover staat. De tekst eronder is `description`. Alles in het
+		// beheerpaneel te wijzigen, niets meer per slug in de code.
+		bannerUrl: text('banner_url'),
+		bannerAlt: text('banner_alt'),
+		bannerWidth: integer('banner_width'),
+		bannerHeight: integer('banner_height'),
+		bannerTitle: text('banner_title'),
 		// De negen categorieen zijn nu plat. parent_id ligt klaar zodat
 		// subcategorieen later geen verbouwing zijn.
 		parentId: integer('parent_id').references((): AnyPgColumn => categories.id, {
@@ -118,8 +128,79 @@ export const categories = pgTable(
 			      btrim(${t.imageAlt}) = ${t.imageAlt}
 			      AND length(${t.imageAlt}) BETWEEN 5 AND 250)`,
 		),
+		// Bij een foto horen afmetingen, zonder foto zijn ze leeg.
+		check(
+			'categories_image_dimensions',
+			sql`((${t.imageUrl} IS NULL) = (${t.imageWidth} IS NULL))
+			    AND ((${t.imageUrl} IS NULL) = (${t.imageHeight} IS NULL))
+			    AND (${t.imageWidth} IS NULL OR ${t.imageWidth} BETWEEN 1 AND 10000)
+			    AND (${t.imageHeight} IS NULL OR ${t.imageHeight} BETWEEN 1 AND 10000)`,
+		),
+		check(
+			'categories_image_url_shape',
+			sql`${t.imageUrl} IS NULL OR (${t.imageUrl} ~ '^https://'
+			    AND ${t.imageUrl} NOT LIKE '%/wp-content/%'
+			    AND length(${t.imageUrl}) BETWEEN 5 AND 500)`,
+		),
+		// Dezelfde regels voor de banner.
+		check('categories_banner_pair', sql`(${t.bannerUrl} IS NULL) = (${t.bannerAlt} IS NULL)`),
+		check(
+			'categories_banner_alt_quality',
+			sql`${t.bannerAlt} IS NULL OR (
+			      btrim(${t.bannerAlt}) = ${t.bannerAlt}
+			      AND length(${t.bannerAlt}) BETWEEN 5 AND 250)`,
+		),
+		check(
+			'categories_banner_dimensions',
+			sql`((${t.bannerUrl} IS NULL) = (${t.bannerWidth} IS NULL))
+			    AND ((${t.bannerUrl} IS NULL) = (${t.bannerHeight} IS NULL))
+			    AND (${t.bannerWidth} IS NULL OR ${t.bannerWidth} BETWEEN 1 AND 10000)
+			    AND (${t.bannerHeight} IS NULL OR ${t.bannerHeight} BETWEEN 1 AND 10000)`,
+		),
+		check(
+			'categories_banner_url_shape',
+			sql`${t.bannerUrl} IS NULL OR (${t.bannerUrl} ~ '^https://'
+			    AND ${t.bannerUrl} NOT LIKE '%/wp-content/%'
+			    AND length(${t.bannerUrl}) BETWEEN 5 AND 500)`,
+		),
+		check(
+			'categories_banner_title_shape',
+			sql`${t.bannerTitle} IS NULL OR (btrim(${t.bannerTitle}) = ${t.bannerTitle}
+			    AND length(${t.bannerTitle}) BETWEEN 3 AND 120)`,
+		),
+		check(
+			'categories_banner_title_clean',
+			sql`${t.bannerTitle} IS NULL OR (${cleanTextSql(t.bannerTitle)})`,
+		),
 		check('categories_no_self_parent', sql`${t.parentId} IS NULL OR ${t.parentId} <> ${t.id}`),
 		check('categories_position_nonneg', sql`${t.position} >= 0`),
+	],
+);
+
+/*
+ * Oude slugs van categorieen.
+ *
+ * Een slug is het adres in de shop, en dat adres staat in Google en in links
+ * die klanten delen. Wordt een slug in het beheerpaneel gewijzigd, dan komt
+ * de oude hier te staan en verwijst /categorie/<oude slug> door naar de
+ * nieuwe. Een slug die opnieuw in gebruik komt, verdwijnt hier weer uit.
+ */
+export const categorySlugHistory = pgTable(
+	'category_slug_history',
+	{
+		id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+		slug: text('slug').notNull().unique(),
+		categoryId: integer('category_id')
+			.notNull()
+			.references(() => categories.id, { onDelete: 'cascade' }),
+		createdAt: createdAt(),
+	},
+	(t) => [
+		index('category_slug_history_category_idx').on(t.categoryId),
+		check(
+			'category_slug_history_slug_format',
+			sql`${t.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND length(${t.slug}) BETWEEN 2 AND 80`,
+		),
 	],
 );
 
