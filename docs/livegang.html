@@ -1,34 +1,56 @@
 <!doctype html>
 <html lang="nl">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Livegang HH Shops</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Livegang HH Shops</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+		>
 
-<style id="stijl">
-	:root {
-		--grond: #f5f7f3;
-		--vlak: #ffffff;
-		--vlak-2: #eaeee5;
-		--inkt: #1a1d17;
-		--gedempt: #5f6659;
-		--lijn: #dde2d6;
-		--lijn-sterk: #c0cab5;
-		--accent: #1f5e3d;
-		--accent-zacht: #e4efe6;
-		--accent-rand: #a9ccb6;
-		--wacht: #8a6516;
-		--wacht-zacht: #f7eeda;
-		--kritiek: #9c3a26;
-		--schaduw: 0 1px 2px rgba(26, 29, 23, .05);
-		color-scheme: light;
-	}
+		<style id="stijl">
+		:root {
+			--grond: #f5f7f3;
+			--vlak: #ffffff;
+			--vlak-2: #eaeee5;
+			--inkt: #1a1d17;
+			--gedempt: #5f6659;
+			--lijn: #dde2d6;
+			--lijn-sterk: #c0cab5;
+			--accent: #1f5e3d;
+			--accent-zacht: #e4efe6;
+			--accent-rand: #a9ccb6;
+			--wacht: #8a6516;
+			--wacht-zacht: #f7eeda;
+			--kritiek: #9c3a26;
+			--schaduw: 0 1px 2px rgba(26, 29, 23, 0.05);
+			color-scheme: light;
+		}
 
-	@media (prefers-color-scheme: dark) {
-		:root:not([data-theme="light"]) {
+		@media (prefers-color-scheme: dark) {
+			:root:not([data-theme="light"]) {
+				--grond: #111410;
+				--vlak: #191d17;
+				--vlak-2: #232820;
+				--inkt: #e9ece3;
+				--gedempt: #98a291;
+				--lijn: #2b3128;
+				--lijn-sterk: #414a3d;
+				--accent: #79c895;
+				--accent-zacht: #1b2a20;
+				--accent-rand: #2f5540;
+				--wacht: #dcb168;
+				--wacht-zacht: #2a2213;
+				--kritiek: #e69077;
+				--schaduw: 0 1px 2px rgba(0, 0, 0, 0.35);
+				color-scheme: dark;
+			}
+		}
+
+		:root[data-theme="dark"] {
 			--grond: #111410;
 			--vlak: #191d17;
 			--vlak-2: #232820;
@@ -42,731 +64,857 @@
 			--wacht: #dcb168;
 			--wacht-zacht: #2a2213;
 			--kritiek: #e69077;
-			--schaduw: 0 1px 2px rgba(0, 0, 0, .35);
+			--schaduw: 0 1px 2px rgba(0, 0, 0, 0.35);
 			color-scheme: dark;
 		}
-	}
 
-	:root[data-theme="dark"] {
-		--grond: #111410;
-		--vlak: #191d17;
-		--vlak-2: #232820;
-		--inkt: #e9ece3;
-		--gedempt: #98a291;
-		--lijn: #2b3128;
-		--lijn-sterk: #414a3d;
-		--accent: #79c895;
-		--accent-zacht: #1b2a20;
-		--accent-rand: #2f5540;
-		--wacht: #dcb168;
-		--wacht-zacht: #2a2213;
-		--kritiek: #e69077;
-		--schaduw: 0 1px 2px rgba(0, 0, 0, .35);
-		color-scheme: dark;
-	}
-
-	*, *::before, *::after { box-sizing: border-box; }
-
-	body {
-		margin: 0;
-		background: var(--grond);
-		color: var(--inkt);
-		font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-		font-size: 16px;
-		line-height: 1.55;
-		-webkit-font-smoothing: antialiased;
-	}
-
-	.omslag {
-		max-width: 60rem;
-		margin: 0 auto;
-		padding-inline: 20px;
-		padding-block: 0 72px;
-	}
-
-	.merkregel {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin: 0;
-		font-family: "IBM Plex Mono", ui-monospace, monospace;
-		font-size: 12px;
-		letter-spacing: .12em;
-		text-transform: uppercase;
-		color: var(--gedempt);
-	}
-	.merkregel::before { content: ""; width: 26px; height: 2px; background: var(--accent); }
-
-	.kop { padding-block: 56px 0; }
-
-	h1 {
-		font-family: Archivo, system-ui, sans-serif;
-		font-weight: 700;
-		font-size: clamp(2.1rem, 5.2vw, 3rem);
-		line-height: 1.05;
-		letter-spacing: -.02em;
-		text-wrap: balance;
-		margin: 18px 0 0;
-	}
-
-	.inleiding { max-width: 58ch; margin: 16px 0 0; color: var(--gedempt); font-size: 1.05rem; }
-	.inleiding strong { color: var(--inkt); font-weight: 600; }
-
-	.voortgang {
-		margin-top: 32px;
-		border: 1px solid var(--lijn);
-		background: var(--vlak);
-		border-radius: 10px;
-		padding: 18px 20px;
-		box-shadow: var(--schaduw);
-	}
-	.voortgang-kop {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 6px 16px;
-	}
-	.voortgang-label {
-		margin: 0;
-		font-family: "IBM Plex Mono", monospace;
-		font-size: 12px;
-		letter-spacing: .08em;
-		text-transform: uppercase;
-		color: var(--gedempt);
-	}
-	.voortgang-getal {
-		margin: 0;
-		font-family: Archivo, sans-serif;
-		font-weight: 700;
-		font-size: 1.45rem;
-		font-variant-numeric: tabular-nums;
-		letter-spacing: -.01em;
-	}
-	.voortgang-getal span { color: var(--gedempt); font-weight: 600; font-size: .95rem; }
-
-	.balk { margin-top: 14px; height: 6px; border-radius: 99px; background: var(--vlak-2); overflow: hidden; }
-	.balk div { height: 100%; background: var(--accent); border-radius: 99px; transition: width .35s ease; }
-
-	.melding {
-		margin: 14px 0 0;
-		padding: 10px 14px;
-		border-radius: 8px;
-		background: var(--wacht-zacht);
-		border: 1px solid var(--lijn);
-		font-size: .9rem;
-	}
-
-	.fase { margin-top: 48px; }
-	.fase-kop {
-		display: flex;
-		align-items: flex-start;
-		gap: 14px;
-		padding-bottom: 14px;
-		border-bottom: 2px solid var(--inkt);
-	}
-	.fase-nr {
-		font-family: "IBM Plex Mono", monospace;
-		font-weight: 500;
-		font-size: 13px;
-		color: var(--accent);
-		padding-top: 7px;
-		white-space: nowrap;
-		font-variant-numeric: tabular-nums;
-	}
-	.fase-tekst h2 {
-		font-family: Archivo, sans-serif;
-		font-weight: 600;
-		font-size: 1.4rem;
-		letter-spacing: -.012em;
-		margin: 0;
-		text-wrap: balance;
-	}
-	.fase-tekst p { margin: 4px 0 0; color: var(--gedempt); font-size: .95rem; max-width: 58ch; }
-
-	.taak {
-		display: grid;
-		grid-template-columns: 30px minmax(0, 1fr);
-		gap: 0 14px;
-		padding: 22px 0;
-		border-bottom: 1px solid var(--lijn);
-	}
-	.taak.af .taak-titel { color: var(--gedempt); text-decoration: line-through; text-decoration-thickness: 1px; }
-	.taak.af .taak-hoe, .taak.af .waarom { opacity: .5; }
-
-	.vink {
-		grid-row: 1 / span 3;
-		appearance: none;
-		-webkit-appearance: none;
-		width: 22px;
-		height: 22px;
-		margin: 3px 0 0;
-		border: 1.5px solid var(--lijn-sterk);
-		border-radius: 6px;
-		background: var(--vlak);
-		cursor: pointer;
-		display: grid;
-		place-content: center;
-		transition: background .15s ease, border-color .15s ease;
-	}
-	.vink::after {
-		content: "";
-		width: 11px;
-		height: 6px;
-		border-left: 2px solid var(--vlak);
-		border-bottom: 2px solid var(--vlak);
-		transform: rotate(-45deg) translate(1px, -2px);
-		opacity: 0;
-	}
-	.vink:checked { background: var(--accent); border-color: var(--accent); }
-	.vink:checked::after { opacity: 1; }
-	.vink:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-	.vink:disabled { cursor: default; opacity: .45; }
-
-	.taak-regel { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
-	.taak-titel { font-weight: 600; font-size: 1.05rem; letter-spacing: -.005em; margin: 0; cursor: pointer; }
-
-	.wie {
-		font-family: "IBM Plex Mono", monospace;
-		font-size: 11px;
-		font-weight: 500;
-		letter-spacing: .06em;
-		text-transform: uppercase;
-		padding: 3px 8px;
-		border-radius: 5px;
-		border: 1px solid var(--lijn-sterk);
-		color: var(--gedempt);
-		white-space: nowrap;
-	}
-	.wie[data-wie="jij"] { color: var(--accent); border-color: var(--accent-rand); background: var(--accent-zacht); }
-	.wie[data-wie="collega"] { color: var(--wacht); border-color: var(--wacht); background: var(--wacht-zacht); }
-
-	.blokkeert { font-size: 12px; color: var(--kritiek); font-weight: 500; }
-
-	.taak-hoe { margin-top: 10px; }
-	.taak-hoe ol { margin: 0; padding-left: 1.25em; }
-	.taak-hoe li { margin: 0 0 5px; font-size: .95rem; max-width: 66ch; }
-	.taak-hoe li:last-child { margin-bottom: 0; }
-	.taak-na { margin: 10px 0 0; font-size: .93rem; color: var(--gedempt); max-width: 66ch; }
-
-	code {
-		font-family: "IBM Plex Mono", ui-monospace, monospace;
-		font-size: .87em;
-		background: var(--vlak-2);
-		border: 1px solid var(--lijn);
-		border-radius: 4px;
-		padding: 1px 5px;
-		overflow-wrap: break-word;
-	}
-
-	pre {
-		font-family: "IBM Plex Mono", ui-monospace, monospace;
-		font-size: .82rem;
-		line-height: 1.6;
-		background: var(--vlak);
-		border: 1px solid var(--lijn);
-		border-left: 3px solid var(--accent-rand);
-		border-radius: 6px;
-		padding: 12px 14px;
-		margin: 10px 0 0;
-		overflow-x: auto;
-	}
-	pre code { background: none; border: 0; padding: 0; font-size: 1em; }
-
-	.waarom {
-		margin: 12px 0 0;
-		padding-left: 12px;
-		border-left: 2px solid var(--lijn-sterk);
-		font-size: .9rem;
-		color: var(--gedempt);
-		max-width: 64ch;
-	}
-
-	.slot { margin-top: 56px; }
-	.slot h2 { font-family: Archivo, sans-serif; font-weight: 600; font-size: 1.2rem; margin: 0 0 14px; }
-	.slot ul { margin: 0; padding-left: 1.1em; color: var(--gedempt); }
-	.slot li { margin-bottom: 8px; font-size: .95rem; max-width: 66ch; }
-	.slot strong { color: var(--inkt); font-weight: 600; }
-
-	.voet {
-		margin-top: 52px;
-		padding-top: 20px;
-		border-top: 1px solid var(--lijn);
-		font-family: "IBM Plex Mono", monospace;
-		font-size: 12px;
-		color: var(--gedempt);
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px 18px;
-		justify-content: space-between;
-	}
-
-	@media (max-width: 540px) {
-		.kop { padding-block: 36px 0; }
-		.taak { grid-template-columns: 26px minmax(0, 1fr); gap: 0 11px; }
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		* { transition: none !important; animation: none !important; }
-	}
-</style>
-</head>
-<body>
-
-<div id="wortel"></div>
-
-<script id="app">
-(() => {
-	"use strict";
-
-	const FASEN = [
-		{
-			titel: "Regel dit eerst",
-			tekst: "Hier zit wachttijd bij een ander. Hoe eerder je begint, hoe eerder de rest kan.",
-			taken: [
-				{
-					id: "mollie-profiel",
-					titel: "Mollie-profiel aanmaken en laten verifiëren",
-					wie: "collega",
-					blokkeert: "Zonder dit kan er niet afgerekend worden",
-					stappen: [
-						"Log in op mollie.com en maak een profiel op naam van de winkel.",
-						"Vul in: bedrijfsnaam, KvK 95788468, het bankrekeningnummer, en <code>https://hh-shops.nl</code> als website.",
-						"Dien het in ter verificatie. Mollie kijkt het na; reken op een paar werkdagen.",
-						"Zet daarna bij Betaalmethoden <strong>iDEAL</strong> en <strong>creditcard</strong> aan, en <strong>Klarna uit</strong>. Klarna staat nu aan.",
-						"Kopieer de livesleutel, die begint met <code>live_</code>. Die heb je nodig bij Fase 3."
-					],
-					waarom: "Ik heb het profiel opgevraagd met jullie testsleutel. Het heet nu letterlijk <em>Test profile</em>, de website staat op example.org en de status is <em>unverified</em>. Er is dus nog helemaal geen echt profiel; het is niet alleen een sleutel omwisselen."
-				},
-				{
-					id: "resend-domein",
-					titel: "hh-shops.nl aanmelden bij Resend",
-					wie: "jij",
-					blokkeert: "Zonder dit krijgt geen enkele klant een mail",
-					stappen: [
-						"Ga in Resend naar Domains en voeg <code>hh-shops.nl</code> toe.",
-						"Zet de records die Resend geeft in de DNS. Resend gebruikt daarvoor het subdomein <code>send.hh-shops.nl</code>, dus aan de bestaande SPF voor Microsoft 365 hoef je niets te veranderen.",
-						"Wacht tot het domein op <em>Verified</em> staat.",
-						"Zet daarna <code>MAIL_FROM</code> in Vercel, zie Fase 3."
-					],
-					waarom: "Ik heb de DNS nagekeken: er staat geen enkel Resend-record op hh-shops.nl. Zolang dat zo is, mag Resend alleen naar het eigen adres van de accounthouder sturen. Een klant krijgt dan geen bestelbevestiging en geen verzendmail, en dat laatste is precies wat ik deze week gebouwd heb."
-				},
-				{
-					id: "dmarc",
-					titel: "Een DMARC-record toevoegen",
-					wie: "jij",
-					stappen: [
-						"Voeg in de DNS een TXT-record toe op <code>_dmarc.hh-shops.nl</code> met deze waarde:"
-					],
-					code: "v=DMARC1; p=none; rua=mailto:info@hh-shops.nl",
-					na: "Begin op <code>p=none</code>. Dat verandert niets aan de bezorging en levert alleen rapporten op. Na een paar weken kun je naar <code>p=quarantine</code>.",
-					waarom: "Er staat er geen. Dat is los van Resend al een probleem: zonder DMARC belanden bestelbevestigingen vaker in de spam, en Google en Yahoo eisen het inmiddels van iedereen die wat volume verstuurt."
-				}
-			]
-		},
-		{
-			titel: "Gegevens die nog ontbreken",
-			tekst: "Kleine dingen, maar de verplichte pagina's zijn niet compleet zonder.",
-			taken: [
-				{
-					id: "btw",
-					titel: "Het btw-identificatienummer opzoeken",
-					wie: "collega",
-					stappen: [
-						"Zoek het op in de btw-aangifte of in de brief van de Belastingdienst. Het heeft de vorm <code>NL123456789B01</code>.",
-						"Let op dat het het <em>identificatienummer</em> is, niet het omzetbelastingnummer met het BSN erin. Dat laatste hoort niet op een website.",
-						"Geef het aan mij door. Ik zet het op één plek, en dan klopt het meteen op de voorwaarden, in de footer en in de gegevens voor Google."
-					],
-					waarom: "Ik heb de hele oude site nagekeken, inclusief de drie PDF's in de voet: het staat er nergens, alleen het KvK-nummer. Een webshop die aan consumenten verkoopt moet het wel noemen (artikel 3:15d BW)."
-				},
-				{
-					id: "retouradres",
-					titel: "Het retouradres bevestigen",
-					wie: "collega",
-					stappen: [
-						"Is het Koperhoek 10 B, 3162 LA Rhoon, hetzelfde als het bezoekadres? Of gaan retouren ergens anders heen?",
-						"Geef ook door of een klant het vooraf moet melden via <code>info@hh-shops.nl</code>, of gewoon mag terugsturen."
-					],
-					waarom: "Dit is het enige open punt waar ik bewust niets heb ingevuld. Een verkeerd retouradres kost een klant zijn pakket, en dan is een gok erger dan een leeg veld."
-				},
-				{
-					id: "bedenktijd",
-					titel: "De bedenktijd van 14 dagen doorgeven aan de frontend-agent",
-					wie: "jij",
-					stappen: [
-						"Laat hem in <code>src/lib/juridisch.ts</code> zetten: <code>bedenktijdDagen: 14</code> en <code>bedenktijdBevestigd: true</code>.",
-						"En de teksten op <code>src/pages/contact.astro</code> en <code>src/pages/product/[slug].astro</code> daaruit laten lezen, want daar staat nu nog dertig.",
-						"Geef de rest meteen mee: retourkosten op <em>winkel</em>, klarna op <em>false</em>, nieuwsbrief op <em>false</em>, levertijd op <em>1 tot 2 werkdagen</em>."
-					],
-					waarom: "De site spreekt zichzelf nu tegen: de contactpagina en de productpagina beloven dertig dagen, terwijl het vinkje bij afrekenen en de bestelmails veertien zeggen. Jullie eigen algemene voorwaarden zeggen veertien, artikel 5.1."
-				}
-			]
-		},
-		{
-			titel: "Instellingen zetten",
-			tekst: "Variabelen in Vercel en één wijziging op de productiedatabase. Dit kan pas als Fase 1 klaar is.",
-			taken: [
-				{
-					id: "cron-secret",
-					titel: "CRON_SECRET in Vercel zetten",
-					wie: "jij",
-					stappen: [
-						"Vercel, het project, Settings, Environment Variables.",
-						"Naam <code>CRON_SECRET</code>, aanvinken voor <strong>Production</strong> en <strong>Preview</strong>.",
-						"Gebruik deze waarde, die heb ik al voor je gemaakt:"
-					],
-					code: "H515wkIRq87AjM91lRKydf8daPQtIF4poCxLnbzL0Dk",
-					waarom: "Zonder deze variabele weigert de nachtelijke opschoontaak élk verzoek, ook dat van Vercel zelf. Bestellingen die op een betaling blijven hangen houden dan hun voorraad vast, en die artikelen kan niemand meer kopen."
-				},
-				{
-					id: "mollie-sleutel",
-					titel: "De Mollie-livesleutel in Vercel zetten",
-					wie: "jij",
-					stappen: [
-						"Zelfde scherm. Naam <code>MOLLIE_API_KEY</code>, waarde de sleutel die met <code>live_</code> begint.",
-						"Alleen aanvinken voor <strong>Production</strong>. Previews houden de testsleutel, anders reken je met echt geld af tijdens het testen."
-					],
-					waarom: "Zonder sleutel weigert de shop in productie af te rekenen. Dat is met opzet, zodat een echte klant nooit op een testbetaalpagina belandt."
-				},
-				{
-					id: "mail-from",
-					titel: "MAIL_FROM in Vercel zetten",
-					wie: "jij",
-					stappen: [
-						"Naam <code>MAIL_FROM</code>, waarde <code>HH Shops &lt;noreply@hh-shops.nl&gt;</code>, voor Production en Preview.",
-						"Doe dit pas als het domein bij Resend op Verified staat, anders weigert Resend de mail."
-					]
-				},
-				{
-					id: "unpooled",
-					titel: "DATABASE_URL_UNPOOLED in .env.productie zetten",
-					wie: "jij",
-					stappen: [
-						"Pak in Neon de verbindingsreeks van de <strong>main</strong>-branch, de variant <em>zonder</em> <code>-pooler</code> in de hostnaam.",
-						"Zet die in <code>.env.productie</code> onder de naam <code>DATABASE_URL_UNPOOLED</code>."
-					],
-					waarom: "Dat bestand heeft nu alleen de gepoolde verbinding. Databasewijzigingen horen daar niet doorheen: de pooler kan een verbinding halverwege aan een andere backend geven, en dat wil je niet midden in een migratie."
-				},
-				{
-					id: "migratie",
-					titel: "Migratie 0008 op de main-database draaien",
-					wie: "jij",
-					stappen: [
-						"Draai hem met het productiebestand geladen:"
-					],
-					code: "npm run db:migrate",
-					na: "Zeg het even als je hier onzeker over bent, dan kijk ik met je mee of hij goed geland is.",
-					waarom: "Die voegt de kolommen toe voor de vervoerder, de track-and-tracecode en de verzendmail. Hij is op de dev-branch gedraaid, nog niet op main. Zonder deze stap loopt het paneel na de livegang vast zodra je een bestelling op verzonden zet."
-				}
-			]
-		},
-		{
-			titel: "De omzetting",
-			tekst: "Pas doen als alles hierboven af is. Vanaf hier zien klanten de nieuwe winkel.",
-			taken: [
-				{
-					id: "domein",
-					titel: "Het domein aan Vercel koppelen",
-					wie: "jij",
-					stappen: [
-						"Vercel, het project, Settings, Domains. Voeg <code>hh-shops.nl</code> en <code>www.hh-shops.nl</code> toe.",
-						"Zet de DNS om naar wat Vercel aangeeft. Het A-record wijst nu nog naar de oude WordPress-server, 162.55.38.56.",
-						"Raak de MX-records <strong>niet</strong> aan. Jullie mail loopt via Microsoft 365 en moet blijven werken."
-					],
-					waarom: "Inloggen werkt meteen na de omzetting: beide adressen staan al in de lijst met vertrouwde adressen, en er is een test die in de gaten houdt dat ze er blijven staan. Zonder dat kon er na de omzetting niemand meer inloggen, klant noch beheerder."
-				},
-				{
-					id: "canoniek",
-					titel: "Canonieke URL's aanzetten",
-					wie: "claude",
-					stappen: [
-						"Dit doe ik, in dezelfde deploy als de omzetting.",
-						"Zeg het zodra de DNS om is, dan zet ik <code>site</code> in de Astro-config op het echte domein en voeg ik de canonieke link toe aan elke pagina."
-					],
-					waarom: "Het staat er nu bewust niet in. Zolang het domein naar WordPress wijst, zou zo een link juist naar de oude site verwijzen."
-				}
-			]
-		},
-		{
-			titel: "Meteen erna nakijken",
-			tekst: "Een half uur werk, en je wéét dat het klopt in plaats van het te hopen.",
-			taken: [
-				{
-					id: "robots",
-					titel: "robots.txt opvragen",
-					wie: "jij",
-					stappen: [
-						"Open <code>https://hh-shops.nl/robots.txt</code>. Er moet <code>Allow: /</code> staan en onderaan een <code>Sitemap:</code>-regel.",
-						"Staat er <code>Disallow: /</code>? Dan komt het verzoek niet op hh-shops.nl binnen en klopt er iets niet aan het domein. Meld het, ga er niet overheen."
-					],
-					waarom: "De shop weigert met opzet geïndexeerd te worden op elk ander adres dan hh-shops.nl, zodat het testadres van Vercel niet naast de echte winkel in Google komt."
-				},
-				{
-					id: "sitemap",
-					titel: "De sitemap indienen in Google Search Console",
-					wie: "jij",
-					stappen: [
-						"Search Console, hh-shops.nl, Sitemaps. Dien <code>sitemap.xml</code> in.",
-						"Er staan 104 adressen in: de startpagina, de overzichten, negen categorieën, de verplichte pagina's en elk zichtbaar product."
-					],
-					waarom: "Het domein blijft hetzelfde, alleen wat erachter draait verandert. Google houdt dus de geschiedenis van het domein, en een verhuisverzoek is niet nodig."
-				},
-				{
-					id: "oude-links",
-					titel: "De oude links controleren",
-					wie: "jij",
-					stappen: [
-						"Draai <code>npm run links:controleren</code> tegen de productiedatabase.",
-						"Klik daarna een paar oude links uit Google aan en kijk of ze op de goede pagina landen."
-					],
-					waarom: "Alle 94 oude productlinks en 9 categorielinks verwijzen door, met en zonder schuine streep erachter. Tegen de dev-database klopt dat; na de omzetting wil je het tegen de echte data gezien hebben."
-				},
-				{
-					id: "inloggen",
-					titel: "Inloggen testen",
-					wie: "jij",
-					stappen: [
-						"Log in op <code>hh-shops.nl/admin</code> met een bestaand beheerdersaccount.",
-						"En op <code>hh-shops.nl/account</code> met een klantaccount."
-					]
-				},
-				{
-					id: "proefbestelling",
-					titel: "Een echte bestelling doen en terugbetalen",
-					wie: "jij",
-					blokkeert: "De belangrijkste test van allemaal",
-					stappen: [
-						"Bestel iets van een paar euro met een echte betaling, op een e-mailadres dat <strong>niet</strong> van de winkel is.",
-						"Controleer dat de bestelbevestiging aankomt. Kijk ook even in de spam.",
-						"Zet hem in het paneel op verzonden, met een echte track-and-tracecode erbij.",
-						"Controleer dat de verzendmail aankomt en dat de volglink werkt.",
-						"Betaal terug via het dashboard van Mollie."
-					],
-					waarom: "Dit is de enige test die het hele pad raakt: Mollie, de database, Resend, de vervoerder en het paneel. Alles wat hiervoor goed leek, kan hier alsnog stuklopen."
-				}
-			]
+		*,
+		*::before,
+		*::after {
+			box-sizing: border-box;
 		}
-	];
 
-	const NIET_NODIG = [
-		"<strong>De verplichte pagina's</strong> (voorwaarden, privacy, klantenservice) worden op de frontend-branch gemaakt. Het vinkje bij afrekenen verwijst er al heen.",
-		"<strong>Het herroepingsformulier.</strong> Jullie eigen voorwaarden verplichten je dat op verzoek te geven, artikel 5.3. Een mail met \"ik wil retourneren\" volstaat zolang het er niet is, maar netter is een formulier.",
-		"<strong>Klarna uit de teksten.</strong> Staat nog in de kernpunten en de footer, in <code>src/lib/site.ts</code>. De frontend-agent haalt dat eruit.",
-		"<strong>Terugbetalen vanuit het paneel, een factuur-pdf en kortingscodes.</strong> Bewust later. Terugbetalen gaat tot die tijd via het dashboard van Mollie.",
-		"<strong>Een cookiebanner is niet nodig.</strong> De nieuwe shop zet alleen functionele cookies, voor de sessie, de winkelmand en de favorieten, en laadt geen enkel extern script. De oude cookieverklaring beschrijft Facebook- en Google-cookies die hier niet meer bestaan."
-	];
+		body {
+			margin: 0;
+			background: var(--grond);
+			color: var(--inkt);
+			font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+			font-size: 16px;
+			line-height: 1.55;
+			-webkit-font-smoothing: antialiased;
+		}
 
-	const WIE_TEKST = { jij: "jij", collega: "collega", claude: "claude doet dit" };
+		.omslag {
+			max-width: 60rem;
+			margin: 0 auto;
+			padding-inline: 20px;
+			padding-block: 0 72px;
+		}
 
-	const wortel = document.getElementById("wortel");
+		.merkregel {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin: 0;
+			font-family: "IBM Plex Mono", ui-monospace, monospace;
+			font-size: 12px;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			color: var(--gedempt);
+		}
+		.merkregel::before {
+			content: "";
+			width: 26px;
+			height: 2px;
+			background: var(--accent);
+		}
 
-	let staat = { af: {} };
-	const magSchrijven = true;
-	let meldtekst = "";
+		.kop {
+			padding-block: 56px 0;
+		}
 
-	const ALLE = FASEN.reduce((op, fase) => op.concat(fase.taken), []);
+		h1 {
+			font-family: Archivo, system-ui, sans-serif;
+			font-weight: 700;
+			font-size: clamp(2.1rem, 5.2vw, 3rem);
+			line-height: 1.05;
+			letter-spacing: -0.02em;
+			text-wrap: balance;
+			margin: 18px 0 0;
+		}
 
-	function el(soort, klasse, tekst) {
-		const knoop = document.createElement(soort);
-		if (klasse) knoop.className = klasse;
-		if (tekst !== undefined) knoop.textContent = tekst;
-		return knoop;
-	}
+		.inleiding {
+			max-width: 58ch;
+			margin: 16px 0 0;
+			color: var(--gedempt);
+			font-size: 1.05rem;
+		}
+		.inleiding strong {
+			color: var(--inkt);
+			font-weight: 600;
+		}
 
-	function bouw() {
-		wortel.replaceChildren();
-		const omslag = el("div", "omslag");
-		omslag.append(bouwKop(), bouwLijst(), bouwSlot(), bouwVoet());
-		wortel.append(omslag);
-	}
+		.voortgang {
+			margin-top: 32px;
+			border: 1px solid var(--lijn);
+			background: var(--vlak);
+			border-radius: 10px;
+			padding: 18px 20px;
+			box-shadow: var(--schaduw);
+		}
+		.voortgang-kop {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: baseline;
+			justify-content: space-between;
+			gap: 6px 16px;
+		}
+		.voortgang-label {
+			margin: 0;
+			font-family: "IBM Plex Mono", monospace;
+			font-size: 12px;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--gedempt);
+		}
+		.voortgang-getal {
+			margin: 0;
+			font-family: Archivo, sans-serif;
+			font-weight: 700;
+			font-size: 1.45rem;
+			font-variant-numeric: tabular-nums;
+			letter-spacing: -0.01em;
+		}
+		.voortgang-getal span {
+			color: var(--gedempt);
+			font-weight: 600;
+			font-size: 0.95rem;
+		}
 
-	function bouwKop() {
-		const kop = el("header", "kop");
-		kop.append(el("p", "merkregel", "hh-shops.nl"));
-		kop.append(el("h1", null, "Livegang HH Shops"));
+		.balk {
+			margin-top: 14px;
+			height: 6px;
+			border-radius: 99px;
+			background: var(--vlak-2);
+			overflow: hidden;
+		}
+		.balk div {
+			height: 100%;
+			background: var(--accent);
+			border-radius: 99px;
+			transition: width 0.35s ease;
+		}
 
-		const inleiding = el("p", "inleiding");
-		inleiding.innerHTML =
-			"Alles wat er nog moet gebeuren voordat het domein van WordPress naar de nieuwe webshop kan. " +
-			"In volgorde: <strong>Fase 1 eerst</strong>, want daar zit wachttijd bij een ander. " +
-			"Vink af wat klaar is; dat onthoudt deze browser voor je.";
-		kop.append(inleiding);
+		.melding {
+			margin: 14px 0 0;
+			padding: 10px 14px;
+			border-radius: 8px;
+			background: var(--wacht-zacht);
+			border: 1px solid var(--lijn);
+			font-size: 0.9rem;
+		}
 
-		const af = ALLE.filter((taak) => staat.af[taak.id]).length;
-		const deel = ALLE.length ? (af / ALLE.length) * 100 : 0;
+		.fase {
+			margin-top: 48px;
+		}
+		.fase-kop {
+			display: flex;
+			align-items: flex-start;
+			gap: 14px;
+			padding-bottom: 14px;
+			border-bottom: 2px solid var(--inkt);
+		}
+		.fase-nr {
+			font-family: "IBM Plex Mono", monospace;
+			font-weight: 500;
+			font-size: 13px;
+			color: var(--accent);
+			padding-top: 7px;
+			white-space: nowrap;
+			font-variant-numeric: tabular-nums;
+		}
+		.fase-tekst h2 {
+			font-family: Archivo, sans-serif;
+			font-weight: 600;
+			font-size: 1.4rem;
+			letter-spacing: -0.012em;
+			margin: 0;
+			text-wrap: balance;
+		}
+		.fase-tekst p {
+			margin: 4px 0 0;
+			color: var(--gedempt);
+			font-size: 0.95rem;
+			max-width: 58ch;
+		}
 
-		const voortgang = el("div", "voortgang");
-		const kopregel = el("div", "voortgang-kop");
-		kopregel.append(el("p", "voortgang-label", "Voortgang"));
-		const getal = el("p", "voortgang-getal");
-		getal.append(document.createTextNode(String(af) + " "));
-		getal.append(el("span", null, "van " + ALLE.length + " afgevinkt"));
-		kopregel.append(getal);
-		voortgang.append(kopregel);
+		.taak {
+			display: grid;
+			grid-template-columns: 30px minmax(0, 1fr);
+			gap: 0 14px;
+			padding: 22px 0;
+			border-bottom: 1px solid var(--lijn);
+		}
+		.taak.af .taak-titel {
+			color: var(--gedempt);
+			text-decoration: line-through;
+			text-decoration-thickness: 1px;
+		}
+		.taak.af .taak-hoe,
+		.taak.af .waarom {
+			opacity: 0.5;
+		}
 
-		const balk = el("div", "balk");
-		const vulling = el("div");
-		vulling.style.width = deel + "%";
-		balk.append(vulling);
-		voortgang.append(balk);
+		.vink {
+			grid-row: 1 / span 3;
+			appearance: none;
+			-webkit-appearance: none;
+			width: 22px;
+			height: 22px;
+			margin: 3px 0 0;
+			border: 1.5px solid var(--lijn-sterk);
+			border-radius: 6px;
+			background: var(--vlak);
+			cursor: pointer;
+			display: grid;
+			place-content: center;
+			transition:
+				background 0.15s ease,
+				border-color 0.15s ease;
+		}
+		.vink::after {
+			content: "";
+			width: 11px;
+			height: 6px;
+			border-left: 2px solid var(--vlak);
+			border-bottom: 2px solid var(--vlak);
+			transform: rotate(-45deg) translate(1px, -2px);
+			opacity: 0;
+		}
+		.vink:checked {
+			background: var(--accent);
+			border-color: var(--accent);
+		}
+		.vink:checked::after {
+			opacity: 1;
+		}
+		.vink:focus-visible {
+			outline: 2px solid var(--accent);
+			outline-offset: 3px;
+		}
+		.vink:disabled {
+			cursor: default;
+			opacity: 0.45;
+		}
 
-		if (meldtekst) voortgang.append(el("p", "melding", meldtekst));
-		kop.append(voortgang);
-		return kop;
-	}
+		.taak-regel {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: baseline;
+			gap: 6px 10px;
+		}
+		.taak-titel {
+			font-weight: 600;
+			font-size: 1.05rem;
+			letter-spacing: -0.005em;
+			margin: 0;
+			cursor: pointer;
+		}
 
-	function bouwLijst() {
-		const fragment = document.createDocumentFragment();
-		FASEN.forEach((fase, i) => {
-			const sectie = el("section", "fase");
-			const kop = el("div", "fase-kop");
-			kop.append(el("span", "fase-nr", "Fase " + (i + 1)));
-			const tekst = el("div", "fase-tekst");
-			tekst.append(el("h2", null, fase.titel));
-			tekst.append(el("p", null, fase.tekst));
-			kop.append(tekst);
-			sectie.append(kop);
-			for (const taak of fase.taken) sectie.append(bouwTaak(taak));
-			fragment.append(sectie);
-		});
-		const main = el("main");
-		main.append(fragment);
-		return main;
-	}
+		.wie {
+			font-family: "IBM Plex Mono", monospace;
+			font-size: 11px;
+			font-weight: 500;
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+			padding: 3px 8px;
+			border-radius: 5px;
+			border: 1px solid var(--lijn-sterk);
+			color: var(--gedempt);
+			white-space: nowrap;
+		}
+		.wie[data-wie="jij"] {
+			color: var(--accent);
+			border-color: var(--accent-rand);
+			background: var(--accent-zacht);
+		}
+		.wie[data-wie="collega"] {
+			color: var(--wacht);
+			border-color: var(--wacht);
+			background: var(--wacht-zacht);
+		}
 
-	function bouwTaak(taak) {
-		const rij = el("div", "taak");
-		rij.dataset.id = taak.id;
-		if (staat.af[taak.id]) rij.classList.add("af");
+		.blokkeert {
+			font-size: 12px;
+			color: var(--kritiek);
+			font-weight: 500;
+		}
 
-		const vink = document.createElement("input");
-		vink.type = "checkbox";
-		vink.className = "vink";
-		vink.id = "taak-" + taak.id;
-		vink.checked = Boolean(staat.af[taak.id]);
-		vink.disabled = !magSchrijven;
-		vink.addEventListener("change", () => zetAf(taak.id, vink.checked, rij));
+		.taak-hoe {
+			margin-top: 10px;
+		}
+		.taak-hoe ol {
+			margin: 0;
+			padding-left: 1.25em;
+		}
+		.taak-hoe li {
+			margin: 0 0 5px;
+			font-size: 0.95rem;
+			max-width: 66ch;
+		}
+		.taak-hoe li:last-child {
+			margin-bottom: 0;
+		}
+		.taak-na {
+			margin: 10px 0 0;
+			font-size: 0.93rem;
+			color: var(--gedempt);
+			max-width: 66ch;
+		}
 
-		const regel = el("div", "taak-regel");
-		const titel = document.createElement("label");
-		titel.className = "taak-titel";
-		titel.htmlFor = vink.id;
-		titel.textContent = taak.titel;
-		regel.append(titel);
+		code {
+			font-family: "IBM Plex Mono", ui-monospace, monospace;
+			font-size: 0.87em;
+			background: var(--vlak-2);
+			border: 1px solid var(--lijn);
+			border-radius: 4px;
+			padding: 1px 5px;
+			overflow-wrap: break-word;
+		}
 
-		const wie = el("span", "wie", WIE_TEKST[taak.wie] || taak.wie);
-		wie.dataset.wie = taak.wie;
-		regel.append(wie);
+		pre {
+			font-family: "IBM Plex Mono", ui-monospace, monospace;
+			font-size: 0.82rem;
+			line-height: 1.6;
+			background: var(--vlak);
+			border: 1px solid var(--lijn);
+			border-left: 3px solid var(--accent-rand);
+			border-radius: 6px;
+			padding: 12px 14px;
+			margin: 10px 0 0;
+			overflow-x: auto;
+		}
+		pre code {
+			background: none;
+			border: 0;
+			padding: 0;
+			font-size: 1em;
+		}
 
-		if (taak.blokkeert) regel.append(el("span", "blokkeert", taak.blokkeert));
+		.waarom {
+			margin: 12px 0 0;
+			padding-left: 12px;
+			border-left: 2px solid var(--lijn-sterk);
+			font-size: 0.9rem;
+			color: var(--gedempt);
+			max-width: 64ch;
+		}
 
-		const hoe = el("div", "taak-hoe");
-		if (taak.stappen) {
-			const ol = document.createElement("ol");
-			for (const stap of taak.stappen) {
-				const li = document.createElement("li");
-				li.innerHTML = stap;
-				ol.append(li);
+		.slot {
+			margin-top: 56px;
+		}
+		.slot h2 {
+			font-family: Archivo, sans-serif;
+			font-weight: 600;
+			font-size: 1.2rem;
+			margin: 0 0 14px;
+		}
+		.slot ul {
+			margin: 0;
+			padding-left: 1.1em;
+			color: var(--gedempt);
+		}
+		.slot li {
+			margin-bottom: 8px;
+			font-size: 0.95rem;
+			max-width: 66ch;
+		}
+		.slot strong {
+			color: var(--inkt);
+			font-weight: 600;
+		}
+
+		.voet {
+			margin-top: 52px;
+			padding-top: 20px;
+			border-top: 1px solid var(--lijn);
+			font-family: "IBM Plex Mono", monospace;
+			font-size: 12px;
+			color: var(--gedempt);
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px 18px;
+			justify-content: space-between;
+		}
+
+		@media (max-width: 540px) {
+			.kop {
+				padding-block: 36px 0;
 			}
-			hoe.append(ol);
-		}
-		if (taak.code) {
-			const pre = document.createElement("pre");
-			pre.append(el("code", null, taak.code));
-			hoe.append(pre);
-		}
-		if (taak.na) {
-			const na = el("p", "taak-na");
-			na.innerHTML = taak.na;
-			hoe.append(na);
+			.taak {
+				grid-template-columns: 26px minmax(0, 1fr);
+				gap: 0 11px;
+			}
 		}
 
-		rij.append(vink, regel, hoe);
-
-		if (taak.waarom) {
-			const waarom = el("p", "waarom");
-			waarom.innerHTML = taak.waarom;
-			rij.append(waarom);
+		@media (prefers-reduced-motion: reduce) {
+			* {
+				transition: none !important;
+				animation: none !important;
+			}
 		}
-		return rij;
-	}
+		</style>
+	</head>
+	<body>
+		<div id="wortel"></div>
 
-	function bouwSlot() {
-		const slot = el("section", "slot");
-		slot.append(el("h2", null, "Dit hoeft niet voor de livegang"));
-		const ul = document.createElement("ul");
-		for (const regel of NIET_NODIG) {
-			const li = document.createElement("li");
-			li.innerHTML = regel;
-			ul.append(li);
-		}
-		slot.append(ul);
-		return slot;
-	}
+		<script id="app">
+		(() => {
+			'use strict';
 
-	function bouwVoet() {
-		const voet = el("footer", "voet");
-		voet.append(el("span", null, "Stand van 14 september 2026"));
-		voet.append(el("span", null, "Uitgebreide toelichting: docs/domeinomzetting.md"));
-		return voet;
-	}
+			const FASEN = [
+				{
+					titel: 'Regel dit eerst',
+					tekst: 'Hier zit wachttijd bij een ander. Hoe eerder je begint, hoe eerder de rest kan.',
+					taken: [
+						{
+							id: 'mollie-profiel',
+							titel: 'Mollie-profiel aanmaken en laten verifiëren',
+							wie: 'collega',
+							blokkeert: 'Zonder dit kan er niet afgerekend worden',
+							stappen: [
+								'Log in op mollie.com en maak een profiel op naam van de winkel.',
+								'Vul in: bedrijfsnaam, KvK 95788468, het bankrekeningnummer, en <code>https://hh-shops.nl</code> als website.',
+								'Dien het in ter verificatie. Mollie kijkt het na; reken op een paar werkdagen.',
+								'Zet daarna bij Betaalmethoden <strong>iDEAL</strong> en <strong>creditcard</strong> aan, en <strong>Klarna uit</strong>. Klarna staat nu aan.',
+								'Kopieer de livesleutel, die begint met <code>live_</code>. Die heb je nodig bij Fase 3.',
+							],
+							waarom:
+								'Ik heb het profiel opgevraagd met jullie testsleutel. Het heet nu letterlijk <em>Test profile</em>, de website staat op example.org en de status is <em>unverified</em>. Er is dus nog helemaal geen echt profiel; het is niet alleen een sleutel omwisselen.',
+						},
+						{
+							id: 'resend-domein',
+							titel: 'hh-shops.nl aanmelden bij Resend',
+							wie: 'jij',
+							blokkeert: 'Zonder dit krijgt geen enkele klant een mail',
+							stappen: [
+								'Ga in Resend naar Domains en voeg <code>hh-shops.nl</code> toe.',
+								'Zet de records die Resend geeft in de DNS. Resend gebruikt daarvoor het subdomein <code>send.hh-shops.nl</code>, dus aan de bestaande SPF voor Microsoft 365 hoef je niets te veranderen.',
+								'Wacht tot het domein op <em>Verified</em> staat.',
+								'Zet daarna <code>MAIL_FROM</code> in Vercel, zie Fase 3.',
+							],
+							waarom:
+								'Ik heb de DNS nagekeken: er staat geen enkel Resend-record op hh-shops.nl. Zolang dat zo is, mag Resend alleen naar het eigen adres van de accounthouder sturen. Een klant krijgt dan geen bestelbevestiging en geen verzendmail, en dat laatste is precies wat ik deze week gebouwd heb.',
+						},
+						{
+							id: 'dmarc',
+							titel: 'Een DMARC-record toevoegen',
+							wie: 'jij',
+							stappen: [
+								'Voeg in de DNS een TXT-record toe op <code>_dmarc.hh-shops.nl</code> met deze waarde:',
+							],
+							code: 'v=DMARC1; p=none; rua=mailto:info@hh-shops.nl',
+							na: 'Begin op <code>p=none</code>. Dat verandert niets aan de bezorging en levert alleen rapporten op. Na een paar weken kun je naar <code>p=quarantine</code>.',
+							waarom:
+								'Er staat er geen. Dat is los van Resend al een probleem: zonder DMARC belanden bestelbevestigingen vaker in de spam, en Google en Yahoo eisen het inmiddels van iedereen die wat volume verstuurt.',
+						},
+					],
+				},
+				{
+					titel: 'Gegevens die nog ontbreken',
+					tekst: "Kleine dingen, maar de verplichte pagina's zijn niet compleet zonder.",
+					taken: [
+						{
+							id: 'btw',
+							titel: 'Het btw-identificatienummer opzoeken',
+							wie: 'collega',
+							stappen: [
+								'Zoek het op in de btw-aangifte of in de brief van de Belastingdienst. Het heeft de vorm <code>NL123456789B01</code>.',
+								'Let op dat het het <em>identificatienummer</em> is, niet het omzetbelastingnummer met het BSN erin. Dat laatste hoort niet op een website.',
+								'Geef het aan mij door. Ik zet het op één plek, en dan klopt het meteen op de voorwaarden, in de footer en in de gegevens voor Google.',
+							],
+							waarom:
+								"Ik heb de hele oude site nagekeken, inclusief de drie PDF's in de voet: het staat er nergens, alleen het KvK-nummer. Een webshop die aan consumenten verkoopt moet het wel noemen (artikel 3:15d BW).",
+						},
+						{
+							id: 'retouradres',
+							titel: 'Het retouradres bevestigen',
+							wie: 'collega',
+							stappen: [
+								'Is het Koperhoek 10 B, 3162 LA Rhoon, hetzelfde als het bezoekadres? Of gaan retouren ergens anders heen?',
+								'Geef ook door of een klant het vooraf moet melden via <code>info@hh-shops.nl</code>, of gewoon mag terugsturen.',
+							],
+							waarom:
+								'Dit is het enige open punt waar ik bewust niets heb ingevuld. Een verkeerd retouradres kost een klant zijn pakket, en dan is een gok erger dan een leeg veld.',
+						},
+						{
+							id: 'bedenktijd',
+							titel: 'De bedenktijd van 14 dagen doorgeven aan de frontend-agent',
+							wie: 'jij',
+							stappen: [
+								'Laat hem in <code>src/lib/juridisch.ts</code> zetten: <code>bedenktijdDagen: 14</code> en <code>bedenktijdBevestigd: true</code>.',
+								'En de teksten op <code>src/pages/contact.astro</code> en <code>src/pages/product/[slug].astro</code> daaruit laten lezen, want daar staat nu nog dertig.',
+								'Geef de rest meteen mee: retourkosten op <em>winkel</em>, klarna op <em>false</em>, nieuwsbrief op <em>false</em>, levertijd op <em>1 tot 2 werkdagen</em>.',
+							],
+							waarom:
+								'De site spreekt zichzelf nu tegen: de contactpagina en de productpagina beloven dertig dagen, terwijl het vinkje bij afrekenen en de bestelmails veertien zeggen. Jullie eigen algemene voorwaarden zeggen veertien, artikel 5.1.',
+						},
+					],
+				},
+				{
+					titel: 'Instellingen zetten',
+					tekst:
+						'Variabelen in Vercel en één wijziging op de productiedatabase. Dit kan pas als Fase 1 klaar is.',
+					taken: [
+						{
+							id: 'cron-secret',
+							titel: 'CRON_SECRET in Vercel zetten',
+							wie: 'jij',
+							stappen: [
+								'Vercel, het project, Settings, Environment Variables.',
+								'Naam <code>CRON_SECRET</code>, aanvinken voor <strong>Production</strong> en <strong>Preview</strong>.',
+								'Gebruik deze waarde, die heb ik al voor je gemaakt:',
+							],
+							code: 'H515wkIRq87AjM91lRKydf8daPQtIF4poCxLnbzL0Dk',
+							waarom:
+								'Zonder deze variabele weigert de nachtelijke opschoontaak élk verzoek, ook dat van Vercel zelf. Bestellingen die op een betaling blijven hangen houden dan hun voorraad vast, en die artikelen kan niemand meer kopen.',
+						},
+						{
+							id: 'mollie-sleutel',
+							titel: 'De Mollie-livesleutel in Vercel zetten',
+							wie: 'jij',
+							stappen: [
+								'Zelfde scherm. Naam <code>MOLLIE_API_KEY</code>, waarde de sleutel die met <code>live_</code> begint.',
+								'Alleen aanvinken voor <strong>Production</strong>. Previews houden de testsleutel, anders reken je met echt geld af tijdens het testen.',
+							],
+							waarom:
+								'Zonder sleutel weigert de shop in productie af te rekenen. Dat is met opzet, zodat een echte klant nooit op een testbetaalpagina belandt.',
+						},
+						{
+							id: 'mail-from',
+							titel: 'MAIL_FROM in Vercel zetten',
+							wie: 'jij',
+							stappen: [
+								'Naam <code>MAIL_FROM</code>, waarde <code>HH Shops &lt;noreply@hh-shops.nl&gt;</code>, voor Production en Preview.',
+								'Doe dit pas als het domein bij Resend op Verified staat, anders weigert Resend de mail.',
+							],
+						},
+						{
+							id: 'unpooled',
+							titel: 'DATABASE_URL_UNPOOLED in .env.productie zetten',
+							wie: 'jij',
+							stappen: [
+								'Pak in Neon de verbindingsreeks van de <strong>main</strong>-branch, de variant <em>zonder</em> <code>-pooler</code> in de hostnaam.',
+								'Zet die in <code>.env.productie</code> onder de naam <code>DATABASE_URL_UNPOOLED</code>.',
+							],
+							waarom:
+								'Dat bestand heeft nu alleen de gepoolde verbinding. Databasewijzigingen horen daar niet doorheen: de pooler kan een verbinding halverwege aan een andere backend geven, en dat wil je niet midden in een migratie.',
+						},
+						{
+							id: 'migratie',
+							titel: 'Migratie 0008 op de main-database draaien',
+							wie: 'jij',
+							stappen: ['Draai hem met het productiebestand geladen:'],
+							code: 'npm run db:migrate',
+							na: 'Zeg het even als je hier onzeker over bent, dan kijk ik met je mee of hij goed geland is.',
+							waarom:
+								'Die voegt de kolommen toe voor de vervoerder, de track-and-tracecode en de verzendmail. Hij is op de dev-branch gedraaid, nog niet op main. Zonder deze stap loopt het paneel na de livegang vast zodra je een bestelling op verzonden zet.',
+						},
+					],
+				},
+				{
+					titel: 'De omzetting',
+					tekst: 'Pas doen als alles hierboven af is. Vanaf hier zien klanten de nieuwe winkel.',
+					taken: [
+						{
+							id: 'domein',
+							titel: 'Het domein aan Vercel koppelen',
+							wie: 'jij',
+							stappen: [
+								'Vercel, het project, Settings, Domains. Voeg <code>hh-shops.nl</code> en <code>www.hh-shops.nl</code> toe.',
+								'Zet de DNS om naar wat Vercel aangeeft. Het A-record wijst nu nog naar de oude WordPress-server, 162.55.38.56.',
+								'Raak de MX-records <strong>niet</strong> aan. Jullie mail loopt via Microsoft 365 en moet blijven werken.',
+							],
+							waarom:
+								'Inloggen werkt meteen na de omzetting: beide adressen staan al in de lijst met vertrouwde adressen, en er is een test die in de gaten houdt dat ze er blijven staan. Zonder dat kon er na de omzetting niemand meer inloggen, klant noch beheerder.',
+						},
+						{
+							id: 'canoniek',
+							titel: "Canonieke URL's aanzetten",
+							wie: 'claude',
+							stappen: [
+								'Dit doe ik, in dezelfde deploy als de omzetting.',
+								'Zeg het zodra de DNS om is, dan zet ik <code>site</code> in de Astro-config op het echte domein en voeg ik de canonieke link toe aan elke pagina.',
+							],
+							waarom:
+								'Het staat er nu bewust niet in. Zolang het domein naar WordPress wijst, zou zo een link juist naar de oude site verwijzen.',
+						},
+					],
+				},
+				{
+					titel: 'Meteen erna nakijken',
+					tekst: 'Een half uur werk, en je wéét dat het klopt in plaats van het te hopen.',
+					taken: [
+						{
+							id: 'robots',
+							titel: 'robots.txt opvragen',
+							wie: 'jij',
+							stappen: [
+								'Open <code>https://hh-shops.nl/robots.txt</code>. Er moet <code>Allow: /</code> staan en onderaan een <code>Sitemap:</code>-regel.',
+								'Staat er <code>Disallow: /</code>? Dan komt het verzoek niet op hh-shops.nl binnen en klopt er iets niet aan het domein. Meld het, ga er niet overheen.',
+							],
+							waarom:
+								'De shop weigert met opzet geïndexeerd te worden op elk ander adres dan hh-shops.nl, zodat het testadres van Vercel niet naast de echte winkel in Google komt.',
+						},
+						{
+							id: 'sitemap',
+							titel: 'De sitemap indienen in Google Search Console',
+							wie: 'jij',
+							stappen: [
+								'Search Console, hh-shops.nl, Sitemaps. Dien <code>sitemap.xml</code> in.',
+								"Er staan 104 adressen in: de startpagina, de overzichten, negen categorieën, de verplichte pagina's en elk zichtbaar product.",
+							],
+							waarom:
+								'Het domein blijft hetzelfde, alleen wat erachter draait verandert. Google houdt dus de geschiedenis van het domein, en een verhuisverzoek is niet nodig.',
+						},
+						{
+							id: 'oude-links',
+							titel: 'De oude links controleren',
+							wie: 'jij',
+							stappen: [
+								'Draai <code>npm run links:controleren</code> tegen de productiedatabase.',
+								'Klik daarna een paar oude links uit Google aan en kijk of ze op de goede pagina landen.',
+							],
+							waarom:
+								'Alle 94 oude productlinks en 9 categorielinks verwijzen door, met en zonder schuine streep erachter. Tegen de dev-database klopt dat; na de omzetting wil je het tegen de echte data gezien hebben.',
+						},
+						{
+							id: 'inloggen',
+							titel: 'Inloggen testen',
+							wie: 'jij',
+							stappen: [
+								'Log in op <code>hh-shops.nl/admin</code> met een bestaand beheerdersaccount.',
+								'En op <code>hh-shops.nl/account</code> met een klantaccount.',
+							],
+						},
+						{
+							id: 'proefbestelling',
+							titel: 'Een echte bestelling doen en terugbetalen',
+							wie: 'jij',
+							blokkeert: 'De belangrijkste test van allemaal',
+							stappen: [
+								'Bestel iets van een paar euro met een echte betaling, op een e-mailadres dat <strong>niet</strong> van de winkel is.',
+								'Controleer dat de bestelbevestiging aankomt. Kijk ook even in de spam.',
+								'Zet hem in het paneel op verzonden, met een echte track-and-tracecode erbij.',
+								'Controleer dat de verzendmail aankomt en dat de volglink werkt.',
+								'Betaal terug via het dashboard van Mollie.',
+							],
+							waarom:
+								'Dit is de enige test die het hele pad raakt: Mollie, de database, Resend, de vervoerder en het paneel. Alles wat hiervoor goed leek, kan hier alsnog stuklopen.',
+						},
+					],
+				},
+			];
 
-	function zetAf(id, af) {
-		if (af) staat.af[id] = new Date().toISOString();
-		else delete staat.af[id];
-		bouw();
-		// De lijst wordt opnieuw opgebouwd, dus het vinkje dat je net aanraakte
-		// is een ander element. Zonder dit springt de toetsenbordfocus naar het
-		// begin van de pagina en ben je je plek kwijt.
-		const terug = document.getElementById("taak-" + id);
-		if (terug) terug.focus({ preventScroll: true });
-		plan();
-	}
+			const NIET_NODIG = [
+				"<strong>De verplichte pagina's</strong> (voorwaarden, privacy, klantenservice) worden op de frontend-branch gemaakt. Het vinkje bij afrekenen verwijst er al heen.",
+				'<strong>Het herroepingsformulier.</strong> Jullie eigen voorwaarden verplichten je dat op verzoek te geven, artikel 5.3. Een mail met "ik wil retourneren" volstaat zolang het er niet is, maar netter is een formulier.',
+				'<strong>Klarna uit de teksten.</strong> Staat nog in de kernpunten en de footer, in <code>src/lib/site.ts</code>. De frontend-agent haalt dat eruit.',
+				'<strong>Terugbetalen vanuit het paneel, een factuur-pdf en kortingscodes.</strong> Bewust later. Terugbetalen gaat tot die tijd via het dashboard van Mollie.',
+				'<strong>Een cookiebanner is niet nodig.</strong> De nieuwe shop zet alleen functionele cookies, voor de sessie, de winkelmand en de favorieten, en laadt geen enkel extern script. De oude cookieverklaring beschrijft Facebook- en Google-cookies die hier niet meer bestaan.',
+			];
 
-	/* ---- bewaren ---- */
+			const WIE_TEKST = { jij: 'jij', collega: 'collega', claude: 'claude doet dit' };
 
-	/*
-	 * De vinkjes blijven in deze browser staan, in localStorage. Geen account
-	 * en geen server nodig: dit bestand werkt door een dubbelklik.
-	 *
-	 * Dat betekent wel dat de vinkjes van jou alleen zijn. Werkt je collega mee,
-	 * stuur hem dan dit bestand en houd zelf bij wat er af is, of zet de stand
-	 * over in docs/domeinomzetting.md.
-	 */
-	const SLEUTEL = "hh-shops-livegang";
+			const wortel = document.getElementById('wortel');
 
-	function bewaar() {
-		try {
-			localStorage.setItem(SLEUTEL, JSON.stringify(staat));
-			if (meldtekst) {
-				meldtekst = "";
+			let staat = { af: {} };
+			const magSchrijven = true;
+			let meldtekst = '';
+
+			const ALLE = FASEN.reduce((op, fase) => op.concat(fase.taken), []);
+
+			function el(soort, klasse, tekst) {
+				const knoop = document.createElement(soort);
+				if (klasse) knoop.className = klasse;
+				if (tekst !== undefined) knoop.textContent = tekst;
+				return knoop;
+			}
+
+			function bouw() {
+				wortel.replaceChildren();
+				const omslag = el('div', 'omslag');
+				omslag.append(bouwKop(), bouwLijst(), bouwSlot(), bouwVoet());
+				wortel.append(omslag);
+			}
+
+			function bouwKop() {
+				const kop = el('header', 'kop');
+				kop.append(el('p', 'merkregel', 'hh-shops.nl'));
+				kop.append(el('h1', null, 'Livegang HH Shops'));
+
+				const inleiding = el('p', 'inleiding');
+				inleiding.innerHTML =
+					'Alles wat er nog moet gebeuren voordat het domein van WordPress naar de nieuwe webshop kan. ' +
+					'In volgorde: <strong>Fase 1 eerst</strong>, want daar zit wachttijd bij een ander. ' +
+					'Vink af wat klaar is; dat onthoudt deze browser voor je.';
+				kop.append(inleiding);
+
+				const af = ALLE.filter((taak) => staat.af[taak.id]).length;
+				const deel = ALLE.length ? (af / ALLE.length) * 100 : 0;
+
+				const voortgang = el('div', 'voortgang');
+				const kopregel = el('div', 'voortgang-kop');
+				kopregel.append(el('p', 'voortgang-label', 'Voortgang'));
+				const getal = el('p', 'voortgang-getal');
+				getal.append(document.createTextNode(String(af) + ' '));
+				getal.append(el('span', null, 'van ' + ALLE.length + ' afgevinkt'));
+				kopregel.append(getal);
+				voortgang.append(kopregel);
+
+				const balk = el('div', 'balk');
+				const vulling = el('div');
+				vulling.style.width = deel + '%';
+				balk.append(vulling);
+				voortgang.append(balk);
+
+				if (meldtekst) voortgang.append(el('p', 'melding', meldtekst));
+				kop.append(voortgang);
+				return kop;
+			}
+
+			function bouwLijst() {
+				const fragment = document.createDocumentFragment();
+				FASEN.forEach((fase, i) => {
+					const sectie = el('section', 'fase');
+					const kop = el('div', 'fase-kop');
+					kop.append(el('span', 'fase-nr', 'Fase ' + (i + 1)));
+					const tekst = el('div', 'fase-tekst');
+					tekst.append(el('h2', null, fase.titel));
+					tekst.append(el('p', null, fase.tekst));
+					kop.append(tekst);
+					sectie.append(kop);
+					for (const taak of fase.taken) sectie.append(bouwTaak(taak));
+					fragment.append(sectie);
+				});
+				const main = el('main');
+				main.append(fragment);
+				return main;
+			}
+
+			function bouwTaak(taak) {
+				const rij = el('div', 'taak');
+				rij.dataset.id = taak.id;
+				if (staat.af[taak.id]) rij.classList.add('af');
+
+				const vink = document.createElement('input');
+				vink.type = 'checkbox';
+				vink.className = 'vink';
+				vink.id = 'taak-' + taak.id;
+				vink.checked = Boolean(staat.af[taak.id]);
+				vink.disabled = !magSchrijven;
+				vink.addEventListener('change', () => zetAf(taak.id, vink.checked, rij));
+
+				const regel = el('div', 'taak-regel');
+				const titel = document.createElement('label');
+				titel.className = 'taak-titel';
+				titel.htmlFor = vink.id;
+				titel.textContent = taak.titel;
+				regel.append(titel);
+
+				const wie = el('span', 'wie', WIE_TEKST[taak.wie] || taak.wie);
+				wie.dataset.wie = taak.wie;
+				regel.append(wie);
+
+				if (taak.blokkeert) regel.append(el('span', 'blokkeert', taak.blokkeert));
+
+				const hoe = el('div', 'taak-hoe');
+				if (taak.stappen) {
+					const ol = document.createElement('ol');
+					for (const stap of taak.stappen) {
+						const li = document.createElement('li');
+						li.innerHTML = stap;
+						ol.append(li);
+					}
+					hoe.append(ol);
+				}
+				if (taak.code) {
+					const pre = document.createElement('pre');
+					pre.append(el('code', null, taak.code));
+					hoe.append(pre);
+				}
+				if (taak.na) {
+					const na = el('p', 'taak-na');
+					na.innerHTML = taak.na;
+					hoe.append(na);
+				}
+
+				rij.append(vink, regel, hoe);
+
+				if (taak.waarom) {
+					const waarom = el('p', 'waarom');
+					waarom.innerHTML = taak.waarom;
+					rij.append(waarom);
+				}
+				return rij;
+			}
+
+			function bouwSlot() {
+				const slot = el('section', 'slot');
+				slot.append(el('h2', null, 'Dit hoeft niet voor de livegang'));
+				const ul = document.createElement('ul');
+				for (const regel of NIET_NODIG) {
+					const li = document.createElement('li');
+					li.innerHTML = regel;
+					ul.append(li);
+				}
+				slot.append(ul);
+				return slot;
+			}
+
+			function bouwVoet() {
+				const voet = el('footer', 'voet');
+				voet.append(el('span', null, 'Stand van 14 september 2026'));
+				voet.append(el('span', null, 'Uitgebreide toelichting: docs/domeinomzetting.md'));
+				return voet;
+			}
+
+			function zetAf(id, af) {
+				if (af) staat.af[id] = new Date().toISOString();
+				else delete staat.af[id];
 				bouw();
+				// De lijst wordt opnieuw opgebouwd, dus het vinkje dat je net aanraakte
+				// is een ander element. Zonder dit springt de toetsenbordfocus naar het
+				// begin van de pagina en ben je je plek kwijt.
+				const terug = document.getElementById('taak-' + id);
+				if (terug) terug.focus({ preventScroll: true });
+				plan();
 			}
-		} catch (fout) {
-			// Privémodus, of de opslag zit vol. De lijst blijft werken, alleen
-			// onthoudt hij de vinkjes niet meer.
-			meldtekst = "Deze browser kan de vinkjes niet bewaren. De lijst werkt wel, maar je begint bij het verversen opnieuw.";
+
+			/* ---- bewaren ---- */
+
+			/*
+			 * De vinkjes blijven in deze browser staan, in localStorage. Geen account
+			 * en geen server nodig: dit bestand werkt door een dubbelklik.
+			 *
+			 * Dat betekent wel dat de vinkjes van jou alleen zijn. Werkt je collega mee,
+			 * stuur hem dan dit bestand en houd zelf bij wat er af is, of zet de stand
+			 * over in docs/domeinomzetting.md.
+			 */
+			const SLEUTEL = 'hh-shops-livegang';
+
+			function bewaar() {
+				try {
+					localStorage.setItem(SLEUTEL, JSON.stringify(staat));
+					if (meldtekst) {
+						meldtekst = '';
+						bouw();
+					}
+				} catch (fout) {
+					// Privémodus, of de opslag zit vol. De lijst blijft werken, alleen
+					// onthoudt hij de vinkjes niet meer.
+					meldtekst =
+						'Deze browser kan de vinkjes niet bewaren. De lijst werkt wel, maar je begint bij het verversen opnieuw.';
+					bouw();
+				}
+			}
+
+			function plan() {
+				bewaar();
+			}
+
+			try {
+				const bewaard = localStorage.getItem(SLEUTEL);
+				if (bewaard) {
+					const gelezen = JSON.parse(bewaard);
+					if (gelezen && typeof gelezen === 'object' && gelezen.af) staat = gelezen;
+				}
+			} catch (fout) {
+				/* Niets bewaard, of onleesbaar. Dan begin je met een lege lijst. */
+			}
+
 			bouw();
-		}
-	}
-
-	function plan() {
-		bewaar();
-	}
-
-	try {
-		const bewaard = localStorage.getItem(SLEUTEL);
-		if (bewaard) {
-			const gelezen = JSON.parse(bewaard);
-			if (gelezen && typeof gelezen === "object" && gelezen.af) staat = gelezen;
-		}
-	} catch (fout) {
-		/* Niets bewaard, of onleesbaar. Dan begin je met een lege lijst. */
-	}
-
-	bouw();
-})();
-</script>
-
-</body>
+		})();
+		</script>
+	</body>
 </html>

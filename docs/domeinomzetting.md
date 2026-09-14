@@ -69,10 +69,28 @@ twee: daar zit doorlooptijd bij een ander.
    ```
 
 5. **Migratie 0008 op de main-database.** Die is op de dev-branch gedraaid,
-   niet op main. Zet eerst `DATABASE_URL_UNPOOLED` in `.env.productie`
-   (dezelfde host zonder `-pooler`): dat bestand heeft nu alleen de gepoolde
-   URL, en migraties horen niet door de pooler te gaan, zie de toelichting in
-   `drizzle.config.ts`.
+   niet op main. `.env.productie` was leeg; vul daar de verbinding van de Neon
+   **main**-branch in, allebei de vormen:
+
+   ```
+   DATABASE_URL            met connection pooling AAN  (host met -pooler)
+   DATABASE_URL_UNPOOLED   met connection pooling UIT  (zelfde host zonder)
+   ```
+
+   Draai hem dan met:
+
+   ```
+   npm run db:migrate:productie            kijken, doet niets
+   npm run db:migrate:productie -- --doe   echt draaien
+   ```
+
+   **Niet met `npm run db:migrate`.** Dat leest altijd `.env`, dus de
+   dev-branch, ook als je er een ander env-bestand voor zet: een variabele die
+   al in de omgeving staat wint van `process.loadEnvFile('.env')` in
+   `drizzle.config.ts`, maar andersom niet. Vergeet je dat een keer, dan denk
+   je dat productie bij is terwijl dat niet zo is. `scripts/migreren.ts` toont
+   daarom eerst welke database het betreft en weigert als het de dev-branch
+   blijkt te zijn.
 
 6. **Het btw-nummer.** Verplicht om te noemen (artikel 3:15d BW) en het staat
    nergens op de oude site, dus het moet uit de eigen aangifte komen. Invullen

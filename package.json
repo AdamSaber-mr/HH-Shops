@@ -19,6 +19,7 @@
 		"db:generate": "drizzle-kit generate",
 		"db:generate:custom": "drizzle-kit generate --custom",
 		"db:migrate": "drizzle-kit migrate",
+		"db:migrate:productie": "node --env-file=.env.productie scripts/migreren.ts",
 		"db:check": "drizzle-kit check",
 		"db:studio": "drizzle-kit studio",
 		"db:check-constraints": "node --env-file=.env scripts/check-constraints.ts",
