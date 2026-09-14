@@ -6,6 +6,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { zetFlash } from '../../../lib/admin/flash.ts';
 import { adresRegels, bestellingOpId } from '../../../lib/bestellen/lezen.ts';
 import { STATUS_TEKST } from '../../../lib/bestellen/status.ts';
+import { VERVOERDERS, volginfo } from '../../../lib/bestellen/verzending.ts';
 import { formatEuro } from '../../../lib/price.ts';
 
 const id = Number.parseInt(Astro.params.id ?? '', 10);
@@ -14,7 +15,22 @@ const pad = `/admin/bestellingen/${id}`;
 
 const verzonden = Astro.getActionResult(actions.bestellingen.verzonden);
 if (verzonden && !verzonden.error) {
-	zetFlash(Astro.cookies, { soort: 'ok', tekst: 'Bestelling op verzonden gezet.' });
+	zetFlash(Astro.cookies, {
+		soort: verzonden.data.gemaild ? 'ok' : 'fout',
+		tekst: verzonden.data.gemaild
+			? 'Bestelling op verzonden gezet en de klant heeft bericht.'
+			: 'Bestelling op verzonden gezet, maar de verzendmail is niet verstuurd. Zie het logboek.',
+	});
+	return Astro.redirect(pad);
+}
+const bijgewerkt = Astro.getActionResult(actions.bestellingen.verzendgegevens);
+if (bijgewerkt && !bijgewerkt.error) {
+	zetFlash(Astro.cookies, {
+		soort: 'ok',
+		tekst: bijgewerkt.data.gemaild
+			? 'Verzendgegevens opgeslagen en de klant heeft opnieuw bericht.'
+			: 'Verzendgegevens opgeslagen.',
+	});
 	return Astro.redirect(pad);
 }
 const controle = Astro.getActionResult(actions.bestellingen.controleren);
@@ -25,13 +41,17 @@ if (controle && !controle.error) {
 	});
 	return Astro.redirect(pad);
 }
-const fout = verzonden?.error?.message ?? controle?.error?.message ?? null;
+const fout =
+	verzonden?.error?.message ?? bijgewerkt?.error?.message ?? controle?.error?.message ?? null;
 
 const order = await bestellingOpId(id);
 if (!order) return new Response(null, { status: 404 });
 
 const datum = new Intl.DateTimeFormat('nl-NL', { dateStyle: 'medium', timeStyle: 'short' });
 const knop = 'inline-flex min-h-10 items-center gap-2 rounded-control border border-border-strong bg-surface px-3 text-sm font-medium text-text hover:bg-surface-hover';
+const volgen = volginfo(order);
+const veld = 'min-h-10 w-full rounded-control border border-border-strong bg-surface px-3 text-sm text-text';
+const label = 'block text-xs font-medium text-text-muted';
 const soorten: Record<string, string> = {
 	created: 'Geplaatst',
 	payment_created: 'Betaling aangemaakt',
@@ -41,6 +61,9 @@ const soorten: Record<string, string> = {
 	status_changed: 'Status gewijzigd',
 	mail_sent: 'Mails verstuurd',
 	mail_failed: 'Mail mislukt',
+	verzendmail_sent: 'Verzendmail verstuurd',
+	verzendmail_failed: 'Verzendmail mislukt',
+	verzending_gewijzigd: 'Verzendgegevens gewijzigd',
 	conflict: 'Conflict',
 	nep_status: 'Testbetaling gekozen',
 	opschonen: 'Opschoonscript',
@@ -59,15 +82,6 @@ const soorten: Record<string, string> = {
 			<p class="mt-1 text-sm text-text-muted">{datum.format(order.createdAt)}, status {STATUS_TEKST[order.status]}{order.paymentMethod ? `, betaald via ${order.paymentMethod}` : ''}</p>
 		</div>
 		<div class="flex flex-wrap gap-2">
-			{order.status === 'paid' && (
-				<form method="POST" action={actions.bestellingen.verzonden}>
-					<input type="hidden" name="id" value={order.id} />
-					<button type="submit" class="inline-flex min-h-10 items-center gap-2 rounded-control bg-accent px-3 text-sm font-medium text-white hover:bg-accent-hover">
-						<Icon name="ph:truck" class="size-4" aria-hidden="true" />
-						Markeer als verzonden
-					</button>
-				</form>
-			)}
 			{order.molliePaymentId && (
 				<form method="POST" action={actions.bestellingen.controleren}>
 					<input type="hidden" name="id" value={order.id} />
@@ -82,6 +96,79 @@ const soorten: Record<string, string> = {
 	{fout && <p role="alert" class="mt-4 rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger">{fout}</p>}
 
 	<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+		<div class="space-y-6">
+		{(order.status === 'paid' || order.status === 'shipped') && (
+			<section class="rounded-card border border-border bg-surface p-5">
+				<div class="flex flex-wrap items-baseline justify-between gap-2">
+					<h2 class="text-lg font-semibold">Verzending</h2>
+					{order.shippedAt && <p class="text-sm text-text-muted">Verzonden op {datum.format(order.shippedAt)}</p>}
+				</div>
+
+				{order.status === 'shipped' && (
+					<p class="mt-3 text-sm">
+						{volgen ? (
+							<>
+								{volgen.label}{volgen.code ? `, code ${volgen.code}` : ''}.
+								{volgen.url && <> <a href={volgen.url} rel="noopener noreferrer" target="_blank" class="text-accent hover:underline">Volg het pakket</a></>}
+							</>
+						) : (
+							'Geen vervoerder en geen track-and-tracecode ingevuld.'
+						)}
+						<span class="mt-1 block text-xs text-text-muted">
+							Verzendmail naar de klant: {order.shipmentSentAt ? datum.format(order.shipmentSentAt) : 'niet verstuurd'}.
+						</span>
+					</p>
+				)}
+
+				{/*
+				  * Hetzelfde formulier voor beide statussen: bij `paid` zet het de
+				  * bestelling op verzonden en mailt het de klant, bij `shipped`
+				  * werkt het alleen de gegevens bij. De klant krijgt dan alleen
+				  * opnieuw bericht als het vinkje aanstaat, zodat een verbeterde
+				  * tikfout geen tweede mail oplevert.
+				  */}
+				<form
+					method="POST"
+					action={order.status === 'paid' ? actions.bestellingen.verzonden : actions.bestellingen.verzendgegevens}
+					class="mt-4 space-y-4"
+				>
+					<input type="hidden" name="id" value={order.id} />
+					<div class="grid gap-4 sm:grid-cols-2">
+						<div>
+							<label class={label} for="vervoerder">Vervoerder</label>
+							<select id="vervoerder" name="vervoerder" class={`${veld} mt-1`}>
+								<option value="">Nog niet bekend</option>
+								{VERVOERDERS.map((v) => (
+									<option value={v.waarde} selected={order.carrier === v.waarde}>{v.naam}</option>
+								))}
+							</select>
+						</div>
+						<div>
+							<label class={label} for="code">Track-and-tracecode</label>
+							<input id="code" name="code" type="text" autocomplete="off" maxlength="60" value={order.trackingCode ?? ''} class={`${veld} mt-1`} placeholder="3SABCD1234567" />
+						</div>
+					</div>
+					<div>
+						<label class={label} for="eigenUrl">Eigen volglink, alleen bij "Anders"</label>
+						<input id="eigenUrl" name="eigenUrl" type="url" maxlength="500" value={order.trackingUrl ?? ''} class={`${veld} mt-1`} placeholder="https://..." />
+						<p class="mt-1 text-xs text-text-muted">
+							Bij PostNL, DHL, DPD, GLS en UPS wordt de link zelf uitgerekend uit de code en de postcode van de klant. Verstuur je met een andere vervoerder, kies dan "Anders" en plak hier de volledige link.
+						</p>
+					</div>
+					{order.status === 'shipped' && (
+						<label class="flex items-start gap-2 text-sm">
+							<input type="checkbox" name="opnieuwMailen" value="1" class="mt-0.5 size-4 rounded border-border-strong" />
+							<span>Stuur de klant opnieuw een verzendmail met deze gegevens</span>
+						</label>
+					)}
+					<button type="submit" class="inline-flex min-h-10 items-center gap-2 rounded-control bg-accent px-3 text-sm font-medium text-white hover:bg-accent-hover">
+						<Icon name="ph:truck" class="size-4" aria-hidden="true" />
+						{order.status === 'paid' ? 'Markeer als verzonden en mail de klant' : 'Verzendgegevens opslaan'}
+					</button>
+				</form>
+			</section>
+		)}
+
 		<section class="rounded-card border border-border bg-surface p-5">
 			<h2 class="text-lg font-semibold">Artikelen</h2>
 			<ul class="mt-4 divide-y divide-border">
@@ -105,6 +192,7 @@ const soorten: Record<string, string> = {
 				<div class="flex justify-between text-text-muted"><dt>Waarvan btw</dt><dd class="tabular-nums">{formatEuro(order.vatCents)}</dd></div>
 			</dl>
 		</section>
+		</div>
 
 		<div class="space-y-6">
 			<section class="rounded-card border border-border bg-surface p-5 text-sm">
@@ -121,7 +209,7 @@ const soorten: Record<string, string> = {
 				<h2 class="text-lg font-semibold">Logboek</h2>
 				<ol class="mt-3 space-y-2">
 					{order.events.map((e) => (
-						<li class:list={['rounded-control px-3 py-2', e.kind === 'conflict' || e.kind === 'mail_failed' ? 'bg-danger-subtle' : 'bg-surface-hover']}>
+						<li class:list={['rounded-control px-3 py-2', e.kind === 'conflict' || e.kind === 'mail_failed' || e.kind === 'verzendmail_failed' ? 'bg-danger-subtle' : 'bg-surface-hover']}>
 							<span class="block text-xs text-text-muted">{datum.format(e.createdAt)}</span>
 							<span class="font-medium">{soorten[e.kind] ?? e.kind}</span>
 							{Object.keys(e.payload).length > 0 && <span class="block text-xs text-text-muted">{JSON.stringify(e.payload)}</span>}

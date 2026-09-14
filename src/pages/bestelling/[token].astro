@@ -8,6 +8,7 @@ import Layout from '../../layouts/Layout.astro';
 import { adresRegels, bestellingOpToken } from '../../lib/bestellen/lezen.ts';
 import { STATUS_TEKST } from '../../lib/bestellen/status.ts';
 import { verwerkBetaling } from '../../lib/bestellen/verwerken.ts';
+import { volginfo } from '../../lib/bestellen/verzending.ts';
 import { formatEuro } from '../../lib/price.ts';
 
 /*
@@ -38,6 +39,7 @@ const koppen = {
 	cancelled: { titel: 'De betaling is niet gelukt', icoon: 'ph:warning-circle' },
 } as const;
 const kop = koppen[order.status];
+const volgen = order.status === 'shipped' ? volginfo(order) : null;
 const eigen = Boolean(Astro.locals.user && order.userId === Astro.locals.user.id);
 Astro.response.headers.set('Cache-Control', 'no-store');
 ---
@@ -59,7 +61,31 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 				<Melding melding={{ soort: 'ok', tekst: `We hebben je betaling ontvangen en sturen een bevestiging naar ${order.email}. Voor 15:00 uur besteld, dan is je pakket morgen in huis.` }} />
 			)}
 			{order.status === 'shipped' && (
-				<Melding melding={{ soort: 'ok', tekst: 'Je pakket is verzonden en komt eraan.' }} />
+				<div class="rounded-card border border-border bg-surface p-5">
+					<p class="text-sm">
+						Je pakket is verzonden{volgen?.vervoerder ? ` met ${volgen.vervoerder}` : ''} en komt eraan.
+						{volgen?.code && <> De track-and-tracecode is <span class="font-medium">{volgen.code}</span>.</>}
+					</p>
+					{volgen?.url && (
+						<>
+							{/*
+							  * Een gewone link en geen <Button>: de volgpagina staat bij de
+							  * vervoerder, dus die opent in een nieuw tabblad en heeft
+							  * rel="noopener" nodig. Button kent die attributen niet.
+							  */}
+							<a
+								href={volgen.url}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-border-strong bg-surface px-4 text-sm font-medium text-text transition-colors hover:bg-surface-hover"
+							>
+								<Icon name="ph:truck" class="size-4" aria-hidden="true" />
+								{volgen.vervoerder ? `Volg je pakket bij ${volgen.vervoerder}` : 'Volg je pakket'}
+							</a>
+							<p class="mt-3 text-xs text-text-muted">Het kan een paar uur duren voor de vervoerder het pakket gescand heeft. Tot die tijd laat de volgpagina nog niets zien.</p>
+						</>
+					)}
+				</div>
 			)}
 			{order.status === 'awaiting_payment' && (
 				<div class="rounded-card border border-border bg-surface p-5">

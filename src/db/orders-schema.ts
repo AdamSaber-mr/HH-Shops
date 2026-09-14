@@ -35,7 +35,8 @@ const stamp = (name: string) => timestamp(name, { withTimezone: true, mode: 'dat
  * awaiting_payment  geplaatst, voorraad gereserveerd, wacht op Mollie
  * paid              betaald; klant en eigenaar hebben een mail
  * cancelled         mislukt, verlopen of geannuleerd; voorraad is terug
- * shipped           door de beheerder op verzonden gezet
+ * shipped           door de beheerder op verzonden gezet; de klant heeft een
+ *                   verzendmail, met de track-and-tracecode als die er is
  */
 export const orderStatus = pgEnum('order_status', [
 	'awaiting_payment',
@@ -81,6 +82,20 @@ export const orders = pgTable(
 		shippedAt: stamp('shipped_at'),
 		/** De bevestigingsmail gaat precies een keer. */
 		confirmationSentAt: stamp('confirmation_sent_at'),
+
+		/*
+		 * Track and trace. Een van de waarden uit VERVOERDERS in
+		 * src/lib/bestellen/verzending.ts; `anders` is de vervoerder die daar
+		 * niet bij staat, en dan plakt de beheerder zelf de volledige link.
+		 * De link van de andere vervoerders wordt uitgerekend uit de code en
+		 * de postcode, en staat dus bewust niet in de database: verandert een
+		 * vervoerder zijn adres, dan kloppen oude bestellingen ook weer.
+		 */
+		carrier: text('carrier'),
+		trackingCode: text('tracking_code'),
+		trackingUrl: text('tracking_url'),
+		/** De verzendmail gaat precies een keer, tenzij de beheerder hem opnieuw stuurt. */
+		shipmentSentAt: stamp('shipment_sent_at'),
 
 		createdAt: stamp('created_at').notNull().defaultNow(),
 		updatedAt: stamp('updated_at').notNull().defaultNow(),
@@ -134,6 +149,37 @@ export const orders = pgTable(
 		check(
 			'orders_shipped_at_matches',
 			sql`(${t.status} = 'shipped') = (${t.shippedAt} IS NOT NULL)`,
+		),
+
+		// Track and trace. De code mag alleen bij een vervoerder staan, en een
+		// eigen link alleen bij `anders`, die zonder link niets zou opleveren.
+		check(
+			'orders_carrier_known',
+			sql`${t.carrier} IS NULL OR ${t.carrier} IN ('postnl', 'dhl', 'dpd', 'gls', 'ups', 'anders')`,
+		),
+		check(
+			'orders_tracking_code_shape',
+			sql`${t.trackingCode} IS NULL OR ${t.trackingCode} ~ '^[A-Za-z0-9][A-Za-z0-9-]{2,39}$'`,
+		),
+		check(
+			'orders_tracking_code_needs_carrier',
+			sql`${t.trackingCode} IS NULL OR ${t.carrier} IS NOT NULL`,
+		),
+		check(
+			'orders_tracking_url_shape',
+			sql`${t.trackingUrl} IS NULL OR (${t.trackingUrl} ~ '^https://' AND length(${t.trackingUrl}) BETWEEN 12 AND 500)`,
+		),
+		// IS NOT DISTINCT FROM en niet `=`: bij een lege vervoerder geeft `=`
+		// de waarde NULL, en een check die NULL oplevert laat alles door. Dan
+		// zou een eigen link zonder vervoerder er alsnog in kunnen.
+		check(
+			'orders_own_url_only_for_other_carrier',
+			sql`(${t.carrier} IS NOT DISTINCT FROM 'anders') = (${t.trackingUrl} IS NOT NULL)`,
+		),
+		// Verzendgegevens en een verzendmail horen bij een verzonden bestelling.
+		check(
+			'orders_shipping_needs_shipped',
+			sql`${t.status} = 'shipped' OR (${t.carrier} IS NULL AND ${t.shipmentSentAt} IS NULL)`,
 		),
 	],
 );

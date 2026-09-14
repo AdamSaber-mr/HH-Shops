@@ -1,6 +1,8 @@
 ---
+import logo from '../assets/logo.png';
 import tussenbanner from '../assets/tussenbanner.png';
 import Hero from '../components/Hero.astro';
+import JsonLd from '../components/JsonLd.astro';
 import ProductSection from '../components/ProductSection.astro';
 import PromoBanner from '../components/PromoBanner.astro';
 import TrendingCategories from '../components/TrendingCategories.astro';
@@ -9,6 +11,8 @@ import UspBar from '../components/UspBar.astro';
 import Layout from '../layouts/Layout.astro';
 import { defaultVariant, listActiveProducts } from '../lib/catalog.ts';
 import { leesFavorieten } from '../lib/klanten/favorieten.ts';
+import { site } from '../lib/site.ts';
+import { winkelSchema } from '../lib/vindbaarheid/jsonld.ts';
 
 /*
  * De startpagina, van boven naar beneden:
@@ -64,11 +68,33 @@ const newest = [...entries]
 			b.product.createdAt.getTime() - a.product.createdAt.getTime(),
 	)
 	.slice(0, NEW_COUNT);
+/*
+ * Wie de winkel is, voor Google. Alleen op de startpagina: dit hoort een keer
+ * per site te staan, niet op elke pagina. Zie src/lib/vindbaarheid/jsonld.ts.
+ */
+const winkel = winkelSchema(
+	Astro.url.origin,
+	{
+		naam: site.name,
+		beschrijving: site.description,
+		email: site.email,
+		kvk: site.kvk,
+		btw: site.btw,
+		adres: {
+			straat: site.address.street,
+			postcode: site.address.postalCode,
+			plaats: site.address.city,
+		},
+	},
+	logo.src,
+);
+
 ---
 
 <Layout
 	description="Huishoudelijke artikelen, kinderartikelen, cosmetica, tassen en schoeisel. Snel geleverd in Nederland."
 >
+	<JsonLd slot="head" schema={winkel} />
 	<Hero
 		title="Alles voor thuis, in één winkel."
 		text="Van huishoudelijke artikelen en kinderspullen tot cosmetica, tassen en schoenen. Voor 15:00 besteld, morgen in huis."

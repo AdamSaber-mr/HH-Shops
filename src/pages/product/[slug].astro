@@ -2,6 +2,7 @@
 import { actions } from 'astro:actions';
 import { Icon } from 'astro-icon/components';
 import BeschrijvingBlok from '../../components/BeschrijvingBlok.astro';
+import JsonLd from '../../components/JsonLd.astro';
 import Hartje from '../../components/klant/Hartje.astro';
 import Price from '../../components/Price.astro';
 import ProductImage from '../../components/ProductImage.astro';
@@ -19,6 +20,7 @@ import { kleurcode } from '../../lib/kleuren.ts';
 import { ontleedBeschrijving, tekstVan } from '../../lib/productinformatie.ts';
 import { gevraagdeWaarden, kiesVariant, paramVoor, waardenVoor } from '../../lib/productkeuze.ts';
 import { usps } from '../../lib/site.ts';
+import { kruimelpadSchema, productSchema } from '../../lib/vindbaarheid/jsonld.ts';
 
 /*
  * De productpagina, naar het voorbeeld van Adam: links de foto's met de
@@ -76,6 +78,21 @@ function keuzeLink(params: Record<string, string>): string {
 	for (const [sleutel, waarde] of Object.entries(params)) url.searchParams.set(sleutel, waarde);
 	return `${url.pathname}${url.search}`;
 }
+
+/*
+ * "?maat=XS" voor een variant, voor de links in de gestructureerde gegevens.
+ * Een const en geen function-declaratie: die laatste wordt naar boven gehaald,
+ * en dan weet TypeScript hierbinnen niet meer dat `product` bestaat.
+ */
+const keuzeLinkVoor = (opties: Record<string, string>): string => {
+	const params = new URLSearchParams();
+	for (const naam of product.optionNames) {
+		const waarde = opties[naam];
+		if (waarde) params.set(paramVoor(naam), waarde);
+	}
+	const query = params.toString();
+	return query ? `?${query}` : '';
+};
 
 const soldOut = selected.stockQuantity === 0;
 const lowStock = !soldOut && selected.stockQuantity < 11;
@@ -135,6 +152,41 @@ const inleidingLengte = info.inleiding.reduce(
 	0,
 );
 const beschrijvingFoto = inleidingLengte >= 700 ? fotos[1] : undefined;
+/*
+ * Gestructureerde gegevens voor Google: dezelfde prijs, voorraad en
+ * artikelnummers die hierboven op de pagina staan, nog een keer machineleesbaar.
+ * Zie src/lib/vindbaarheid/jsonld.ts. Het kruimelpad hieronder volgt dat van de
+ * navigatie, met de eerste categorie van het product als tussenstap.
+ */
+const hoofdcategorie = categorieen[0];
+const schema = [
+	productSchema(Astro.url.origin, {
+		naam: product.name,
+		beschrijving: omschrijving ?? tekstVan(product.description),
+		merk: product.brand,
+		pad: `/product/${product.slug}`,
+		fotos: fotos.map((f) => f.url),
+		varianten: product.variants.map((v) => ({
+			sku: v.sku,
+			prijsCenten: v.priceCents,
+			voorraad: v.stockQuantity,
+			// Bij een product met keuzes wijst elke variant naar zijn eigen
+			// selectie, zodat een klik uit Google op de goede maat uitkomt.
+			pad:
+				product.variants.length > 1
+					? `/product/${product.slug}${keuzeLinkVoor(v.options)}`
+					: `/product/${product.slug}`,
+		})),
+	}),
+	kruimelpadSchema(Astro.url.origin, [
+		{ naam: 'Home', pad: '/' },
+		...(hoofdcategorie
+			? [{ naam: hoofdcategorie.name, pad: `/categorie/${hoofdcategorie.slug}` }]
+			: [{ naam: 'Alle producten', pad: '/producten' }]),
+		{ naam: product.name, pad: `/product/${product.slug}` },
+	]),
+];
+
 const voorraadTekst = soldOut
 	? 'Uitverkocht'
 	: lowStock
@@ -148,6 +200,7 @@ const voorraadTekst = soldOut
 	deelAfbeelding={fotos[fotoIndex]?.url}
 	deelAfbeeldingAlt={fotos[fotoIndex]?.alt}
 >
+	<JsonLd slot="head" schema={schema} />
 	<div class="mx-auto max-w-[1400px] px-4 py-4 sm:px-6 lg:py-5">
 		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
 			<ol class="flex flex-wrap items-center gap-x-2 gap-y-1">

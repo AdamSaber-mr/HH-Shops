@@ -1,0 +1,29 @@
+---
+import { alsScriptInhoud, type Jsonld } from '../lib/vindbaarheid/jsonld.ts';
+
+/*
+ * Zet gestructureerde gegevens op de pagina. Gebruik hem in de head-slot van
+ * Layout:
+ *
+ *   <JsonLd slot="head" schema={[productSchema(...), kruimelpadSchema(...)]} />
+ *
+ * Een `<script type="application/ld+json">` is geen script maar een gegevensblok:
+ * de browser voert hem niet uit. Daarom valt hij ook niet onder `script-src`
+ * van de Content-Security-Policy in src/middleware.ts, en hoeft daar geen
+ * 'unsafe-inline' bij. Dat is nagelopen met een echte browser en de policy van
+ * productie erop.
+ *
+ * De inhoud wordt ontsmet in alsScriptInhoud; zie de toelichting daar.
+ */
+
+interface Props {
+	schema: Jsonld | readonly Jsonld[];
+}
+
+const { schema } = Astro.props;
+const blokken = Array.isArray(schema) ? schema : [schema as Jsonld];
+---
+
+{blokken.map((blok) => (
+	<script type="application/ld+json" is:inline set:html={alsScriptInhoud(blok)} />
+))}

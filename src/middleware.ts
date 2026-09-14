@@ -3,8 +3,11 @@ import { defineMiddleware } from 'astro:middleware';
 import type { APIContext, MiddlewareNext } from 'astro';
 import { getAuth } from './auth/server.ts';
 import { heeftSessieCookie, isBeheerder } from './auth/sessie.ts';
+import { getDb } from './db/client.ts';
 import { zetFlash } from './lib/klanten/flash.ts';
 import { lokaalPad } from './lib/klanten/pad.ts';
+import { nieuwePlek } from './lib/oude-links/opzoeken.ts';
+import { kanOudPadZijn, zonderOudeAttributen } from './lib/oude-links/paden.ts';
 
 /*
  * Wie mag waar.
@@ -138,8 +141,45 @@ function zetBeveiligingsheaders(headers: Headers): void {
 	if (import.meta.env.PROD) headers.set('Content-Security-Policy', CSP);
 }
 
+/*
+ * De oude site, hh-shops.nl op WordPress, heeft links die in Google staan en
+ * in bookmarks. Die moeten hier landen en niet op een foutpagina, anders is
+ * de opgebouwde vindbaarheid weg zodra het domein omgaat.
+ *
+ * Twee gevallen, allebei met 301 ("permanent verplaatst"), want dat is wat
+ * Google nodig heeft om de waarde mee te verhuizen:
+ *
+ * 1. Een oude variantlink als /product/x?attribute_maten=38. Het pad bestaat
+ *    gewoon, dus hier komt nooit een 404 uit: dit wordt vooraf opgeschoond
+ *    naar onze eigen ?maat=38. Kost geen query, alleen een blik op de
+ *    querystring.
+ * 2. Een oud pad dat hier niet bestaat, zoals /product-categorie/schoenen of
+ *    de oude productslug van een losse maat. Dat wordt pas opgezocht als er
+ *    echt een 404 uit komt, zodat een gewone pagina er niets voor betaalt.
+ *    Het werkt daardoor ook ongeacht wie die 404 gaf: de productpagina
+ *    antwoordt zelf met 404 op een onbekende slug, en /product-categorie
+ *    bestaat als route helemaal niet.
+ */
+async function oudeLink(context: APIContext): Promise<Response | null> {
+	if (context.request.method !== 'GET' && context.request.method !== 'HEAD') return null;
+	if (!kanOudPadZijn(context.url.pathname)) return null;
+	const naar = await nieuwePlek(getDb(), context.url.pathname);
+	if (!naar) return null;
+	// De querystring van de bezoeker gaat mee, tenzij de nieuwe plek er zelf
+	// al een heeft (dan kiest die de variant, en zou samenvoegen botsen).
+	const eigenQuery = naar.includes('?');
+	return context.redirect(
+		`${naar}${!eigenQuery && context.url.search ? context.url.search : ''}`,
+		301,
+	);
+}
+
 export const onRequest = defineMiddleware(async (context, next) => {
-	const antwoord = await afhandelen(context, next);
+	const opgeschoond = context.request.method === 'GET' ? zonderOudeAttributen(context.url) : null;
+	if (opgeschoond) return context.redirect(opgeschoond, 301);
+
+	let antwoord = await afhandelen(context, next);
+	if (antwoord.status === 404) antwoord = (await oudeLink(context)) ?? antwoord;
 	// Eigen Referrer-Policy van een pagina (de herstelpagina) blijft staan.
 	const eigenReferrer = antwoord.headers.get('Referrer-Policy');
 	zetBeveiligingsheaders(antwoord.headers);

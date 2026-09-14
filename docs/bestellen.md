@@ -3,6 +3,9 @@
 > Gebouwd op 11 september 2026, fase 4 uit het plan van aanpak. Winkelmand
 > en accounts bestonden al (docs/klantaccounts.md); dit is het afrekenen,
 > de betaling via Mollie, de bestelmails en het bestelbeheer.
+>
+> Op 14 september 2026 uitgebreid met de verzendmail en track and trace
+> (migratie 0008). Daarvoor hoorde de klant na "verzonden" niets meer.
 
 ## Wat het kan
 
@@ -17,7 +20,9 @@
   als voorwaarde. Twee klanten die tegelijk het laatste exemplaar bestellen:
   een wint, de ander krijgt een melding en houdt zijn winkelmand.
 - **Betalen** via de Payments API van Mollie: betaalmethode kiezen bij
-  Mollie zelf (iDEAL en creditcard; Klarna pas na een echte test). Zonder
+  Mollie zelf. De code noemt geen methoden, dus wat de klant te zien krijgt
+  staat in het Mollie-dashboard. Klarna komt er niet (bevestigd op 14
+  september 2026); dat hoeft dus alleen in dat dashboard uit te staan. Zonder
   sleutel, buiten productie, een nagebootste Mollie op
   `/betaling-test/<id>` met knoppen Betaald, Mislukt, Verlopen en
   Geannuleerd, zodat elk pad lokaal en op een preview te testen is.
@@ -28,9 +33,17 @@
   Mislukt, verlopen of geannuleerd: bestelling op geannuleerd, voorraad
   terug, knop "Zet de artikelen terug in mijn winkelmand". Betaald na
   annulering wordt als conflict gelogd en in het paneel getoond.
+- **Verzenden**: in het paneel kiest de beheerder de vervoerder en vult hij
+  de track-and-tracecode in; de bestelling gaat op verzonden en de klant
+  krijgt meteen een mail met de code en een knop naar de volgpagina. Ook
+  zonder code gaat die mail, want "je pakket is onderweg" is beter dan
+  stilte. Een code die later alsnog binnenkomt of een tikfout is bij te
+  werken, met een vinkje of de klant opnieuw bericht krijgt. Zie
+  "Track and trace" hieronder.
 - **Beheerpaneel** onder `/admin/bestellingen`: lijst met filter op status
-  en zoeken, detail met artikelen, klant, adres en het volledige logboek,
-  knoppen "Markeer als verzonden" en "Controleer bij Mollie".
+  en zoeken, detail met artikelen, klant, adres, de verzendgegevens en het
+  volledige logboek, knoppen "Markeer als verzonden en mail de klant" en
+  "Controleer bij Mollie".
 - **Account**: `/account/bestellingen` met de eigen bestellingen; elke
   bestelling linkt naar de statuspagina.
 - **Vangnet**: `scripts/bestellingen-opschonen.ts` (met `--doe`) controleert
@@ -50,7 +63,8 @@ Verzendkosten 4,24 euro, gratis vanaf 50 euro (`src/lib/bestellen/instellingen.t
 | Plaatsen en betaling starten | `src/lib/bestellen/plaatsen.ts` |
 | Betaling verwerken, annuleren, mails | `src/lib/bestellen/verwerken.ts`, `annuleren.ts` |
 | Leesvragen | `src/lib/bestellen/lezen.ts` |
-| Mailsjablonen bestelling | `src/lib/mail/sjablonen.ts` |
+| Mailsjablonen bestelling en verzending | `src/lib/mail/sjablonen.ts` |
+| Vervoerders en volglinks (zuiver, getest) | `src/lib/bestellen/verzending.ts` |
 | Actions | `src/actions/afrekenen.ts` (open), `src/actions/bestellingen.ts` (beheer) |
 | Pagina's | `src/pages/afrekenen.astro`, `bestelling/[token].astro`, `betaling-test/[id].astro`, `api/mollie/webhook.ts`, `account/bestellingen.astro`, `admin/bestellingen/` |
 
@@ -62,6 +76,35 @@ terug; de mail linkt ernaar.
 redirect zegt niets. In beide gevallen wordt `payments.get` gedaan en de
 bestelling in de transactie gelockt (`FOR UPDATE`), zodat webhook en
 statuspagina elkaar niet in de weg zitten. De overgang is idempotent.
+
+## Track and trace
+
+De volglink wordt elke keer opnieuw uitgerekend uit de code en de postcode
+van de klant, en staat niet in de database (`src/lib/bestellen/verzending.ts`).
+Verandert een vervoerder zijn adres, dan kloppen oude bestellingen ook weer
+zodra dat ene bestand klopt.
+
+| Vervoerder | Wat de link nodig heeft |
+|---|---|
+| PostNL | code plus postcode |
+| DHL | code plus postcode |
+| DPD, GLS, UPS | alleen de code |
+| Anders | de beheerder plakt zelf de volledige link |
+
+"Anders" is voor een vervoerder die er niet bij staat, bijvoorbeeld als een
+bestelling via een verkoopkanaal loopt dat zijn eigen volgpagina heeft. De
+klant leest dan geen vervoerdersnaam, alleen "Je pakket is verzonden" met de
+knop "Volg je pakket".
+
+De code wordt opgeschoond voor hij wordt bewaard: spaties en punten eruit,
+hoofdletters erop, want zo staat hij op het label en zo verwachten de
+volgpagina's hem. `3s abcd 1234 567` wordt `3SABCD1234567`.
+
+De verzendmail gaat precies een keer (`shipment_sent_at`), tenzij de
+beheerder hem bewust opnieuw stuurt. Mislukt hij, dan blijft de bestelling
+gewoon op verzonden staan, komt er een regel in het logboek en staat het
+formulier klaar om het opnieuw te proberen. Een mail die niet aankomt mag het
+inpakken niet ongedaan maken.
 
 **CSRF.** Astro's eigen herkomstcontrole staat uit (`checkOrigin: false`)
 omdat die geen uitzonderingen kent; `src/middleware.ts` doet dezelfde
@@ -83,12 +126,13 @@ dan geen webhook, en de statuspagina vraagt zelf na.
 | `BESTELLING_MAIL_NAAR` | optioneel | eigenaar-adres; standaard info@hh-shops.nl |
 | `RESEND_API_KEY` | zie docs/klantaccounts.md | de mails |
 
-Migratie 0006 draaien met `npm run db:migrate` op elke database. In
+Migraties 0006 en 0008 draaien met `npm run db:migrate` op elke database. In
 productie weigert de koppeling te starten zonder Mollie-sleutel.
 
 Voor de livegang: in het Mollie-dashboard de gegevens van de winkel
-(KvK, bankrekening, website) laten controleren, de livesleutel in Vercel
-zetten, en een bestelling van een paar euro echt doen en terugbetalen.
+(KvK, bankrekening, website) laten controleren, daar iDEAL en creditcard
+aanzetten en Klarna uit laten, de livesleutel in Vercel zetten, en een
+bestelling van een paar euro echt doen en terugbetalen.
 
 ## Voor de privacyverklaring
 
@@ -97,19 +141,22 @@ het kan noemen:
 
 - Per bestelling: naam, e-mailadres, bezorgadres, telefoonnummer en
   opmerking als de klant die geeft, de bestelde artikelen en bedragen, het
-  betalingskenmerk van Mollie en de betaalmethode. Nodig om de bestelling
-  uit te voeren en wettelijk zeven jaar te bewaren voor de boekhouding.
+  betalingskenmerk van Mollie en de betaalmethode, en na verzending de
+  vervoerder en de track-and-tracecode. Nodig om de bestelling uit te voeren
+  en wettelijk zeven jaar te bewaren voor de boekhouding.
 - Verwijdert een klant zijn account, dan verdwijnen account, favorieten,
   winkelmand en bezorgadres. De bestellingen blijven bewaard, losgekoppeld
   van het account (`user_id` wordt leeg), met de gegevens die erop staan.
 - Verwerkers: Vercel (hosting, Europa), Neon (database, Frankfurt), Mollie
   (betaling; ziet naam, bedrag en omschrijving, nooit onze wachtwoorden),
-  Resend (mail).
+  Resend (mail), en de vervoerder die het pakket bezorgt (naam en adres).
 - Cookies: alleen functioneel (sessie, winkelmand, favorieten, meldingen).
 
 ## Wat er bewust niet in zit
 
-- Factuur-pdf en verzendlabels: later, bij het bestelbeheer.
+- Factuur-pdf en verzendlabels: later, bij het bestelbeheer. De
+  track-and-tracecode wordt met de hand ingevuld; er is geen koppeling met
+  een vervoerder die hem zelf ophaalt.
 - Kortingscodes.
 - Betaalmethode kiezen op de eigen afrekenpagina; het is een parameter in
   de Mollie-aanroep.

@@ -2,12 +2,13 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { getDb } from '../../db/client.ts';
 import { orders } from '../../db/orders-schema.ts';
 import { getMailer } from '../mail/server.ts';
-import { bestelbevestiging, bestelmelding } from '../mail/sjablonen.ts';
+import { bestelbevestiging, bestelmelding, verzendbevestiging } from '../mail/sjablonen.ts';
 import { formatEuro } from '../price.ts';
 import { annuleer, logboek } from './annuleren.ts';
 import { adresRegels, regelOmschrijving } from './lezen.ts';
 import { eigenaarMail, getBetaalkoppeling } from './server.ts';
 import { type Bestelstatus, type MollieStatus, pasBetaalstatusToe } from './status.ts';
+import { volginfo } from './verzending.ts';
 
 /*
  * Wat er met een bestelling gebeurt nadat hij geplaatst is: de betaling
@@ -144,6 +145,65 @@ export async function stuurBestelmails(orderId: number, origin: string): Promise
 		await logboek(db, orderId, 'mail_failed', {
 			fout: error instanceof Error ? error.message : String(error),
 		});
+	}
+}
+
+/**
+ * De verzendmail naar de klant, zodra de bestelling op verzonden staat.
+ *
+ * Standaard precies een keer: `shipment_sent_at` houdt bij dat hij weg is.
+ * Vult de beheerder later alsnog een track-and-tracecode in, dan mag hij de
+ * mail bewust opnieuw laten sturen; daarvoor is `opnieuw`.
+ *
+ * Gooit geen fout naar boven. Een mail die niet aankomt mag het op verzonden
+ * zetten niet ongedaan maken; het staat in het logboek en de knop
+ * "Verzendmail opnieuw sturen" blijft in het paneel staan.
+ */
+export async function stuurVerzendmail(
+	orderId: number,
+	origin: string,
+	opnieuw = false,
+): Promise<boolean> {
+	const db = getDb();
+	const order = await db.query.orders.findFirst({
+		where: eq(orders.id, orderId),
+		with: { items: { orderBy: (i, { asc }) => [asc(i.position)] } },
+	});
+	if (order?.status !== 'shipped') return false;
+	if (order.shipmentSentAt && !opnieuw) return false;
+
+	const volgen = volginfo(order);
+	const mail = verzendbevestiging({
+		nummer: order.number,
+		naam: order.name,
+		regels: order.items.map(
+			(i) => [regelOmschrijving(i), formatEuro(i.lineTotalCents)] as [string, string],
+		),
+		adres: adresRegels(order),
+		vervoerder: volgen?.vervoerder ?? null,
+		code: volgen?.code ?? null,
+		volglink: volgen?.url ?? null,
+		url: `${origin}/bestelling/${order.token}`,
+	});
+	try {
+		await getMailer().verstuur({ aan: order.email, ...mail });
+		await db
+			.update(orders)
+			.set({ shipmentSentAt: new Date(), updatedAt: new Date() })
+			.where(eq(orders.id, orderId));
+		await logboek(db, orderId, 'verzendmail_sent', {
+			aan: order.email,
+			vervoerder: order.carrier,
+			code: order.trackingCode,
+			opnieuw,
+		});
+		return true;
+	} catch (error) {
+		console.error(`[bestellen] Verzendmail voor ${order.number} niet verstuurd`, error);
+		await logboek(db, orderId, 'verzendmail_failed', {
+			fout: error instanceof Error ? error.message : String(error),
+		});
+		return false;
 	}
 }
 
