@@ -31,8 +31,13 @@ export const site = {
 		postalCode: '3162 LA',
 		city: 'Rhoon',
 	},
-	/** INVULLEN: btw-nummer, zodra bekend. Leeg laat de regel weg. */
-	btw: '',
+	/**
+	 * Het btw-identificatienummer, doorgegeven door de klant op 14 september
+	 * 2026. Dit is de enige plek waar het staat: de voet, de algemene
+	 * voorwaarden, de factuur-pdf en de winkelgegevens voor Google lezen hem
+	 * hier. Leeg laten zou die regels overal weer laten verdwijnen.
+	 */
+	btw: 'NL867299812B01',
 } as const;
 
 /*
