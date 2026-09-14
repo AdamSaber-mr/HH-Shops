@@ -219,6 +219,11 @@ export default defineConfig({
 				access: 'secret',
 				optional: true,
 			}),
+			// De dagelijkse cron van Vercel (vercel.json) stuurt dit geheim mee als
+			// `Authorization: Bearer <geheim>`. Zonder geheim weigert
+			// /api/cron/bestellingen-opschonen elk verzoek, ook dat van Vercel zelf.
+			// Optioneel, zodat lokaal draaien en CI geen geheim nodig hebben.
+			CRON_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
 		},
 		// `validateSecrets` blijft bewust op de standaard `false`. Geheimen
 		// worden dan pas gecontroleerd wanneer ze echt gelezen worden, en niet

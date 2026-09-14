@@ -89,14 +89,17 @@ adressen gecontroleerd, alles verwijst door.
 
 ## Bij de domeinomzetting
 
-1. Het domein omzetten naar Vercel.
-2. `https://hh-shops.nl/robots.txt` opvragen en controleren dat er `Allow: /`
+De volledige afvinklijst staat in `docs/domeinomzetting.md`. Wat daarvan met
+vindbaarheid te maken heeft:
+
+1. `https://hh-shops.nl/robots.txt` opvragen en controleren dat er `Allow: /`
    staat en een `Sitemap:`-regel. Staat er `Disallow: /`, dan komt het
    verzoek niet op `hh-shops.nl` binnen.
-3. `https://hh-shops.nl/sitemap.xml` indienen in Google Search Console.
-4. `site` in `astro.config.mjs` zetten op `https://hh-shops.nl`. Dat staat er
+2. `https://hh-shops.nl/sitemap.xml` indienen in Google Search Console.
+3. `site` in `astro.config.mjs` zetten op `https://hh-shops.nl`. Dat staat er
    nu bewust niet, omdat canonieke URL's anders naar de oude site wijzen.
-5. Een paar oude links uit Google aanklikken en kijken of ze landen.
+4. `npm run links:controleren` tegen de productiedatabase, en daarna een paar
+   oude links uit Google met de hand aanklikken.
 
 ## Wat er bewust niet in zit
 

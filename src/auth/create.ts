@@ -27,6 +27,52 @@ const DAG = 60 * 60 * 24;
 export const ROL_KLANT = 'klant';
 export const ROL_ADMIN = 'admin';
 
+/*
+ * De adressen waarvan we een inlogpoging vertrouwen.
+ *
+ * Geen vaste baseURL: Vercel-previews hebben per deploy een ander adres.
+ * Better Auth leidt hem af uit de aanvraag zolang de host in TOEGESTANE_HOSTS
+ * staat, en accepteert een formulier-POST alleen van een herkomst in
+ * VERTROUWDE_HERKOMSTEN.
+ *
+ * hh-shops.nl staat er alvast bij, vooruitlopend op de domeinomzetting. Dat
+ * kan geen kwaad zolang het domein nog naar WordPress wijst: deze lijsten
+ * zeggen alleen welke adressen we vertrouwen als er iets van binnenkomt, en er
+ * komt nu niets van dat domein binnen. Andersom is het wel erg: ontbreekt het
+ * adres op het moment van de omzetting, dan kan niemand meer inloggen, klant
+ * noch beheerder, en is de winkel op slag onbeheerbaar. Zie
+ * docs/domeinomzetting.md.
+ *
+ * Ze staan hier los van createAuth zodat create.test.ts ze kan nakijken
+ * zonder een databaseverbinding op te tuigen.
+ */
+export const TOEGESTANE_HOSTS: readonly string[] = [
+	'hh-shops.nl',
+	'www.hh-shops.nl',
+	'hh-shops.vercel.app',
+	'*.vercel.app',
+	'localhost:4321',
+	'localhost:4322',
+	'localhost:4323',
+];
+
+export const VERTROUWDE_HERKOMSTEN: readonly string[] = [
+	'https://hh-shops.nl',
+	'https://www.hh-shops.nl',
+	'https://hh-shops.vercel.app',
+	'https://*.vercel.app',
+	'http://localhost:4321',
+	'http://localhost:4322',
+	'http://localhost:4323',
+];
+
+/*
+ * Geldt alleen voor een host die niet in de lijst hierboven staat. Bewust het
+ * Vercel-adres en niet hh-shops.nl: zolang dat domein naar WordPress wijst, is
+ * een link daarheen het slechtste antwoord dat we kunnen geven.
+ */
+export const TERUGVAL_ADRES = 'https://hh-shops.vercel.app';
+
 /** Hoe lang een herstellink werkt. Kort, want wie hem aanvraagt zit erop te wachten. */
 export const HERSTELLINK_MINUTEN = 60;
 /** Hoe lang een bevestigingslink werkt. Langer, want die mail blijft vaak een dag liggen. */
@@ -64,28 +110,8 @@ export function createAuth({ db, secret, rateLimit = true, mail }: AuthOptions) 
 		secret,
 		database: drizzleAdapter(db, { provider: 'pg', schema: authSchema }),
 
-		/*
-		 * Geen vaste baseURL: Vercel-previews hebben per deploy een ander adres.
-		 * Better Auth leidt hem af uit de aanvraag zolang de host in deze lijst
-		 * staat. Het echte domein komt er in fase 6 bij.
-		 */
-		baseURL: {
-			allowedHosts: [
-				'hh-shops.vercel.app',
-				'*.vercel.app',
-				'localhost:4321',
-				'localhost:4322',
-				'localhost:4323',
-			],
-			fallback: 'https://hh-shops.vercel.app',
-		},
-		trustedOrigins: [
-			'https://hh-shops.vercel.app',
-			'https://*.vercel.app',
-			'http://localhost:4321',
-			'http://localhost:4322',
-			'http://localhost:4323',
-		],
+		baseURL: { allowedHosts: TOEGESTANE_HOSTS, fallback: TERUGVAL_ADRES },
+		trustedOrigins: VERTROUWDE_HERKOMSTEN,
 
 		emailAndPassword: {
 			enabled: true,
