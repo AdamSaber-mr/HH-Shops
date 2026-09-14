@@ -100,7 +100,10 @@ export function platteTekst({
 	for (const t of tabellen) {
 		delen.push('');
 		if (t.kop) delen.push(t.kop.toUpperCase());
-		for (const [l, w] of t.rijen) delen.push(`${l}: ${w}`);
+		// Een adresregel komt binnen als [regel, ''] en heeft geen waarde;
+		// dan alleen het label, anders leest er "Koperhoek 10 B: " met een
+		// dubbele punt achter niets.
+		for (const [l, w] of t.rijen) delen.push(w ? `${l}: ${w}` : l);
 		if (t.totaal) delen.push(`${t.totaal[0]}: ${t.totaal[1]}`);
 	}
 	if (knop) delen.push('', `${knop.tekst}: ${knop.url}`);
@@ -208,6 +211,73 @@ export function bestelbevestiging(g: BestelmailGegevens): Mail {
 	};
 	return {
 		onderwerp: `Je bestelling ${g.nummer} bij ${AFZENDER_NAAM}`,
+		tekst: platteTekst(inhoud),
+		html: opmaak(inhoud),
+	};
+}
+
+export type Verzendmailgegevens = {
+	nummer: string;
+	naam: string;
+	/** Regels als [omschrijving, bedrag], net als in de bevestiging. */
+	regels: [string, string][];
+	adres: string[];
+	/** De vervoerder zoals de klant hem kent, bijvoorbeeld "PostNL". Leeg als hij niet is ingevuld. */
+	vervoerder: string | null;
+	/** De track-and-tracecode, of leeg als die er nog niet is. */
+	code: string | null;
+	/** De volgpagina van de vervoerder, of leeg. */
+	volglink: string | null;
+	/** De statuspagina van de bestelling; die blijft altijd werken. */
+	url: string;
+};
+
+/**
+ * Naar de klant, zodra de beheerder de bestelling op verzonden zet.
+ *
+ * De mail gaat ook zonder track-and-tracecode. Dat is met opzet: "je pakket
+ * is onderweg" is nog altijd beter dan stilte na de bevestiging, en de code
+ * kan er later alsnog achteraan komen.
+ *
+ * De knop wijst naar de volgpagina van de vervoerder als die er is, en
+ * anders naar de statuspagina van de bestelling. De statuspagina staat er
+ * daarom altijd nog eens los onder: een volglink van een vervoerder vervalt
+ * na verloop van tijd, onze eigen pagina niet.
+ */
+export function verzendbevestiging(g: Verzendmailgegevens): Mail {
+	const opening = g.code
+		? `Je bestelling ${g.nummer} is onderweg. ${g.vervoerder ?? 'De vervoerder'} bezorgt het pakket; met de code hieronder volg je waar het is.`
+		: `Je bestelling ${g.nummer} is ingepakt en aan ${g.vervoerder ?? 'de vervoerder'} meegegeven. Meestal staat het pakket de volgende werkdag voor de deur.`;
+	const volgen: Tabel[] = g.code
+		? [
+				{
+					kop: 'Track and trace',
+					rijen: [
+						...(g.vervoerder ? ([['Vervoerder', g.vervoerder]] as [string, string][]) : []),
+						['Code', g.code],
+					],
+				},
+			]
+		: [];
+	const inhoud: Opmaak = {
+		titel: 'Je bestelling is onderweg',
+		alineas: [aanhef(g.naam), opening],
+		tabellen: [
+			...volgen,
+			{ kop: 'Je bestelling', rijen: g.regels },
+			{ kop: 'Bezorgadres', rijen: g.adres.map((r) => [r, '']) },
+		],
+		knop: g.volglink
+			? { tekst: 'Volg je pakket', url: g.volglink }
+			: { tekst: 'Bekijk je bestelling', url: g.url },
+		naschrift: [
+			...(g.volglink ? [`De gegevens van je bestelling blijven staan op ${g.url}`] : []),
+			'Het kan een paar uur duren voor de vervoerder het pakket gescand heeft. Tot die tijd laat de volgpagina nog niets zien.',
+			`Vragen? Mail naar info@hh-shops.nl en noem je bestelnummer ${g.nummer}. Je hebt 14 dagen bedenktijd na ontvangst.`,
+		],
+	};
+	return {
+		onderwerp: `Je bestelling ${g.nummer} is onderweg`,
 		tekst: platteTekst(inhoud),
 		html: opmaak(inhoud),
 	};

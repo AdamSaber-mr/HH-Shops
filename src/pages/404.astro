@@ -1,0 +1,64 @@
+---
+import { Icon } from 'astro-icon/components';
+import Button from '../components/Button.astro';
+import Layout from '../layouts/Layout.astro';
+import { listCategories } from '../lib/catalog.ts';
+
+/*
+ * De pagina voor een adres dat niet bestaat.
+ *
+ * Komt pas aan de beurt als src/middleware.ts geen oude link heeft gevonden
+ * die hierheen wees (src/lib/oude-links.ts). Wie hier belandt, heeft dus een
+ * link die echt nergens meer heen gaat: een product dat uit het assortiment
+ * is, of een tikfout.
+ *
+ * Daarom geen kale "404". De bezoeker wilde iets kopen, dus staan de
+ * categorieen er meteen onder: dan hoeft hij niet terug naar Google.
+ */
+const categorieen = await listCategories();
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<Layout title="Pagina niet gevonden" noindex>
+	<div class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:py-24">
+		<div class="text-center">
+			<span class="inline-flex size-12 items-center justify-center rounded-full bg-accent-subtle text-accent">
+				<Icon name="ph:magnifying-glass" class="size-6" aria-hidden="true" />
+			</span>
+			<h1 class="mt-5 text-2xl font-bold tracking-tight sm:text-3xl">Deze pagina bestaat niet</h1>
+			<p class="mx-auto mt-3 max-w-lg text-text-muted">
+				Het adres klopt niet, of het product dat hier stond is uit het assortiment. Zoek verder via
+				de categorieen hieronder, of bekijk het volledige aanbod.
+			</p>
+			<div class="mt-8 flex flex-wrap justify-center gap-3">
+				<Button href="/producten">Alle producten</Button>
+				<Button href="/" variant="secondary">Naar de startpagina</Button>
+			</div>
+		</div>
+
+		{categorieen.length > 0 && (
+			<section aria-labelledby="categorieen-titel" class="mt-14 border-t border-border pt-10">
+				<h2 id="categorieen-titel" class="text-center text-sm font-semibold tracking-wide text-text-muted uppercase">
+					Onze categorieen
+				</h2>
+				<ul class="mt-5 flex flex-wrap justify-center gap-2">
+					{categorieen.map((c) => (
+						<li>
+							<a
+								href={`/categorie/${c.slug}`}
+								class="inline-flex min-h-10 items-center rounded-control border border-border-strong bg-surface px-3 text-sm font-medium text-text transition-colors hover:bg-surface-hover"
+							>
+								{c.name}
+							</a>
+						</li>
+					))}
+				</ul>
+			</section>
+		)}
+
+		<p class="mt-12 text-center text-sm text-text-muted">
+			Kom je er niet uit? Mail naar
+			<a href="mailto:info@hh-shops.nl" class="font-medium text-accent hover:underline">info@hh-shops.nl</a>.
+		</p>
+	</div>
+</Layout>

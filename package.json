@@ -24,7 +24,8 @@
 		"db:check-constraints": "node --env-file=.env scripts/check-constraints.ts",
 		"import:contactsheet": "node --env-file=.env scripts/import/contactsheet.ts",
 		"import:check": "node --env-file=.env scripts/import/index.ts --check",
-		"import": "node --env-file=.env scripts/import/index.ts"
+		"import": "node --env-file=.env scripts/import/index.ts",
+		"links:controleren": "node --env-file=.env scripts/oude-links-controleren.ts"
 	},
 	"dependencies": {
 		"@astrojs/vercel": "^11.0.10",

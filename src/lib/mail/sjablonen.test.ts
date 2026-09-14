@@ -114,3 +114,47 @@ describe('bestelmails', async () => {
 		expect(m.tekst).toContain('via ideal');
 	});
 });
+
+describe('verzendbevestiging', async () => {
+	const { verzendbevestiging } = await import('./sjablonen.ts');
+	const g = {
+		nummer: 'HH-100001',
+		naam: 'Piet Jansen',
+		regels: [['2 x Zwemvest Hond, Maat M', '\u20ac 30,00']] as [string, string][],
+		adres: ['Piet Jansen', 'Dorpsstraat 12', '1234 AB Dorp'],
+		vervoerder: 'PostNL',
+		code: '3SABCD1234567',
+		volglink: 'https://jouw.postnl.nl/track-and-trace/3SABCD1234567-NL-1234AB',
+		url: 'https://x.test/bestelling/tok',
+	};
+
+	it('noemt de vervoerder, de code en de volglink', () => {
+		const m = verzendbevestiging(g);
+		expect(m.onderwerp).toBe('Je bestelling HH-100001 is onderweg');
+		expect(m.tekst).toContain('Vervoerder: PostNL');
+		expect(m.tekst).toContain('Code: 3SABCD1234567');
+		expect(m.tekst).toContain('Volg je pakket: https://jouw.postnl.nl/track-and-trace/');
+		expect(m.html).toContain(
+			'href="https://jouw.postnl.nl/track-and-trace/3SABCD1234567-NL-1234AB"',
+		);
+	});
+
+	it('noemt daarnaast de statuspagina, want een volglink van een vervoerder vervalt', () => {
+		expect(verzendbevestiging(g).tekst).toContain('https://x.test/bestelling/tok');
+	});
+
+	it('gaat ook zonder code, en wijst dan naar de statuspagina', () => {
+		const m = verzendbevestiging({ ...g, code: null, volglink: null });
+		expect(m.tekst).toContain('Hallo Piet,');
+		expect(m.tekst).not.toContain('Code:');
+		expect(m.tekst).toContain('Bekijk je bestelling: https://x.test/bestelling/tok');
+	});
+
+	it('houdt zich aan de ontwerpregels: geen streepjes als gedachtestreep, geen emoji', () => {
+		const m = verzendbevestiging(g);
+		for (const t of [m.onderwerp, m.tekst, m.html]) {
+			expect(t).not.toMatch(/[\u2013\u2014]/);
+			expect(t).not.toMatch(/\p{Extended_Pictographic}/u);
+		}
+	});
+});
