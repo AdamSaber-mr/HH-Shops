@@ -5,7 +5,7 @@ import {
 	GRATIS_VERZENDING_VANAF_CENTS,
 	VERZENDKOSTEN_CENTS,
 } from '../lib/bestellen/instellingen.ts';
-import { juridisch, ontbreekt, openPunten } from '../lib/juridisch.ts';
+import { bedenktijdInWoorden, juridisch, ontbreekt, openPunten } from '../lib/juridisch.ts';
 import { formatEuro } from '../lib/price.ts';
 import { site } from '../lib/site.ts';
 
@@ -149,7 +149,7 @@ const inhoud = [
 
 	<h2 id="bedenktijd">Bedenktijd en retourneren</h2>
 	<p>
-		Je hebt {juridisch.bedenktijdDagen} dagen bedenktijd, gerekend vanaf de dag dat je je bestelling
+		Je hebt {bedenktijdInWoorden()} dagen bedenktijd, gerekend vanaf de dag dat je je bestelling
 		ontvangt.{' '}
 		{ontbreekt('bedenktijdDagen') ? (
 			<>
@@ -157,7 +157,11 @@ const inhoud = [
 				de oude winkel. <Invullen wat="de bedenktijd van dertig dagen" />
 			</>
 		) : (
-			<>Dat is ruimer dan de veertien dagen waar de wet je recht op geeft.</>
+			juridisch.bedenktijdDagen > 14 ? (
+				'Dat is ruimer dan de veertien dagen waar de wet je recht op geeft.'
+			) : (
+				'Dat is de termijn waar de wet je recht op geeft.'
+			)
 		)}
 	</p>
 	<p>

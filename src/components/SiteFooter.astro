@@ -8,9 +8,8 @@ import { footerGroups, paymentMethods, site } from '../lib/site.ts';
 /*
  * De footer van elke pagina.
  *
- * Bovenin een nieuwsbriefstrook, daaronder vier kolommen (over de winkel,
- * categorieen, klantenservice, over H&H Shops) en een onderbalk met
- * betaalmethoden en de juridische regel.
+ * Vier kolommen (over de winkel, categorieen, klantenservice, over H&H Shops)
+ * en een onderbalk met betaalmethoden en de juridische regel.
  *
  * Op telefoon stonden die vier kolommen onder elkaar en was de voet bijna een
  * heel scherm lang. Nu ligt het anders neer, zonder dat er iets verdwijnt:
@@ -24,8 +23,9 @@ import { footerGroups, paymentMethods, site } from '../lib/site.ts';
  * elke rij zo hoog als zijn langste kolom, en met negen categorieen naast een
  * lijstje van vijf krijg je een half scherm wit.
  *
- * Het nieuwsbriefformulier verstuurt nog nergens heen. De action wijst naar
- * /nieuwsbrief, die pagina komt als de e-mailprovider gekozen is.
+ * Hier stond een strook om je in te schrijven voor een nieuwsbrief. Op
+ * 14 september 2026 is bevestigd dat die er niet komt, dus is hij weg: een
+ * formulier dat nergens heen stuurt is erger dan geen formulier.
  *
  * Contactgegevens komen uit src/lib/site.ts en zijn deels nog INVULLEN. De
  * categorieen komen via Layout uit de database.
@@ -40,38 +40,6 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="mt-16 border-t border-border bg-surface lg:mt-24">
-	<!-- Nieuwsbrief -->
-	<div class="border-b border-border">
-		<div
-			class="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-8 sm:gap-6 sm:px-6 sm:py-10 lg:flex-row lg:items-center lg:justify-between"
-		>
-			<div class="max-w-md">
-				<h2 class="text-xl font-bold tracking-tight">Blijf op de hoogte</h2>
-				<p class="mt-1 text-sm text-pretty text-text-muted">
-					Nieuwe producten en acties als eerste in je inbox. Geen spam, uitschrijven kan altijd.
-				</p>
-			</div>
-			<form action="/nieuwsbrief" method="post" class="flex w-full max-w-lg gap-2">
-				<label for="nieuwsbrief-email" class="sr-only">E-mailadres</label>
-				<input
-					id="nieuwsbrief-email"
-					type="email"
-					name="email"
-					required
-					autocomplete="email"
-					placeholder="Je e-mailadres"
-					class="min-h-12 min-w-0 flex-1 rounded-control border border-border-strong bg-surface px-4 text-sm placeholder:text-text-muted focus:border-accent"
-				/>
-				<button
-					type="submit"
-					class="inline-flex min-h-12 shrink-0 items-center justify-center rounded-control bg-accent px-5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-				>
-					Aanmelden
-				</button>
-			</form>
-		</div>
-	</div>
-
 	<!-- Kolommen -->
 	<div
 		class="mx-auto grid max-w-[1400px] grid-cols-2 gap-x-6 gap-y-8 px-4 py-10 sm:px-6 sm:py-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-8 lg:py-12"

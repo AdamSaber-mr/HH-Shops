@@ -5,7 +5,7 @@ import {
 	GRATIS_VERZENDING_VANAF_CENTS,
 	VERZENDKOSTEN_CENTS,
 } from '../../lib/bestellen/instellingen.ts';
-import { juridisch, ontbreekt, openPunten } from '../../lib/juridisch.ts';
+import { bedenktijdInWoorden, juridisch, ontbreekt, openPunten } from '../../lib/juridisch.ts';
 import { formatEuro } from '../../lib/price.ts';
 import { site } from '../../lib/site.ts';
 
@@ -102,7 +102,7 @@ const inhoud = [
 	<h2 id="retour">Retour en garantie</h2>
 	<h3>Hoeveel bedenktijd heb ik?</h3>
 	<p>
-		{juridisch.bedenktijdDagen} dagen, vanaf de dag dat je je bestelling ontvangt.{' '}
+		{bedenktijdInWoorden()} dagen, vanaf de dag dat je je bestelling ontvangt.{' '}
 		{ontbreekt('bedenktijdDagen') && <Invullen wat="de bedenktijd van dertig dagen" />}
 	</p>
 	<h3>Wat kost het om iets terug te sturen?</h3>

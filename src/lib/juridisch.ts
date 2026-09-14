@@ -15,6 +15,8 @@
  * Adam vraagt deze punten na bij zijn collega's (14 september 2026).
  */
 
+import { site } from './site.ts';
+
 export interface Adres {
 	straat: string;
 	postcode: string;
@@ -22,37 +24,50 @@ export interface Adres {
 }
 
 export const juridisch = {
-	/** Btw-identificatienummer. Hoort op de voorwaarden en in de footer. */
-	btw: '' as string,
+	/*
+	 * Btw-identificatienummer. Dit is geen eigen waarde maar die uit site.ts,
+	 * want de voet toont hem ook: één nummer op twee plekken invullen gaat een
+	 * keer mis. Vul hem dus in site.ts in, dan klopt hier alles vanzelf.
+	 *
+	 * Hij staat nergens op de oude site, ook niet in de voorwaarden of de
+	 * privacyverklaring daar, dus moet hij bij de klant vandaan komen.
+	 */
+	btw: site.btw as string,
 
-	/** Waar een klant een retour naartoe stuurt. Hoeft niet het bezoekadres te zijn. */
+	/*
+	 * Waar een klant een retour naartoe stuurt. Blijft dit leeg, dan zegt de
+	 * retourpagina dat je het adres per mail krijgt als je je retour aanmeldt.
+	 * Dat is de afspraak: aanmelden gaat via info@hh-shops.nl (14 september 2026).
+	 */
 	retouradres: null as Adres | null,
 
-	/**
-	 * Wie de retourzending betaalt. Wettelijk mag dat de klant zijn, mits we
-	 * dat vooraf zeggen; zeggen we niets, dan betalen wij.
+	/*
+	 * Wie de retourzending betaalt. Wettelijk mag dat de klant zijn, mits we dat
+	 * vooraf zeggen; zeggen we niets, dan betalen wij. Bevestigd op 14 september
+	 * 2026: retourneren is kosteloos.
 	 */
-	retourkosten: null as 'klant' | 'winkel' | null,
+	retourkosten: 'winkel' as 'klant' | 'winkel' | null,
 
-	/**
-	 * Bedenktijd in dagen. Veertien is het wettelijk minimum en mag nooit
-	 * lager. Dertig staat op de contactpagina en komt van de oude site;
-	 * zolang dat niet bevestigd is, noemen we het als "nog te bevestigen".
+	/*
+	 * Bedenktijd in dagen. Veertien is het wettelijk minimum en mag nooit lager.
+	 * De algemene voorwaarden op de oude site (artikel 5, geldig sinds 1 januari
+	 * 2025) noemen veertien dagen; dat is dus wat de winkel echt belooft. Op de
+	 * nieuwe contactpagina stond dertig, wat nergens op gebaseerd was.
 	 */
-	bedenktijdDagen: 30,
-	bedenktijdBevestigd: false,
+	bedenktijdDagen: 14,
+	bedenktijdBevestigd: true,
 
-	/** De levertijd zoals we die durven beloven, bijvoorbeeld "1 tot 2 werkdagen". */
-	levertijd: null as string | null,
+	/** De levertijd zoals we die beloven. Bevestigd op 14 september 2026. */
+	levertijd:
+		'Bestel je op een werkdag voor 15:00 uur, dan gaat je bestelling dezelfde dag de deur uit en heb je hem meestal de volgende werkdag in huis. In het weekend versturen we niet.' as
+			| string
+			| null,
 
-	/** Bieden we Klarna aan? Staat nu al in de kernpunten en de footer. */
-	klarna: null as boolean | null,
+	/** Bieden we Klarna aan? Nee, bevestigd op 14 september 2026. */
+	klarna: false as boolean | null,
 
-	/**
-	 * Komt er een nieuwsbrief? Het formulier staat al in de voet maar stuurt
-	 * nog nergens heen, en de privacyverklaring moet hem noemen zodra hij er is.
-	 */
-	nieuwsbrief: null as boolean | null,
+	/** Komt er een nieuwsbrief? Nee, bevestigd op 14 september 2026. */
+	nieuwsbrief: false as boolean | null,
 
 	/** Datum onderaan de pagina's. Bijwerken zodra de tekst inhoudelijk verandert. */
 	bijgewerkt: '14 september 2026',
@@ -66,7 +81,6 @@ export interface OpenPunt {
 
 const ALLE_PUNTEN: readonly OpenPunt[] = [
 	{ sleutel: 'btw', tekst: 'het btw-nummer' },
-	{ sleutel: 'retouradres', tekst: 'het retouradres' },
 	{ sleutel: 'retourkosten', tekst: 'wie de retourzending betaalt' },
 	{ sleutel: 'levertijd', tekst: 'de levertijd' },
 	{ sleutel: 'bedenktijdDagen', tekst: 'de bedenktijd van dertig dagen' },
@@ -84,6 +98,21 @@ export function ontbreekt(sleutel: keyof typeof juridisch): boolean {
 /** De open punten van een pagina, in de volgorde hierboven. Leeg is klaar. */
 export function openPunten(sleutels: readonly (keyof typeof juridisch)[]): OpenPunt[] {
 	return ALLE_PUNTEN.filter((punt) => sleutels.includes(punt.sleutel) && ontbreekt(punt.sleutel));
+}
+
+/*
+ * De bedenktijd uitgeschreven, want in een lopende zin staat "veertien dagen"
+ * netter dan "14 dagen", zeker naast de andere getallen in die tekst. Een
+ * aantal dat hier niet in staat komt gewoon als cijfer terug.
+ */
+export function bedenktijdInWoorden(): string {
+	const woorden: Record<number, string> = {
+		14: 'veertien',
+		21: 'eenentwintig',
+		30: 'dertig',
+		60: 'zestig',
+	};
+	return woorden[juridisch.bedenktijdDagen] ?? String(juridisch.bedenktijdDagen);
 }
 
 /** Het retouradres als losse regels, of null zolang het onbekend is. */

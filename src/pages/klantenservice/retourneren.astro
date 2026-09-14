@@ -1,7 +1,7 @@
 ---
 import Invullen from '../../components/Invullen.astro';
 import TekstPagina from '../../components/TekstPagina.astro';
-import { juridisch, ontbreekt, openPunten, retouradresRegels } from '../../lib/juridisch.ts';
+import { bedenktijdInWoorden, juridisch, ontbreekt, openPunten, retouradresRegels } from '../../lib/juridisch.ts';
 import { site } from '../../lib/site.ts';
 
 /*
@@ -40,7 +40,7 @@ const adres = retouradresRegels();
 >
 	<h2 id="bedenktijd">Hoeveel bedenktijd je hebt</h2>
 	<p>
-		Je hebt {juridisch.bedenktijdDagen} dagen bedenktijd, vanaf de dag dat je je bestelling
+		Je hebt {bedenktijdInWoorden()} dagen bedenktijd, vanaf de dag dat je je bestelling
 		ontvangt.{' '}
 		{ontbreekt('bedenktijdDagen') ? (
 			<>
@@ -48,7 +48,11 @@ const adres = retouradresRegels();
 				binnenkort. <Invullen wat="de bedenktijd van dertig dagen" />
 			</>
 		) : (
-			<>Dat is ruimer dan de veertien dagen die de wet voorschrijft.</>
+			juridisch.bedenktijdDagen > 14 ? (
+				'Dat is ruimer dan de veertien dagen die de wet voorschrijft.'
+			) : (
+				'Dat is de bedenktijd waar de wet je recht op geeft.'
+			)
 		)}
 	</p>
 	<p>
@@ -76,8 +80,11 @@ const adres = retouradresRegels();
 	{adres ? (
 		<p>{adres.map((regel) => (<>{regel}<br /></>))}</p>
 	) : (
-		<p>Het adres staat hier zodra het bekend is: <Invullen wat="het retouradres" /></p>
-		<p>Meld je retour gerust alvast per e-mail; je krijgt het adres dan van ons.</p>
+		<p>
+			Je krijgt het retouradres van ons zodra je je retour aanmeldt op{' '}
+			<a href={`mailto:${site.email}`}>{site.email}</a>. Zo weten we dat je pakket eraan komt en
+			bij welke bestelling het hoort.
+		</p>
 	)}
 	<p>Stuur nooit iets terug zonder het eerst te melden, dan weten we niet van wie het pakket is.</p>
 

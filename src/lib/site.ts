@@ -8,8 +8,12 @@
  * livegang vervangen of geschrapt worden.
  *
  * De beloftes (gratis verzending vanaf 50 euro, voor 15:00 besteld morgen in
- * huis, betalen via iDEAL, creditcard of Klarna) komen van de oude site en
- * zijn op 10 september 2026 door Adam bevestigd voor de nieuwe shop.
+ * huis, betalen via iDEAL of creditcard) komen van de oude site en zijn op
+ * 10 september 2026 door Adam bevestigd voor de nieuwe shop.
+ *
+ * Klarna stond hier eerst bij. Op 14 september 2026 is bevestigd dat de winkel
+ * dat niet aanbiedt; een betaalmethode noemen die er niet is, is een belofte
+ * die bij het afrekenen stukloopt.
  */
 
 export const site = {
@@ -55,7 +59,7 @@ export const usps: readonly Usp[] = [
 	{
 		icon: 'ph:lock-simple',
 		title: 'Veilig betalen',
-		text: 'iDEAL, creditcard of achteraf met Klarna',
+		text: 'Betaal met iDEAL of creditcard',
 	},
 	{
 		icon: 'ph:arrow-counter-clockwise',
@@ -65,11 +69,11 @@ export const usps: readonly Usp[] = [
 ];
 
 /*
- * Betaalmethoden in de footer, zoals op de oude site: iDEAL, creditcard en
- * Klarna. Tekstlabels en geen logo's: die logo's hebben elk hun eigen
+ * Betaalmethoden in de footer: iDEAL en creditcard, de methoden die de winkel
+ * echt aanbiedt. Tekstlabels en geen logo's: die logo's hebben elk hun eigen
  * merkregels en komen pas als de betaalprovider gekoppeld is.
  */
-export const paymentMethods: readonly string[] = ['iDEAL', 'Mastercard', 'Visa', 'Klarna'];
+export const paymentMethods: readonly string[] = ['iDEAL', 'Mastercard', 'Visa'];
 
 export interface FooterGroup {
 	title: string;
