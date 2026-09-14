@@ -129,6 +129,25 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 				<div class="flex justify-between gap-4 border-t border-border pt-2 text-base font-semibold"><dt>Totaal</dt><dd class="tabular-nums">{formatEuro(order.totalCents)}</dd></div>
 				<div class="flex justify-between gap-4 text-xs text-text-muted"><dt>Waarvan btw</dt><dd class="tabular-nums">{formatEuro(order.vatCents)}</dd></div>
 			</dl>
+
+			{/*
+			  * De factuur als pdf. Alleen bij een betaalde bestelling: voor een
+			  * bestelling die nog op een betaling wacht valt er niets te
+			  * factureren, en de route erachter denkt er net zo over.
+			  *
+			  * Een gewone link en geen <Button>: dit is een download, geen actie,
+			  * en `download` is een attribuut dat Button niet kent.
+			  */}
+			{(order.status === 'paid' || order.status === 'shipped') && (
+				<a
+					href={`/bestelling/${order.token}/factuur.pdf`}
+					download
+					class="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-border-strong bg-surface px-4 text-sm font-medium text-text transition-colors hover:bg-surface-hover"
+				>
+					<Icon name="ph:receipt" class="size-4" aria-hidden="true" />
+					Factuur downloaden (pdf)
+				</a>
+			)}
 		</section>
 
 		<section aria-labelledby="adres-titel" class="mt-6 rounded-card border border-border bg-surface p-5 sm:p-6">

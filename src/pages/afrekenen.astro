@@ -73,7 +73,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 					<h2 id="gegevens-titel" class="text-lg font-semibold">Je gegevens</h2>
 					<div class="mt-4 grid gap-5 sm:grid-cols-2">
 						<Formulierveld naam="email" label="E-mailadres" type="email" autocomplete="email" inputmode="email" verplicht hint="Hierop krijg je de bevestiging." waarde={ingevuld.email ?? ''} fout={fouten.email?.[0]} />
-						<Formulierveld naam="phone" label="Telefoonnummer" type="tel" autocomplete="tel" hint="Voor de bezorger." waarde={ingevuld.phone ?? ''} fout={fouten.phone?.[0]} />
+						<Formulierveld naam="phone" label="Telefoonnummer" type="tel" autocomplete="tel" verplicht hint="De bezorger belt of appt hiermee als hij je niet treft." waarde={ingevuld.phone ?? ''} fout={fouten.phone?.[0]} />
 					</div>
 				</section>
 

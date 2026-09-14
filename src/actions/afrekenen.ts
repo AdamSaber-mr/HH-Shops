@@ -52,11 +52,17 @@ export const afrekenenActions = {
 					}
 				}
 				const phone = normaliseWhitespace(v.phone ?? '');
-				if (phone !== '' && !/^\+?[0-9 ()-]{6,20}$/.test(phone)) {
+				if (phone === '') {
 					ctx.addIssue({
 						code: 'custom',
 						path: ['phone'],
-						message: 'Vul een telefoonnummer in met alleen cijfers, of laat het veld leeg.',
+						message: 'Vul je telefoonnummer in, daar heeft de bezorger je voor nodig.',
+					});
+				} else if (!/^\+?[0-9 ()-]{6,20}$/.test(phone)) {
+					ctx.addIssue({
+						code: 'custom',
+						path: ['phone'],
+						message: 'Vul een telefoonnummer in met alleen cijfers.',
 					});
 				}
 				const note = normaliseWhitespace(v.customerNote ?? '');
