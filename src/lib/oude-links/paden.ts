@@ -95,6 +95,24 @@ const OUDE_OPTIENAMEN: Record<string, string> = {
  */
 export function zonderOudeAttributen(url: URL): string | null {
 	if (!url.search.includes('attribute_')) return null;
+
+	/*
+	 * Het pad gaat ongewijzigd de doorverwijzing in, dus het moet onmiskenbaar
+	 * een pad op deze site zijn. Zou er `//kwaadaardig.test` staan, dan is dat
+	 * een protocol-relatieve link en stuurt de doorverwijzing de bezoeker naar
+	 * een vreemd domein.
+	 *
+	 * Astro plakt dubbele schuine strepen zelf al plat voordat de middleware
+	 * aan de beurt is, dus dit is vandaag niet te misbruiken. Maar dat staat
+	 * nergens beschreven en kan bij een volgende versie veranderen, en op 14
+	 * september 2026 bleek al hoe duur het is om op ongedocumenteerd gedrag van
+	 * Astro te leunen (zie src/pages/[...pad].astro). Dus controleren we het
+	 * hier zelf, net als lokaalPad() dat doet voor een ?naar=.
+	 */
+	const pad = normaliseerPad(url.pathname);
+	if (!pad.startsWith('/') || pad.startsWith('//') || pad.startsWith('/\\')) return null;
+	if (/[\r\n]/.test(pad) || pad.length > 300) return null;
+
 	const params = new URLSearchParams();
 	let gevonden = false;
 	for (const [sleutel, waarde] of url.searchParams) {
@@ -109,5 +127,5 @@ export function zonderOudeAttributen(url: URL): string | null {
 	}
 	if (!gevonden) return null;
 	const query = params.toString();
-	return `${normaliseerPad(url.pathname)}${query ? `?${query}` : ''}`;
+	return `${pad}${query ? `?${query}` : ''}`;
 }

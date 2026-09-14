@@ -63,6 +63,28 @@ describe('zonderOudeAttributen', () => {
 			'/product/x?smaak=Vanille',
 		);
 	});
+	it('verwijst nooit naar een ander domein', () => {
+		/*
+		 * Een protocol-relatief pad als //kwaadaardig.test zou de bezoeker naar
+		 * buiten sturen. Astro plakt dubbele strepen zelf plat voordat de
+		 * middleware aan de beurt is, maar daar leunen we niet op.
+		 *
+		 * Het hele adres uitschrijven, en niet `new URL(pad, basis)`: die tweede
+		 * vorm leest //kwaadaardig.test als een ander domein en levert een pad
+		 * van alleen "/" op, waarmee de test niets meer bewijst.
+		 */
+		for (const pad of ['//kwaadaardig.test', '///kwaadaardig.test', '/\\kwaadaardig.test']) {
+			const url = new URL(`https://hh-shops.nl${pad}?attribute_maten=38`);
+			expect(url.host).toBe('hh-shops.nl');
+			expect(zonderOudeAttributen(url)).toBeNull();
+		}
+
+		// Een gecodeerde backslash blijft wel een pad op deze site en mag dus
+		// gewoon door; een browser blijft daarmee op hh-shops.nl.
+		expect(
+			zonderOudeAttributen(new URL('https://hh-shops.nl/%5Ckwaadaardig.test?attribute_maten=38')),
+		).toBe('/%5ckwaadaardig.test?maat=38');
+	});
 	it('doet niets als er niets op te schonen valt', () => {
 		expect(zonderOudeAttributen(url('/product/x?maat=38'))).toBeNull();
 		expect(zonderOudeAttributen(url('/product/x'))).toBeNull();
