@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { closeDb, openDb } from './db.ts';
 
 /*
@@ -64,16 +65,32 @@ if (host.includes('-pooler')) {
  * De endpoint van de dev-branch staat in .env. Wijzen beide bestanden naar
  * dezelfde endpoint, dan is .env.productie niet ingevuld met de main-branch
  * en zou je denken dat je productie migreert terwijl je op dev zit.
+ *
+ * Het bestand wordt hier met de hand gelezen en NIET met process.loadEnvFile.
+ * Die laatste laat een variabele die al in de omgeving staat ongemoeid, en via
+ * `--env-file=.env.productie` staat hij er al. Dan zou dit de productiehost
+ * met zichzelf vergelijken en altijd alarm slaan. Dat gebeurde ook, de eerste
+ * keer dat dit script tegen de echte main-branch draaide.
  */
-let devHost: string | null = null;
-try {
-	const eigen = { ...process.env };
-	process.loadEnvFile('.env');
-	devHost = hostVan(process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL ?? '');
-	Object.assign(process.env, eigen);
-} catch {
-	// Geen .env, bijvoorbeeld op een machine waar alleen productie staat.
+function uitEnvBestand(pad: string, naam: string): string | null {
+	try {
+		const regel = readFileSync(pad, 'utf8')
+			.split('\n')
+			.find((r) => r.trimStart().startsWith(`${naam}=`));
+		if (!regel) return null;
+		return regel
+			.slice(regel.indexOf('=') + 1)
+			.trim()
+			.replace(/^["']|["']$/g, '');
+	} catch {
+		// Geen .env, bijvoorbeeld op een machine waar alleen productie staat.
+		return null;
+	}
 }
+
+const devHost = hostVan(
+	uitEnvBestand('.env', 'DATABASE_URL_UNPOOLED') ?? uitEnvBestand('.env', 'DATABASE_URL') ?? '',
+);
 const zelfdeAlsDev = devHost !== null && host.split('.')[0] === devHost.split('.')[0];
 
 const db = openDb();

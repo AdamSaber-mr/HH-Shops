@@ -16,7 +16,7 @@
 			"!.astro/",
 			"!.vercel/",
 			"!data/",
-			"!docs/**",
+			"!docs",
 			"!drizzle/",
 			"!.agents/",
 			"!public/",
