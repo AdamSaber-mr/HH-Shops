@@ -153,12 +153,16 @@ function zetBeveiligingsheaders(headers: Headers): void {
  *    gewoon, dus hier komt nooit een 404 uit: dit wordt vooraf opgeschoond
  *    naar onze eigen ?maat=38. Kost geen query, alleen een blik op de
  *    querystring.
- * 2. Een oud pad dat hier niet bestaat, zoals /product-categorie/schoenen of
- *    de oude productslug van een losse maat. Dat wordt pas opgezocht als er
- *    echt een 404 uit komt, zodat een gewone pagina er niets voor betaalt.
- *    Het werkt daardoor ook ongeacht wie die 404 gaf: de productpagina
- *    antwoordt zelf met 404 op een onbekende slug, en /product-categorie
- *    bestaat als route helemaal niet.
+ * 2. Een pagina die zelf met 404 antwoordt op een oude slug. De
+ *    productpagina doet dat: /product/<oude losse maat> matcht wel de route
+ *    maar levert geen product op. Dat wordt pas opgezocht als er echt een
+ *    404 uit komt, zodat een gewone pagina er niets voor betaalt.
+ *
+ * Een adres waar HELEMAAL GEEN route bij past komt hier niet langs maar in
+ * src/pages/[...pad].astro. Dat is geen dubbeling: Astro bepaalt die 404
+ * voordat er middleware aan te pas komt en draait de status van een
+ * doorverwijzing hier weer terug naar 404. De toelichting staat in dat
+ * bestand.
  */
 async function oudeLink(context: APIContext): Promise<Response | null> {
 	if (context.request.method !== 'GET' && context.request.method !== 'HEAD') return null;

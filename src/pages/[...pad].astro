@@ -1,0 +1,52 @@
+---
+import NietGevonden from '../components/NietGevonden.astro';
+import { getDb } from '../db/client.ts';
+import { nieuwePlek } from '../lib/oude-links/opzoeken.ts';
+import { kanOudPadZijn } from '../lib/oude-links/paden.ts';
+
+/*
+ * Elk adres waar geen enkele andere route bij past.
+ *
+ * Dit is de plek waar een oud adres van hh-shops.nl wordt doorverwezen, en
+ * anders de foutpagina staat.
+ *
+ * WAAROM DIT EEN ROUTE IS EN GEEN REGEL IN DE MIDDLEWARE
+ *
+ * De middleware deed dit eerst: hij liet het verzoek zijn gang gaan en keek
+ * pas bij een 404 of het een oud adres was. Dat werkt in de dev-server, en
+ * het werkt in productie voor een pagina die zelf 404 antwoordt (een
+ * onbekende productslug), maar NIET voor een adres waar helemaal geen route
+ * bij past. Dan bepaalt Astro de 404 voordat er middleware aan te pas komt,
+ * rendert het de foutpagina, en voegt het beide antwoorden samen met
+ * `mergeResponses` (astro/dist/core/errors/default-handler.js). Die functie
+ * houdt de status van het eerste antwoord aan zodra die niet 200 is. Onze
+ * 301 werd daardoor weer een 404, mét de Location-header erop, en geen
+ * enkele browser volgt dat.
+ *
+ * Op 14 september 2026 stond dat een halve dag live: `/winkel` en
+ * `/product-categorie/schoenen` gaven een 404 met `location: /producten`
+ * erin. Een route die altijd matcht heeft dat probleem niet, want dan komt
+ * de foutafhandeling van Astro er nooit aan te pas.
+ *
+ * De middleware houdt zijn eigen 404-controle wel, voor het geval dat hier
+ * niet langskomt: een pagina die zelf 404 antwoordt, zoals de productpagina
+ * bij een oude slug. Zie src/middleware.ts.
+ */
+
+const pad = `/${Astro.params.pad ?? ''}`;
+
+if (kanOudPadZijn(pad)) {
+	const naar = await nieuwePlek(getDb(), pad);
+	if (naar) {
+		// De querystring van de bezoeker gaat mee, tenzij de nieuwe plek er zelf
+		// al een heeft; die kiest dan een variant en zou botsen.
+		const eigenQuery = naar.includes('?');
+		return Astro.redirect(`${naar}${!eigenQuery ? Astro.url.search : ''}`, 301);
+	}
+}
+
+Astro.response.status = 404;
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<NietGevonden />
