@@ -11,9 +11,23 @@ import Button from './Button.astro';
  * De foto's van Adam zijn 3:1 (2170 x 725) en hebben links een leeg zandkleurig
  * vlak, rechts de producten. Op desktop wordt de foto op ware verhouding
  * getoond (niets bijgesneden) en bepaalt hij de hoogte van de banner; de tekst
- * staat absoluut over het lege linkerdeel. Op telefoon en tablet is dat vlak
- * te smal voor tekst: daar staat de tekst op een zandkleurig vlak (token sand,
- * dezelfde kleur als de rand van de foto's) en komt de foto eronder.
+ * staat absoluut over het lege linkerdeel. Op tablet is dat vlak te smal voor
+ * tekst: daar staat de tekst op een zandkleurig vlak (token sand, dezelfde
+ * kleur als de rand van de foto's) en komt de foto eronder.
+ *
+ * Op telefoon (< 640px) staat de banner naast elkaar: links de kop op het
+ * zandvlak, rechts de foto over de volle hoogte. Een 3:1-foto onder een blok
+ * tekst wordt op die breedte een streepje van niks; naast elkaar blijft het
+ * een banner. De foto wordt daar bijgesneden (object-cover, rechts uitgelijnd)
+ * zodat de producten in beeld staan en niet het lege vlak; dat de snede links
+ * door het zand loopt zie je niet, want het vlak ernaast heeft dezelfde kleur.
+ * De ondertekst en de knop vallen op telefoon weg: de knop wees naar de
+ * producten die er direct onder staan, en de tekst kost meer hoogte dan hij
+ * op dat scherm waard is.
+ *
+ * De kaart is precies zo hoog als de foto en knipt af wat er niet in past. De
+ * kop staat daarom pas vanaf 1280px op zijn grootst: tussen 1024 en 1280 is de
+ * kaart maar ~326px hoog en viel de knop er anders half buiten.
  *
  * De foto komt uit de database: de bannerfoto die in het beheerpaneel bij de
  * categorie is geupload. Ontbreekt hij, dan is de banner een bosgroen vlak
@@ -38,36 +52,42 @@ const { image, eyebrow, title, text, cta } = Astro.props;
 
 <section class="mx-auto max-w-[1400px] px-4 sm:px-6" aria-label="Over deze categorie">
 	{image ? (
-		<div class="relative overflow-hidden rounded-card bg-sand text-text">
+		<div
+			class="relative grid min-h-36 grid-cols-[1fr_46%] items-stretch overflow-hidden rounded-card bg-sand text-text sm:block sm:min-h-0"
+		>
 			<div
-				class="relative z-10 max-w-xl px-6 py-10 sm:px-10 sm:py-12 lg:absolute lg:inset-y-0 lg:left-0 lg:flex lg:max-w-[55%] lg:flex-col lg:justify-center lg:px-14 lg:py-0"
+				class="relative z-10 flex max-w-xl flex-col justify-center px-4 py-5 sm:block sm:px-10 sm:py-12 lg:absolute lg:inset-y-0 lg:left-0 lg:flex lg:max-w-[55%] lg:flex-col lg:justify-center lg:px-14 lg:py-0"
 			>
 				{eyebrow && (
-					<p class="text-sm font-semibold tracking-wide text-accent uppercase">{eyebrow}</p>
+					<p class="hidden text-sm font-semibold tracking-wide text-accent uppercase sm:block">{eyebrow}</p>
 				)}
-				<p class="mt-2 text-3xl font-bold tracking-tight text-balance text-accent-hover sm:text-4xl lg:text-5xl">
+				<p class="text-2xl font-bold tracking-tight text-balance text-accent-hover sm:mt-2 sm:text-4xl xl:text-5xl">
 					{title}
 				</p>
-				<p class="mt-4 max-w-md text-base text-pretty sm:text-lg">{text}</p>
-				<div class="mt-8">
+				<p class="mt-4 hidden max-w-md text-base text-pretty sm:block sm:text-lg">{text}</p>
+				<div class="mt-8 hidden sm:block">
 					<Button href={cta.href} size="lg">
 						{cta.label}
 						<Icon name="ph:arrow-right" class="size-5" aria-hidden="true" />
 					</Button>
 				</div>
 			</div>
+			<!-- De maat op telefoon (140vw) is groter dan het vakje zelf (46% van de
+			     breedte): de foto wordt daar bijgesneden, dus staat er maar een deel
+			     van in beeld en heeft de browser een navenant groter bestand nodig om
+			     scherp te blijven. -->
 			<Image
 				src={image.url}
 				width={image.width}
 				height={image.height}
 				alt={image.alt}
 				widths={[768, 1080, 1400, 2170]}
-				sizes="(min-width: 1400px) 1352px, calc(100vw - 32px)"
+				sizes="(min-width: 1400px) 1352px, (min-width: 640px) calc(100vw - 32px), 140vw"
 				quality={72}
 				loading="eager"
 				fetchpriority="high"
 				decoding="async"
-				class="block w-full"
+				class="block h-full w-full object-cover object-right sm:h-auto sm:object-fill"
 			/>
 		</div>
 	) : (

@@ -12,8 +12,12 @@ import WinkelmandPaneel from './klant/WinkelmandPaneel.astro';
 /*
  * De kop van elke pagina: een smalle servicebalk, daaronder de navigatie.
  *
- * De navigatie plakt bovenaan het scherm (sticky). In een winkel wil je vanaf
- * elke plek op de pagina bij zoeken en de winkelmand kunnen.
+ * Op desktop plakt de navigatie bovenaan het scherm (sticky): daar wil je vanaf
+ * elke plek op de pagina bij zoeken en de winkelmand kunnen, en er is genoeg
+ * scherm over. Op telefoon en tablet scrollt de kop gewoon mee naar boven: de
+ * balk is daar drie rijen hoog (servicebalk, navigatie, zoekveld) en neemt die
+ * te veel van het zicht in beslag. `relative` houdt de z-index werkend, nu de
+ * kop daar niet meer positioned is.
  *
  * Twee uitklapdelen, allebei gestuurd door het script onderaan:
  *  - het categoriemenu op desktop (knop met aria-expanded en een paneel);
@@ -38,7 +42,7 @@ const aantalFavorieten = (await leesFavorieten(Astro)).length;
 const voornaam = Astro.locals.user?.name.split(' ')[0];
 ---
 
-<header class="sticky top-0 z-40">
+<header class="relative z-40 lg:sticky lg:top-0">
 	<!-- Servicebalk -->
 	<div class="bg-accent text-white">
 		<div

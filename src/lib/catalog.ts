@@ -96,20 +96,48 @@ export function bannerFoto(c: {
 }
 
 /**
+ * De eerste hele zinnen van een tekst die samen binnen `max` tekens blijven,
+ * altijd minstens de eerste zin.
+ *
+ * De banner heeft een vaste hoogte (die van de foto) en knipt af wat er niet
+ * in past; een lange tekst uit het beheerpaneel zou daar dus halverwege een
+ * zin verdwijnen. Vandaar deze korte versie voor de banner, terwijl de
+ * categoriepagina de volledige tekst achter 'Lees meer' zet. Het budget van
+ * 120 tekens is de maat waarop de teksten in de banner passen; wie in het
+ * paneel een langer verhaal typt, ziet dat dus op de pagina en niet in de
+ * banner.
+ */
+function korteTekst(tekst: string, max = 120): string {
+	const zinnen = tekst.match(/[^.!?]+[.!?]+\s*/g);
+	if (!zinnen) return tekst;
+	let kort = '';
+	for (const zin of zinnen) {
+		if (kort && (kort + zin).trim().length > max) break;
+		kort += zin;
+	}
+	return kort.trim() || tekst;
+}
+
+/**
  * De tekst in de banner van een categoriepagina: uit het beheerpaneel, met
  * een nette terugval op de naam als er nog niets is ingevuld.
+ *
+ * `kort` is wat in de banner past, `tekst` is alles. Blijft de hele tekst
+ * binnen het budget van korteTekst, dan zijn ze gelijk.
  */
 export function bannerTekst(c: {
 	name: string;
 	bannerTitle: string | null;
 	description: string | null;
 }) {
+	const tekst =
+		c.description ??
+		'Bekijk het volledige aanbod in deze categorie. Voor 15:00 besteld, morgen in huis.';
 	return {
 		eyebrow: c.name,
 		titel: c.bannerTitle ?? `Alles uit ${c.name.toLowerCase()} op een rij.`,
-		tekst:
-			c.description ??
-			'Bekijk het volledige aanbod in deze categorie. Voor 15:00 besteld, morgen in huis.',
+		tekst,
+		kort: korteTekst(tekst),
 		knop: 'Bekijk de producten',
 	};
 }

@@ -23,6 +23,13 @@ import { leesFavorieten } from '../../lib/klanten/favorieten.ts';
 /*
  * De categoriepagina: banner, filterbalk, kop met teller en het raster.
  *
+ * Op telefoon staat boven de banner een korte inleiding: de naam van de
+ * categorie, de eerste twee regels van de begeleidende tekst en een 'Lees
+ * meer' dat de rest uitklapt. Die tekst past daar niet meer in de banner zelf
+ * (die staat op telefoon naast elkaar, zie CategoryBanner.astro), en zo blijft
+ * hij toch te lezen zonder de producten weg te duwen. Vanaf tablet verandert
+ * er niets: daar staat de tekst gewoon in de banner en is de inleiding weg.
+ *
  * Een pagina voor alle categorieen. De slug bepaalt de categorie; de tekst en
  * de foto in de banner komen uit de database (in te vullen in het
  * beheerpaneel). Is de slug in het paneel gewijzigd, dan verwijst de oude
@@ -75,7 +82,7 @@ const teller = gefilterdActief
 	: aantal(alle.length);
 ---
 
-<Layout title={category.name} description={tekst.tekst} noindex={noindex}>
+<Layout title={category.name} description={tekst.kort} noindex={noindex}>
 	<div class="mx-auto max-w-[1400px] px-4 pt-5 sm:px-6">
 		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
 			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
@@ -84,6 +91,31 @@ const teller = gefilterdActief
 			<span aria-hidden="true" class="mx-2">/</span>
 			<span aria-current="page" class="text-text">{category.name}</span>
 		</nav>
+
+		<!-- Inleiding, alleen op telefoon. De naam staat hier als <p>: de h1 van de
+		     pagina hoort bij het raster verderop, en een tweede kop erboven klopt
+		     niet voor schermlezers en zoekmachines.
+
+		     De tekst staat op twee regels afgekapt (line-clamp-2); 'Lees meer'
+		     klapt de rest uit. Geen <details>: die verbergt zijn inhoud volledig
+		     zolang hij dicht staat, en juist die eerste twee regels wil je zien.
+		     Het knopje werkt net als de menu's in SiteHeader.astro op
+		     aria-expanded, zodat een schermlezer de toestand meekrijgt. -->
+		<div class="mt-3 sm:hidden">
+			<p class="text-2xl font-bold tracking-tight">{category.name}</p>
+			<p id="categorie-inleiding" class="mt-1.5 line-clamp-2 text-text-muted" data-inleiding>
+				{tekst.tekst}
+			</p>
+			<button
+				type="button"
+				class="inline-flex min-h-9 items-center font-medium text-accent underline-offset-2 hover:underline"
+				aria-expanded="false"
+				aria-controls="categorie-inleiding"
+				data-inleiding-knop
+			>
+				Lees meer
+			</button>
+		</div>
 	</div>
 
 	<div class="mt-4">
@@ -91,7 +123,7 @@ const teller = gefilterdActief
 			image={bannerFoto(category)}
 			eyebrow={tekst.eyebrow}
 			title={tekst.titel}
-			text={tekst.tekst}
+			text={tekst.kort}
 			cta={{ label: tekst.knop, href: '#producten' }}
 		/>
 	</div>
@@ -102,7 +134,9 @@ const teller = gefilterdActief
 		)}
 
 		<div class="mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-			<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{category.name}</h1>
+			<h1 class="sr-only text-2xl font-bold tracking-tight sm:not-sr-only sm:text-3xl">
+				{category.name}
+			</h1>
 			<p class="text-text-muted">{teller}</p>
 		</div>
 
@@ -129,3 +163,26 @@ const teller = gefilterdActief
 		)}
 	</section>
 </Layout>
+
+<script>
+	/*
+	 * 'Lees meer' onder de categorienaam op telefoon: klapt de afgekapte tekst
+	 * uit en terug. De toestand staat op aria-expanded, het afkappen is een
+	 * klasse; zo blijft de opmaak in de HTML en doet het script alleen het
+	 * omzetten.
+	 */
+	const tekst = document.querySelector<HTMLElement>('[data-inleiding]');
+	const knop = document.querySelector<HTMLButtonElement>('[data-inleiding-knop]');
+
+	// Past de tekst al in twee regels, dan valt er niets uit te klappen en is de
+	// knop alleen maar in de weg. Buiten telefoonbreedte staat het blok op
+	// display:none en zijn beide hoogtes 0; ook dan blijft de knop weg.
+	if (tekst && knop && tekst.scrollHeight <= tekst.clientHeight + 1) knop.hidden = true;
+
+	knop?.addEventListener('click', () => {
+		const open = knop.getAttribute('aria-expanded') === 'true';
+		knop.setAttribute('aria-expanded', String(!open));
+		knop.textContent = open ? 'Lees meer' : 'Lees minder';
+		tekst?.classList.toggle('line-clamp-2', open);
+	});
+</script>
