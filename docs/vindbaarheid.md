@@ -107,3 +107,8 @@ adressen gecontroleerd, alles verwijst door.
 - **De losse blogpost van de oude site** (`/Drinkglazen - Set van 4 ...`) en
   zijn categorie. Er is geen product dat erbij hoort, dus die krijgen de
   foutpagina. Dat is het juiste antwoord voor een pagina die niet vervangen is.
+- **De drie PDF's uit de oude voet** (algemene voorwaarden, privacyverklaring,
+  cookieverklaring). Die stonden onder `/wp-content/uploads/2025/09/` en zijn
+  bewaard in `data/oude-site/`. Ze worden niet doorverwezen: de nieuwe shop
+  heeft er echte pagina's voor, en een PDF is daar een slechtere versie van.
+  Wie de oude link nog volgt, krijgt de foutpagina met de weg terug.

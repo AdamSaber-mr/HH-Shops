@@ -105,8 +105,18 @@ export function sitemapXml(origin: string, paginas: readonly Sitemappagina[]): s
 
 /*
  * De pagina's die er altijd zijn, los van de catalogus. De startpagina
- * voorop; daarna de twee overzichten waar een bezoeker vanaf kan zoeken,
- * en dan de twee vaste pagina's.
+ * voorop; daarna de twee overzichten waar een bezoeker vanaf kan zoeken, en
+ * dan de vaste pagina's.
+ *
+ * De klantenservice en de juridische pagina's krijgen een lage prioriteit,
+ * maar staan er wel bij. Ze trekken zelf geen bezoekers, alleen laat Google
+ * een winkel die zijn voorwaarden, verzending en retourbeleid netjes op een
+ * vindbare pagina heeft, zwaarder wegen dan een die dat niet doet.
+ *
+ * LET OP: die zeven pagina's worden op de frontend-branch gemaakt en komen
+ * via main hier samen. Staat er een in deze lijst die op jouw branch nog niet
+ * bestaat, dan is dat geen fout; de sitemap wordt alleen op hh-shops.nl
+ * geserveerd, en dat is main.
  */
 export const VASTE_PAGINAS: readonly Sitemappagina[] = [
 	{ pad: '/', prioriteit: 1.0 },
@@ -114,4 +124,11 @@ export const VASTE_PAGINAS: readonly Sitemappagina[] = [
 	{ pad: '/categorieen', prioriteit: 0.8 },
 	{ pad: '/over-ons', prioriteit: 0.4 },
 	{ pad: '/contact', prioriteit: 0.4 },
+	{ pad: '/klantenservice', prioriteit: 0.4 },
+	{ pad: '/klantenservice/verzenden', prioriteit: 0.3 },
+	{ pad: '/klantenservice/retourneren', prioriteit: 0.3 },
+	{ pad: '/klantenservice/betalen', prioriteit: 0.3 },
+	{ pad: '/klantenservice/veelgestelde-vragen', prioriteit: 0.3 },
+	{ pad: '/algemene-voorwaarden', prioriteit: 0.2 },
+	{ pad: '/privacy', prioriteit: 0.2 },
 ];

@@ -20,7 +20,9 @@
   als voorwaarde. Twee klanten die tegelijk het laatste exemplaar bestellen:
   een wint, de ander krijgt een melding en houdt zijn winkelmand.
 - **Betalen** via de Payments API van Mollie: betaalmethode kiezen bij
-  Mollie zelf (iDEAL en creditcard; Klarna pas na een echte test). Zonder
+  Mollie zelf. De code noemt geen methoden, dus wat de klant te zien krijgt
+  staat in het Mollie-dashboard. Klarna komt er niet (bevestigd op 14
+  september 2026); dat hoeft dus alleen in dat dashboard uit te staan. Zonder
   sleutel, buiten productie, een nagebootste Mollie op
   `/betaling-test/<id>` met knoppen Betaald, Mislukt, Verlopen en
   Geannuleerd, zodat elk pad lokaal en op een preview te testen is.
@@ -128,8 +130,9 @@ Migraties 0006 en 0008 draaien met `npm run db:migrate` op elke database. In
 productie weigert de koppeling te starten zonder Mollie-sleutel.
 
 Voor de livegang: in het Mollie-dashboard de gegevens van de winkel
-(KvK, bankrekening, website) laten controleren, de livesleutel in Vercel
-zetten, en een bestelling van een paar euro echt doen en terugbetalen.
+(KvK, bankrekening, website) laten controleren, daar iDEAL en creditcard
+aanzetten en Klarna uit laten, de livesleutel in Vercel zetten, en een
+bestelling van een paar euro echt doen en terugbetalen.
 
 ## Voor de privacyverklaring
 
