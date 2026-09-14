@@ -110,8 +110,10 @@ export function createAuth({ db, secret, rateLimit = true, mail }: AuthOptions) 
 		secret,
 		database: drizzleAdapter(db, { provider: 'pg', schema: authSchema }),
 
-		baseURL: { allowedHosts: TOEGESTANE_HOSTS, fallback: TERUGVAL_ADRES },
-		trustedOrigins: VERTROUWDE_HERKOMSTEN,
+		// Kopieën: Better Auth wil gewone arrays, en de lijsten hierboven staan
+		// bewust op readonly zodat niemand ze onderweg aanpast.
+		baseURL: { allowedHosts: [...TOEGESTANE_HOSTS], fallback: TERUGVAL_ADRES },
+		trustedOrigins: [...VERTROUWDE_HERKOMSTEN],
 
 		emailAndPassword: {
 			enabled: true,

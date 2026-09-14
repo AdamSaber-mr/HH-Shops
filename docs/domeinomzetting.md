@@ -114,7 +114,5 @@ twee: daar zit doorlooptijd bij een ander.
 - De verplichte pagina's, die op de frontend-branch worden gemaakt.
 - Het herroepingsformulier. De eigen algemene voorwaarden (artikel 5.3)
   verplichten de winkel dat op verzoek te geven, en het bestaat nog niet.
-- Gestructureerde gegevens voor Google (product-JSON-LD), zie
-  `docs/vindbaarheid.md`.
 - Terugbetalen vanuit het paneel en een factuur-pdf, bewust later
   (`docs/bestellen.md`).
