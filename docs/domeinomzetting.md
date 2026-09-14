@@ -5,6 +5,10 @@
 > is gedaan; wat hier staat kan alleen een mens doen, of moet op het moment
 > zelf gebeuren.
 
+> Naast dit document staat `docs/livegang.html`: dezelfde lijst om af te
+> vinken, te openen met een dubbelklik. Dit bestand is de toelichting, dat
+> bestand is de werklijst.
+
 Het domein blijft hetzelfde, alleen wat erachter draait verandert. Dat is
 gunstig: Google houdt de geschiedenis van het domein. Alleen de adressen
 binnen het domein veranderen, en die verwijzen allemaal door
