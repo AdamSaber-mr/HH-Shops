@@ -1,0 +1,152 @@
+---
+import Invullen from '../../components/Invullen.astro';
+import TekstPagina from '../../components/TekstPagina.astro';
+import { juridisch, ontbreekt, openPunten, retouradresRegels } from '../../lib/juridisch.ts';
+import { site } from '../../lib/site.ts';
+
+/*
+ * Retourneren.
+ *
+ * Bevat het modelformulier voor herroeping. Dat hoort een webshop aan te
+ * bieden; een gewone mail volstaat ook, en dat staat er dus ook bij.
+ *
+ * Het retouradres, de kosten en de bedenktijd komen uit lib/juridisch.ts.
+ * Zolang die er niet zijn, staat er een markering in plaats van een antwoord:
+ * een verkeerd retouradres kost een klant zijn pakket.
+ */
+
+const inhoud = [
+	{ id: 'bedenktijd', label: 'Hoeveel bedenktijd je hebt' },
+	{ id: 'hoe', label: 'Zo stuur je iets terug' },
+	{ id: 'adres', label: 'Het retouradres' },
+	{ id: 'kosten', label: 'Wat het kost' },
+	{ id: 'geld-terug', label: 'Wanneer je je geld terugkrijgt' },
+	{ id: 'uitzonderingen', label: 'Wat niet terug kan' },
+	{ id: 'modelformulier', label: 'Modelformulier' },
+	{ id: 'kapot', label: 'Kapot of verkeerd geleverd' },
+];
+
+const adres = retouradresRegels();
+---
+
+<TekstPagina
+	eyebrow="Klantenservice"
+	titel="Retourneren"
+	lead="Toch niet wat je zocht? Dat kan gebeuren. Hier lees je hoe je iets terugstuurt en wanneer je je geld terugkrijgt."
+	beschrijving="Retourneren bij H&H Shops: bedenktijd, hoe je een retour aanmeldt, het retouradres en wanneer je je geld terugkrijgt."
+	kruimels={[{ label: 'Klantenservice', href: '/klantenservice' }]}
+	inhoud={inhoud}
+	openPunten={openPunten(['bedenktijdDagen', 'retouradres', 'retourkosten'])}
+>
+	<h2 id="bedenktijd">Hoeveel bedenktijd je hebt</h2>
+	<p>
+		Je hebt {juridisch.bedenktijdDagen} dagen bedenktijd, vanaf de dag dat je je bestelling
+		ontvangt.{' '}
+		{ontbreekt('bedenktijdDagen') ? (
+			<>
+				De wet geeft je in elk geval veertien dagen; wat wij daarbovenop doen, bevestigen we
+				binnenkort. <Invullen wat="de bedenktijd van dertig dagen" />
+			</>
+		) : (
+			<>Dat is ruimer dan de veertien dagen die de wet voorschrijft.</>
+		)}
+	</p>
+	<p>
+		Je hoeft geen reden op te geven. Bekijk het product gerust zoals je in een winkel zou doen.
+		Gebruik je het meer dan dat en is het daardoor minder waard, dan mogen we dat verrekenen met
+		wat je terugkrijgt.
+	</p>
+
+	<h2 id="hoe">Zo stuur je iets terug</h2>
+	<ol>
+		<li>
+			Meld het bij ons. Mail naar <a href={`mailto:${site.email}`}>{site.email}</a> met je
+			bestelnummer en wat je wilt terugsturen, of gebruik het{' '}
+			<a href="#modelformulier">modelformulier</a> hieronder.
+		</li>
+		<li>Je hoort van ons hoe je het terugstuurt. Wacht daar even op, dan gaat er niets mis.</li>
+		<li>
+			Stuur het product binnen veertien dagen na je melding terug, met alles wat erbij zat.
+			Origineel verpakt is fijn, maar hoeft niet als het product maar heel blijft.
+		</li>
+		<li>Bewaar het verzendbewijs. Daarmee kun je aantonen dat je het verstuurd hebt.</li>
+	</ol>
+
+	<h2 id="adres">Het retouradres</h2>
+	{adres ? (
+		<p>{adres.map((regel) => (<>{regel}<br /></>))}</p>
+	) : (
+		<p>Het adres staat hier zodra het bekend is: <Invullen wat="het retouradres" /></p>
+		<p>Meld je retour gerust alvast per e-mail; je krijgt het adres dan van ons.</p>
+	)}
+	<p>Stuur nooit iets terug zonder het eerst te melden, dan weten we niet van wie het pakket is.</p>
+
+	<h2 id="kosten">Wat het kost</h2>
+	<p>
+		{juridisch.retourkosten === 'winkel' ? (
+			<>De retourzending is gratis: wij betalen de verzendkosten.</>
+		) : juridisch.retourkosten === 'klant' ? (
+			<>De kosten van de retourzending betaal je zelf.</>
+		) : (
+			<>
+				Wie de retourzending betaalt: <Invullen wat="wie de retourzending betaalt" />
+			</>
+		)}
+	</p>
+
+	<h2 id="geld-terug">Wanneer je je geld terugkrijgt</h2>
+	<p>
+		Je krijgt je geld binnen veertien dagen terug nadat je je retour hebt gemeld, op dezelfde
+		manier als je betaald hebt. Daar zitten ook de verzendkosten van de heenweg bij.
+	</p>
+	<p>
+		We mogen wachten met terugbetalen tot we het product terug hebben, of tot jij ons het
+		verzendbewijs hebt laten zien. Stuur je maar een deel van je bestelling terug, dan blijven de
+		verzendkosten van de heenweg staan.
+	</p>
+
+	<h2 id="uitzonderingen">Wat niet terug kan</h2>
+	<p>Voor een paar producten geldt geen bedenktijd. Dat is wettelijk zo geregeld:</p>
+	<ul>
+		<li>
+			verzegelde producten die om hygiënische redenen niet terug kunnen als de verzegeling
+			verbroken is, zoals cosmetica en verzorgingsproducten;
+		</li>
+		<li>producten die speciaal voor jou gemaakt of persoonlijk aangepast zijn;</li>
+		<li>producten die snel bederven.</li>
+	</ul>
+	<p>Ongeopend en met de verzegeling heel kun je cosmetica gewoon terugsturen.</p>
+
+	<h2 id="modelformulier">Modelformulier voor herroeping</h2>
+	<p>
+		Dit formulier hoef je alleen te gebruiken als je dat wilt. Een gewone mail waarin staat dat je
+		van de koop afziet, is net zo geldig.
+	</p>
+	<div class="mt-4 rounded-card border border-border bg-surface p-5 sm:p-6">
+		<p class="text-sm text-text-muted">Kopieer en vul aan:</p>
+		<p class="mt-3">
+			Aan H&H Shops, {site.address.street}, {site.address.postalCode} {site.address.city},{' '}
+			{site.email}
+		</p>
+		<p class="mt-3">
+			Ik deel u hierbij mede dat ik onze overeenkomst betreffende de verkoop van de volgende
+			producten herroep:
+		</p>
+		<ul class="mt-3">
+			<li>Besteld op / ontvangen op:</li>
+			<li>Bestelnummer:</li>
+			<li>Product(en):</li>
+			<li>Naam:</li>
+			<li>Adres:</li>
+			<li>Datum:</li>
+		</ul>
+	</div>
+
+	<h2 id="kapot">Kapot of verkeerd geleverd</h2>
+	<p>
+		Is er iets stuk aangekomen, of heb je iets anders gekregen dan je besteld hebt? Dan is dit geen
+		retour maar een fout van ons. Mail ons met je bestelnummer en een foto, dan sturen we een
+		nieuwe of betalen we terug. Je hebt daarnaast altijd recht op een product dat doet wat je
+		ervan mag verwachten; dat staat bij <a href="/algemene-voorwaarden#garantie">garantie</a>.
+	</p>
+</TekstPagina>

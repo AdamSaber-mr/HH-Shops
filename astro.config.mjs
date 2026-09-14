@@ -130,6 +130,10 @@ export default defineConfig({
 					'envelope-simple',
 					'map-pin',
 					'receipt',
+					// Klantenservice en de verplichte pagina's
+					'question',
+					'file-text',
+					'shield-check',
 				],
 			},
 		}),

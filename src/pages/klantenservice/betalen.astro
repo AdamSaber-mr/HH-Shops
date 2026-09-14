@@ -1,0 +1,100 @@
+---
+import Invullen from '../../components/Invullen.astro';
+import TekstPagina from '../../components/TekstPagina.astro';
+import {
+	GRATIS_VERZENDING_VANAF_CENTS,
+	VERZENDKOSTEN_CENTS,
+} from '../../lib/bestellen/instellingen.ts';
+import { juridisch, ontbreekt, openPunten } from '../../lib/juridisch.ts';
+import { formatEuro } from '../../lib/price.ts';
+import { site } from '../../lib/site.ts';
+
+/*
+ * Betalen.
+ *
+ * Beschrijft wat het bestelproces echt doet: je kiest je betaalmethode op de
+ * pagina van Mollie, niet bij ons (zie docs/bestellen.md). Of Klarna erbij
+ * komt staat nog open; zolang dat zo is, belooft deze pagina het niet.
+ */
+
+const inhoud = [
+	{ id: 'methoden', label: 'Hoe je kunt betalen' },
+	{ id: 'veilig', label: 'Veilig betalen' },
+	{ id: 'wanneer', label: 'Wanneer je betaalt' },
+	{ id: 'prijzen', label: 'Prijzen en btw' },
+	{ id: 'mislukt', label: 'Als de betaling niet lukt' },
+	{ id: 'terug', label: 'Geld terug' },
+];
+---
+
+<TekstPagina
+	eyebrow="Klantenservice"
+	titel="Betalen"
+	lead="Hoe je bij ons betaalt, wanneer het bedrag van je rekening gaat en wat je doet als een betaling niet lukt."
+	beschrijving="Betalen bij H&H Shops: iDEAL en creditcard via Mollie, prijzen inclusief btw en wat je doet als een betaling mislukt."
+	kruimels={[{ label: 'Klantenservice', href: '/klantenservice' }]}
+	inhoud={inhoud}
+	openPunten={openPunten(['klarna'])}
+>
+	<h2 id="methoden">Hoe je kunt betalen</h2>
+	<p>Je kunt bij ons betalen met:</p>
+	<ul>
+		<li><strong>iDEAL</strong>, met je eigen bank;</li>
+		<li><strong>Creditcard</strong>, Mastercard of Visa.</li>
+	</ul>
+	{ontbreekt('klarna') ? (
+		<p>Achteraf betalen met Klarna: <Invullen wat="of we Klarna aanbieden" /></p>
+	) : juridisch.klarna ? (
+		<p>
+			Ook <strong>achteraf betalen met Klarna</strong> kan. Daarvoor gelden de voorwaarden van
+			Klarna zelf; zij sturen je de betaalinstructies.
+		</p>
+	) : null}
+	<p>
+		Je kiest je betaalmethode nadat je op "afrekenen" hebt geklikt, op de beveiligde pagina van
+		onze betaalpartner. Zo zie je meteen welke manieren er op dat moment zijn.
+	</p>
+
+	<h2 id="veilig">Veilig betalen</h2>
+	<p>
+		Betalingen lopen via Mollie, een Nederlandse betaaldienst die onder toezicht staat van De
+		Nederlandsche Bank. Je rekeningnummer en je creditcardgegevens komen bij hen terecht, niet bij
+		ons: wij krijgen alleen te horen dát je betaald hebt en met welke methode.
+	</p>
+	<p>De hele winkel loopt over een beveiligde verbinding, te zien aan het slotje in je browser.</p>
+
+	<h2 id="wanneer">Wanneer je betaalt</h2>
+	<p>
+		Je betaalt meteen bij het afrekenen. Zodra de betaling binnen is, krijg je een bevestiging per
+		e-mail en gaan wij inpakken. Bij iDEAL is het bedrag direct van je rekening af; bij een
+		creditcard kan het een dag duren voordat je het op je overzicht ziet staan.
+	</p>
+
+	<h2 id="prijzen">Prijzen en btw</h2>
+	<p>
+		Alle prijzen in de winkel zijn inclusief btw. Verzendkosten komen er apart bij:{' '}
+		{formatEuro(VERZENDKOSTEN_CENTS)}, en gratis vanaf {formatEuro(GRATIS_VERZENDING_VANAF_CENTS)}.
+		In je winkelmand zie je het totaal voordat je afrekent, en in je bevestigingsmail staat het
+		nog een keer met de btw erbij.
+	</p>
+
+	<h2 id="mislukt">Als de betaling niet lukt</h2>
+	<p>
+		Dan komt de bestelling niet tot stand en is er ook niets afgeschreven. Je winkelmand blijft
+		gewoon staan, dus je kunt het zo opnieuw proberen. Breek je halverwege af, dan gebeurt er
+		hetzelfde.
+	</p>
+	<p>
+		Zie je toch een afschrijving zonder bevestigingsmail? Mail ons dan met het bedrag en het
+		tijdstip erbij op <a href={`mailto:${site.email}`}>{site.email}</a>, dan zoeken we het na.
+		Meestal gaat het om een reservering die vanzelf terugkomt.
+	</p>
+
+	<h2 id="terug">Geld terug</h2>
+	<p>
+		Betalen we iets terug, bijvoorbeeld na een retour, dan gaat dat altijd via dezelfde weg als je
+		betaald hebt. Hoe lang je bank erover doet verschilt, maar reken op een paar werkdagen. Wat er
+		bij een retour precies terugkomt, staat bij{' '}
+		<a href="/klantenservice/retourneren#geld-terug">retourneren</a>.
+	</p>
+</TekstPagina>

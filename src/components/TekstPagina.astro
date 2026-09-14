@@ -1,0 +1,155 @@
+---
+import { Icon } from 'astro-icon/components';
+import Layout from '../layouts/Layout.astro';
+import type { OpenPunt } from '../lib/juridisch.ts';
+import { juridisch } from '../lib/juridisch.ts';
+import { site } from '../lib/site.ts';
+import Button from './Button.astro';
+
+/*
+ * Het jasje om de informatiepagina's heen: voorwaarden, privacy en de
+ * klantenservicepagina's. Kruimelpad, kop, inhoudsopgave, de tekst zelf en
+ * onderaan een zetje naar contact.
+ *
+ * Een pagina levert alleen zijn tekst aan (de slot) en de lijst koppen voor de
+ * inhoudsopgave. Zo staan die vijf pagina's gegarandeerd gelijk en gaat het
+ * schrijven over de tekst, niet over de opmaak.
+ *
+ * De inhoudsopgave staat in de HTML vóór de tekst: op telefoon hoort hij daar
+ * ook te staan, en op desktop schuift hij met grid naar de rechterkolom en
+ * blijft hij meelopen.
+ *
+ * `openPunten` zijn de gegevens die de klant nog moet aanleveren. Zijn die er,
+ * dan zegt de pagina eerlijk bovenaan dat hij nog niet af is. Dat blokje
+ * verdwijnt zodra src/lib/juridisch.ts is ingevuld.
+ */
+
+interface Props {
+	eyebrow: string;
+	titel: string;
+	lead: string;
+	beschrijving: string;
+	/** Tussenstappen in het kruimelpad, tussen Home en deze pagina. */
+	kruimels?: readonly { label: string; href: string }[];
+	/** De h2's op de pagina, in dezelfde volgorde. */
+	inhoud: readonly { id: string; label: string }[];
+	openPunten?: readonly OpenPunt[];
+}
+
+const { eyebrow, titel, lead, beschrijving, kruimels = [], inhoud, openPunten = [] } = Astro.props;
+
+const puntenZin =
+	openPunten.length === 1
+		? openPunten[0].tekst
+		: `${openPunten.slice(0, -1).map((p) => p.tekst).join(', ')} en ${openPunten.at(-1)?.tekst}`;
+---
+
+<Layout title={titel} description={beschrijving}>
+	<div class="mx-auto max-w-[1400px] px-4 pt-5 sm:px-6">
+		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
+			{kruimels.map((kruimel) => (
+				<>
+					<span aria-hidden="true" class="mx-2">/</span>
+					<a href={kruimel.href} class="rounded-control hover:text-text hover:underline">
+						{kruimel.label}
+					</a>
+				</>
+			))}
+			<span aria-hidden="true" class="mx-2">/</span>
+			<span aria-current="page" class="text-text">{titel}</span>
+		</nav>
+	</div>
+
+	<section class="mx-auto max-w-[1400px] px-4 pt-8 sm:px-6 lg:pt-12" aria-labelledby="paginatitel">
+		<div class="max-w-2xl">
+			<p class="text-sm font-semibold tracking-wide text-accent uppercase">{eyebrow}</p>
+			<h1 id="paginatitel" class="mt-3 text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+				{titel}
+			</h1>
+			<p class="mt-5 text-lg leading-relaxed text-pretty text-text-muted">{lead}</p>
+		</div>
+	</section>
+
+	<div class="mx-auto mt-10 max-w-[1400px] px-4 sm:px-6 lg:mt-14">
+		<div class="border-t border-border pt-10 lg:pt-14">
+			<div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-16">
+				<!-- Inhoudsopgave. Op telefoon een veegbalk met chips: deze pagina's
+				     hebben tot elf koppen, en die onder elkaar duwen de tekst een half
+				     scherm naar beneden. Vanaf lg wordt het de lijst in de rechterkolom,
+				     die met de tekst meeloopt. -->
+				<nav
+					aria-labelledby="inhoud-titel"
+					class="min-w-0 lg:sticky lg:top-28 lg:col-start-2 lg:row-start-1 lg:self-start"
+				>
+					<p id="inhoud-titel" class="text-sm font-semibold tracking-wide text-text-muted uppercase">
+						Op deze pagina
+					</p>
+					<ul
+						class="geen-schuifbalk -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:gap-0.5 lg:overflow-visible lg:px-0"
+					>
+						{inhoud.map((item) => (
+							<li class="shrink-0">
+								<a
+									href={`#${item.id}`}
+									class="flex min-h-9 items-center rounded-full border border-border bg-surface px-3 text-sm whitespace-nowrap text-text-muted hover:border-border-strong hover:text-accent lg:rounded-control lg:border-0 lg:bg-transparent lg:px-0 lg:whitespace-normal lg:hover:underline"
+								>
+									{item.label}
+								</a>
+							</li>
+						))}
+					</ul>
+				</nav>
+
+				<div class="min-w-0 lg:col-start-1 lg:row-start-1">
+					{openPunten.length > 0 && (
+						<div class="mb-10 flex items-start gap-4 rounded-card bg-sand p-5 sm:p-6">
+							<span class="mt-0.5 text-accent" aria-hidden="true">
+								<Icon name="ph:pencil-simple" class="size-6" />
+							</span>
+							<div class="min-w-0">
+								<p class="font-semibold">Deze pagina is nog niet definitief</p>
+								<p class="mt-1 text-pretty">
+									We wachten nog op {puntenZin}. Op die plekken staat hieronder een markering in
+									plaats van een antwoord. Vragen in de tussentijd? Mail ons op{' '}
+									<a href={`mailto:${site.email}`} class="text-accent underline underline-offset-2">
+										{site.email}
+									</a>.
+								</p>
+							</div>
+						</div>
+					)}
+
+					<div class="lopende-tekst max-w-3xl">
+						<slot />
+					</div>
+
+					<p class="mt-12 border-t border-border pt-6 text-sm text-text-muted">
+						Laatst bijgewerkt op {juridisch.bijgewerkt}.
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<section class="mx-auto mt-12 max-w-[1400px] px-4 sm:px-6 lg:mt-16" aria-labelledby="hulp-titel">
+		<div
+			class="flex flex-col gap-5 rounded-card border border-border bg-surface p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between"
+		>
+			<div class="max-w-xl">
+				<h2 id="hulp-titel" class="text-xl font-bold tracking-tight">Kom je er niet uit?</h2>
+				<p class="mt-1 text-pretty text-text-muted">
+					Stuur ons een bericht met je bestelnummer erbij, dan kijken we meteen mee. Je krijgt
+					persoonlijk antwoord.
+				</p>
+			</div>
+			<div class="flex flex-wrap gap-3">
+				<Button href="/contact" size="lg">
+					Naar contact
+					<Icon name="ph:arrow-right" class="size-5" aria-hidden="true" />
+				</Button>
+				<Button href={`mailto:${site.email}`} size="lg" variant="secondary">Mail ons</Button>
+			</div>
+		</div>
+	</section>
+</Layout>

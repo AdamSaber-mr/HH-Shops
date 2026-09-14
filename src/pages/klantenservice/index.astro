@@ -1,0 +1,147 @@
+---
+import { Icon } from 'astro-icon/components';
+import Button from '../../components/Button.astro';
+import Layout from '../../layouts/Layout.astro';
+import {
+	GRATIS_VERZENDING_VANAF_CENTS,
+	VERZENDKOSTEN_CENTS,
+} from '../../lib/bestellen/instellingen.ts';
+import { formatEuro } from '../../lib/price.ts';
+import { site } from '../../lib/site.ts';
+
+/*
+ * Klantenservice: de ingang naar de vier informatiepagina's.
+ *
+ * Bestaat omdat de voet naar "Klantenservice" verwijst en het kruimelpad van
+ * die pagina's ergens naartoe moet. Meteen de plek om iemand die een vraag
+ * heeft in één oogopslag de goede kant op te sturen; wie er niet uitkomt,
+ * vindt onderaan gewoon een mens.
+ */
+
+const onderwerpen = [
+	{
+		icon: 'ph:truck',
+		titel: 'Verzenden en bezorgen',
+		tekst: `Verzendkosten ${formatEuro(VERZENDKOSTEN_CENTS)}, gratis vanaf ${formatEuro(GRATIS_VERZENDING_VANAF_CENTS)}. Wanneer je bestelling komt en wat je doet als er iets misgaat.`,
+		href: '/klantenservice/verzenden',
+	},
+	{
+		icon: 'ph:arrow-counter-clockwise',
+		titel: 'Retourneren',
+		tekst: 'Toch niet wat je zocht? Hoe je iets terugstuurt, waar het naartoe moet en wanneer je je geld terugkrijgt.',
+		href: '/klantenservice/retourneren',
+	},
+	{
+		icon: 'ph:lock-simple',
+		titel: 'Betalen',
+		tekst: 'Betalen met iDEAL of creditcard, wanneer het bedrag van je rekening gaat en wat je doet als het niet lukt.',
+		href: '/klantenservice/betalen',
+	},
+	{
+		icon: 'ph:question',
+		titel: 'Veelgestelde vragen',
+		tekst: 'De vragen die we het vaakst krijgen over bestellen, bezorgen, betalen en je account.',
+		href: '/klantenservice/veelgestelde-vragen',
+	},
+];
+
+const juridischeLinks = [
+	{ icon: 'ph:file-text', titel: 'Algemene voorwaarden', href: '/algemene-voorwaarden' },
+	{ icon: 'ph:shield-check', titel: 'Privacyverklaring', href: '/privacy' },
+];
+---
+
+<Layout
+	title="Klantenservice"
+	description="De klantenservice van H&H Shops: verzenden, retourneren, betalen en veelgestelde vragen. Kom je er niet uit, dan helpen we je persoonlijk."
+>
+	<div class="mx-auto max-w-[1400px] px-4 pt-5 sm:px-6">
+		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
+			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
+			<span aria-hidden="true" class="mx-2">/</span>
+			<span aria-current="page" class="text-text">Klantenservice</span>
+		</nav>
+	</div>
+
+	<section class="mx-auto max-w-[1400px] px-4 pt-8 sm:px-6 lg:pt-12" aria-labelledby="ks-titel">
+		<div class="max-w-2xl">
+			<p class="text-sm font-semibold tracking-wide text-accent uppercase">Klantenservice</p>
+			<h1 id="ks-titel" class="mt-3 text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+				Waar kunnen we je mee helpen?
+			</h1>
+			<p class="mt-5 text-lg leading-relaxed text-pretty text-text-muted">
+				Het antwoord op de meeste vragen staat hieronder. Kom je er niet uit, dan krijg je
+				gewoon een mens aan de lijn van de mail.
+			</p>
+		</div>
+	</section>
+
+	<section class="mx-auto mt-10 max-w-[1400px] px-4 sm:px-6 lg:mt-14" aria-label="Onderwerpen">
+		<ul class="grid gap-4 sm:grid-cols-2">
+			{onderwerpen.map((onderwerp) => (
+				<li>
+					<a
+						href={onderwerp.href}
+						class="flex h-full items-start gap-4 rounded-card border border-border bg-surface p-5 transition-colors hover:border-border-strong hover:bg-surface-hover sm:p-6"
+					>
+						<span
+							class="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent"
+							aria-hidden="true"
+						>
+							<Icon name={onderwerp.icon} class="size-6" />
+						</span>
+						<span class="min-w-0">
+							<span class="flex items-center gap-1.5 font-semibold">
+								{onderwerp.titel}
+								<Icon name="ph:caret-right" class="size-4 text-text-muted" aria-hidden="true" />
+							</span>
+							<span class="mt-1 block text-pretty text-text-muted">{onderwerp.tekst}</span>
+						</span>
+					</a>
+				</li>
+			))}
+		</ul>
+	</section>
+
+	<section class="mx-auto mt-12 max-w-[1400px] px-4 sm:px-6 lg:mt-16" aria-labelledby="ks-contact">
+		<div class="border-t border-border pt-12 lg:pt-16">
+			<div class="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-16">
+				<div class="max-w-xl">
+					<h2 id="ks-contact" class="text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+						Staat je vraag er niet bij?
+					</h2>
+					<p class="mt-4 text-pretty text-text-muted">
+						Stuur ons een bericht met je bestelnummer erbij, dan kijken we meteen mee. Je krijgt
+						persoonlijk antwoord, geen standaardmail.
+					</p>
+					<div class="mt-8 flex flex-wrap gap-3">
+						<Button href="/contact" size="lg">
+							Stuur een bericht
+							<Icon name="ph:arrow-right" class="size-5" aria-hidden="true" />
+						</Button>
+						<Button href={`mailto:${site.email}`} size="lg" variant="secondary">Mail ons direct</Button>
+					</div>
+				</div>
+
+				<div>
+					<p class="text-sm font-semibold tracking-wide text-text-muted uppercase">
+						Goed om te weten
+					</p>
+					<ul class="mt-3 grid gap-2">
+						{juridischeLinks.map((link) => (
+							<li>
+								<a
+									href={link.href}
+									class="flex min-h-11 items-center gap-3 rounded-control text-text hover:text-accent hover:underline"
+								>
+									<Icon name={link.icon} class="size-5 shrink-0 text-text-muted" aria-hidden="true" />
+									{link.titel}
+								</a>
+							</li>
+						))}
+					</ul>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>

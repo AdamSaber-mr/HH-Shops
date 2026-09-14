@@ -1,0 +1,27 @@
+---
+import { Icon } from 'astro-icon/components';
+
+/*
+ * Een zichtbare markering op de plek van een gegeven dat nog niet bevestigd
+ * is: het retouradres, het btw-nummer, de levertijd.
+ *
+ * Bewust opvallend en in gewone taal. Op een pagina met afspraken is een gat
+ * dat je ziet beter dan een verzonnen antwoord dat je gelooft. De waarden
+ * staan in src/lib/juridisch.ts; zodra ze daar ingevuld zijn, verdwijnt deze
+ * markering vanzelf uit de tekst.
+ */
+
+interface Props {
+	/** Wat er nog moet komen, in gewone woorden. Bijvoorbeeld "het retouradres". */
+	wat: string;
+}
+
+const { wat } = Astro.props;
+---
+
+<span
+	class="inline-flex items-center gap-1.5 rounded-control bg-sand px-2 py-0.5 text-[0.95em] font-medium text-text"
+>
+	<Icon name="ph:pencil-simple" class="size-4 shrink-0 text-accent" aria-hidden="true" />
+	Nog invullen: {wat}
+</span>

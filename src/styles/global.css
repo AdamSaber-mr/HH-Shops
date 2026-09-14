@@ -248,3 +248,86 @@
 		font-size: 1rem;
 	}
 }
+
+/*
+  De lopende tekst van de informatiepagina's (voorwaarden, privacy,
+  klantenservice). Daar staan tientallen koppen, alinea's en lijstjes onder
+  elkaar; die elk apart van klassen voorzien maakt de tekst in het bestand
+  onleesbaar, en juist bij dit soort pagina's wil je de tekst kunnen lezen
+  zoals hij op het scherm komt.
+
+  Alleen de elementen die er echt in voorkomen. Koppen krijgen ruimte
+  bovenlangs en scroll-margin, want de kop van de site plakt op desktop
+  bovenaan en zou een aangeklikte kop anders net afdekken.
+*/
+@utility lopende-tekst {
+	& h2 {
+		margin-top: 3rem;
+		scroll-margin-top: 8rem;
+		font-size: 1.5rem;
+		line-height: 2rem;
+		font-weight: 700;
+		letter-spacing: -0.025em;
+	}
+
+	& h2:first-child {
+		margin-top: 0;
+	}
+
+	& h3 {
+		margin-top: 2rem;
+		font-size: 1.125rem;
+		line-height: 1.75rem;
+		font-weight: 600;
+	}
+
+	& p,
+	& ul,
+	& ol {
+		margin-top: 1rem;
+		line-height: 1.7;
+		text-wrap: pretty;
+	}
+
+	& ul,
+	& ol {
+		padding-left: 1.25rem;
+	}
+
+	& ul {
+		list-style: disc;
+	}
+
+	& ol {
+		list-style: decimal;
+	}
+
+	& li + li {
+		margin-top: 0.5rem;
+	}
+
+	& li::marker {
+		color: var(--color-text-muted);
+	}
+
+	& a {
+		color: var(--color-accent);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+	& a:hover {
+		color: var(--color-accent-hover);
+	}
+
+	& strong {
+		font-weight: 600;
+	}
+
+	@media (width >= 40rem) {
+		& h2 {
+			font-size: 1.875rem;
+			line-height: 2.25rem;
+		}
+	}
+}

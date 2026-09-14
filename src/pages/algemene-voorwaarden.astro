@@ -1,0 +1,235 @@
+---
+import Invullen from '../components/Invullen.astro';
+import TekstPagina from '../components/TekstPagina.astro';
+import {
+	GRATIS_VERZENDING_VANAF_CENTS,
+	VERZENDKOSTEN_CENTS,
+} from '../lib/bestellen/instellingen.ts';
+import { juridisch, ontbreekt, openPunten } from '../lib/juridisch.ts';
+import { formatEuro } from '../lib/price.ts';
+import { site } from '../lib/site.ts';
+
+/*
+ * De algemene voorwaarden.
+ *
+ * LET OP: dit is een opzet, geschreven op basis van het Nederlandse
+ * consumentenrecht en van wat de shop feitelijk doet (zie docs/bestellen.md).
+ * Hij is niet door een jurist nagekeken. Voor de livegang hoort iemand die er
+ * verstand van heeft hier nog een keer doorheen te gaan.
+ *
+ * Getallen komen uit de code, niet uit de tekst: verzendkosten en de
+ * gratisdrempel uit bestellen/instellingen.ts, zodat de voorwaarden niet
+ * stilletjes iets anders beloven dan de winkelmand rekent. Wat nog bevestigd
+ * moet worden staat in lib/juridisch.ts en toont zolang een markering.
+ */
+
+const inhoud = [
+	{ id: 'wie-we-zijn', label: 'Wie we zijn' },
+	{ id: 'waarvoor', label: 'Waarvoor deze voorwaarden gelden' },
+	{ id: 'producten', label: 'Producten en prijzen' },
+	{ id: 'bestellen', label: 'Bestellen' },
+	{ id: 'betalen', label: 'Betalen' },
+	{ id: 'bezorgen', label: 'Bezorgen' },
+	{ id: 'bedenktijd', label: 'Bedenktijd en retourneren' },
+	{ id: 'garantie', label: 'Garantie' },
+	{ id: 'klachten', label: 'Klachten' },
+	{ id: 'gegevens', label: 'Je gegevens' },
+	{ id: 'slot', label: 'Tot slot' },
+];
+---
+
+<TekstPagina
+	eyebrow="Juridisch"
+	titel="Algemene voorwaarden"
+	lead="Hier staat waar je op kunt rekenen als je bij ons bestelt, en wat wij van jou verwachten. In gewone taal, zodat je niet hoeft te gokken wat er staat."
+	beschrijving="De algemene voorwaarden van H&H Shops: bestellen, betalen, bezorgen, bedenktijd, retourneren, garantie en klachten."
+	inhoud={inhoud}
+	openPunten={openPunten(['btw', 'levertijd', 'retourkosten', 'bedenktijdDagen', 'klarna'])}
+>
+	<h2 id="wie-we-zijn">Wie we zijn</h2>
+	<p>
+		Je koopt bij H&H Shops. Je bereikt ons het snelst per e-mail, en we antwoorden persoonlijk.
+	</p>
+	<ul>
+		<li>{site.address.street}, {site.address.postalCode} {site.address.city}</li>
+		<li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+		<li>KVK-nummer {site.kvk}</li>
+		<li>
+			Btw-nummer:{' '}
+			{juridisch.btw ? juridisch.btw : <Invullen wat="het btw-nummer" />}
+		</li>
+	</ul>
+
+	<h2 id="waarvoor">Waarvoor deze voorwaarden gelden</h2>
+	<p>
+		Deze voorwaarden gelden voor alles wat je in onze winkel ziet en voor elke bestelling die je bij
+		ons plaatst. Voordat je afrekent vink je aan dat je ze gelezen hebt. Je kunt ze hier altijd
+		teruglezen, opslaan of afdrukken.
+	</p>
+	<p>
+		Wat hier staat kan nooit minder zijn dan waar de wet je recht op geeft. Staat er per ongeluk
+		toch iets dat daarmee botst, dan geldt de wet en blijft de rest gewoon staan.
+	</p>
+
+	<h2 id="producten">Producten en prijzen</h2>
+	<ul>
+		<li>Alle prijzen zijn in euro's en inclusief btw.</li>
+		<li>
+			Verzendkosten komen er apart bij: {formatEuro(VERZENDKOSTEN_CENTS)}, en gratis vanaf{' '}
+			{formatEuro(GRATIS_VERZENDING_VANAF_CENTS)}. Je ziet het bedrag in de winkelmand voordat je
+			afrekent, dus je weet altijd wat je betaalt.
+		</li>
+		<li>
+			We doen ons best om foto's, maten en beschrijvingen te laten kloppen. Kleuren kunnen op jouw
+			scherm iets anders zijn dan in het echt.
+		</li>
+		<li>
+			Staat er een prijs of omschrijving die duidelijk niet klopt, bijvoorbeeld door een typefout,
+			dan hoeven we daar niet aan vast te zitten. We nemen dan contact met je op en je krijgt je
+			geld terug als je de bestelling niet wilt doorzetten.
+		</li>
+		<li>Een aanbod geldt zolang de voorraad strekt.</li>
+	</ul>
+
+	<h2 id="bestellen">Bestellen</h2>
+	<p>
+		Je legt de producten in je winkelmand, vult je gegevens in en betaalt. De koop is rond zodra je
+		betaling gelukt is en je van ons een bevestiging per e-mail krijgt. In die mail staat je
+		bestelnummer; bewaar hem, want die vragen we bij vragen of een retour.
+	</p>
+	<p>
+		Geen bevestiging gekregen? Kijk eerst in je ongewenste mail en mail ons anders even. We leveren
+		op dit moment alleen in Nederland.
+	</p>
+	<p>
+		We mogen een bestelling weigeren of annuleren, bijvoorbeeld als een product toch niet meer
+		leverbaar is. Je hoort dat dan zo snel mogelijk van ons en je krijgt je geld binnen veertien
+		dagen terug.
+	</p>
+
+	<h2 id="betalen">Betalen</h2>
+	<p>
+		Betalen doe je via onze betaalpartner Mollie. Je kiest je betaalmethode op de beveiligde pagina
+		van Mollie, en wij zien je betaalgegevens zelf nooit.
+	</p>
+	<p>
+		Je kunt betalen met iDEAL en met creditcard (Mastercard en Visa).{' '}
+		{ontbreekt('klarna') ? (
+			<>Of we daarnaast Klarna aanbieden: <Invullen wat="of we Klarna aanbieden" /></>
+		) : juridisch.klarna ? (
+			<>Ook achteraf betalen met Klarna kan; daarvoor gelden de voorwaarden van Klarna zelf.</>
+		) : null}
+	</p>
+	<p>
+		Lukt de betaling niet, dan komt de bestelling niet tot stand en blijft je winkelmand gewoon
+		staan. Meer hierover lees je bij <a href="/klantenservice/betalen">betalen</a>.
+	</p>
+
+	<h2 id="bezorgen">Bezorgen</h2>
+	<ul>
+		<li>We bezorgen in heel Nederland, op het adres dat je bij het afrekenen invult.</li>
+		<li>
+			Hoe lang het duurt:{' '}
+			{juridisch.levertijd ? <>{juridisch.levertijd}.</> : <Invullen wat="de levertijd" />}
+		</li>
+		<li>
+			We leveren in elk geval binnen dertig dagen. Lukt dat niet, dan hoor je dat van ons en mag je
+			de bestelling kosteloos annuleren.
+		</li>
+		<li>
+			Tot het moment dat jij het pakket in handen hebt, is het ons risico. Komt er iets beschadigd
+			aan, laat het ons dan weten en stuur een foto mee, dan lossen we het op.
+		</li>
+		<li>
+			Klopt het bezorgadres niet, laat het dan zo snel mogelijk weten. Is het pakket al onderweg,
+			dan kunnen we het meestal niet meer omleiden.
+		</li>
+	</ul>
+	<p>Alles over verzending staat bij <a href="/klantenservice/verzenden">verzenden en bezorgen</a>.</p>
+
+	<h2 id="bedenktijd">Bedenktijd en retourneren</h2>
+	<p>
+		Je hebt {juridisch.bedenktijdDagen} dagen bedenktijd, gerekend vanaf de dag dat je je bestelling
+		ontvangt.{' '}
+		{ontbreekt('bedenktijdDagen') ? (
+			<>
+				De wet geeft je er in elk geval veertien; dertig staat op onze contactpagina en komt van
+				de oude winkel. <Invullen wat="de bedenktijd van dertig dagen" />
+			</>
+		) : (
+			<>Dat is ruimer dan de veertien dagen waar de wet je recht op geeft.</>
+		)}
+	</p>
+	<p>
+		In die periode mag je zonder reden van de koop af. Je meldt dat per e-mail of met het{' '}
+		<a href="/klantenservice/retourneren#modelformulier">modelformulier voor herroeping</a>. Daarna
+		heb je nog veertien dagen om het product terug te sturen.
+	</p>
+	<ul>
+		<li>
+			Je mag het product bekijken en beoordelen zoals je in een winkel zou doen. Gebruik je het
+			meer dan dat en is het daardoor minder waard geworden, dan mogen we dat verrekenen met je
+			terugbetaling.
+		</li>
+		<li>
+			De kosten van de retourzending:{' '}
+			{juridisch.retourkosten === 'winkel' ? (
+				<>die betalen wij.</>
+			) : juridisch.retourkosten === 'klant' ? (
+				<>die betaal je zelf.</>
+			) : (
+				<Invullen wat="wie de retourzending betaalt" />
+			)}
+		</li>
+		<li>
+			Je krijgt je geld binnen veertien dagen terug nadat je de herroeping hebt gemeld, inclusief
+			de verzendkosten van de heenweg. We mogen daarmee wachten tot we het product terug hebben of
+			tot jij hebt laten zien dat je het verstuurd hebt.
+		</li>
+		<li>
+			Op sommige producten geldt geen bedenktijd: verzegelde artikelen die om hygiënische redenen
+			niet terug kunnen als de verzegeling verbroken is, zoals cosmetica, en producten die speciaal
+			voor jou zijn gemaakt.
+		</li>
+	</ul>
+	<p>
+		Hoe je een retour aanmeldt en waar hij naartoe moet, staat bij{' '}
+		<a href="/klantenservice/retourneren">retourneren</a>.
+	</p>
+
+	<h2 id="garantie">Garantie</h2>
+	<p>
+		Je hebt altijd recht op een product dat doet wat je er redelijkerwijs van mag verwachten. Dat is
+		de wettelijke garantie en die geldt ongeacht wat een fabrikant zelf belooft. Hoe lang je
+		daarop kunt rekenen hangt af van wat voor product het is en wat je ervoor betaald hebt.
+	</p>
+	<p>
+		Is er iets mis, mail ons dan met je bestelnummer en een foto. We zoeken samen een oplossing:
+		repareren, vervangen of je geld terug. Slijtage door normaal gebruik en schade door verkeerd
+		gebruik vallen er niet onder.
+	</p>
+
+	<h2 id="klachten">Klachten</h2>
+	<p>
+		Ben je ergens niet tevreden over, laat het ons dan weten via{' '}
+		<a href={`mailto:${site.email}`}>{site.email}</a> of het{' '}
+		<a href="/contact">contactformulier</a>. We reageren binnen veertien dagen inhoudelijk. Hebben we
+		langer nodig, dan laten we dat weten en zeggen we erbij wanneer je antwoord kunt verwachten.
+	</p>
+	<p>
+		Komen we er samen niet uit, dan kun je het geschil voorleggen aan de bevoegde Nederlandse
+		rechter.
+	</p>
+
+	<h2 id="gegevens">Je gegevens</h2>
+	<p>
+		Voor je bestelling hebben we je gegevens nodig. Wat we bewaren, hoe lang en met wie we het
+		delen staat in onze <a href="/privacy">privacyverklaring</a>. We verkopen je gegevens niet.
+	</p>
+
+	<h2 id="slot">Tot slot</h2>
+	<p>
+		Op onze overeenkomsten is Nederlands recht van toepassing. We mogen deze voorwaarden aanpassen;
+		voor jouw bestelling geldt altijd de versie die er stond op het moment dat je bestelde.
+	</p>
+</TekstPagina>

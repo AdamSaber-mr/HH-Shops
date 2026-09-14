@@ -1,0 +1,138 @@
+---
+import Invullen from '../../components/Invullen.astro';
+import TekstPagina from '../../components/TekstPagina.astro';
+import {
+	GRATIS_VERZENDING_VANAF_CENTS,
+	VERZENDKOSTEN_CENTS,
+} from '../../lib/bestellen/instellingen.ts';
+import { juridisch, ontbreekt, openPunten } from '../../lib/juridisch.ts';
+import { formatEuro } from '../../lib/price.ts';
+import { site } from '../../lib/site.ts';
+
+/*
+ * Veelgestelde vragen.
+ *
+ * Korte antwoorden met een verwijzing naar de pagina waar het hele verhaal
+ * staat. Bewust geen uitklapblokken: de vragen zijn kort, en tekst die er
+ * gewoon staat kun je doorzoeken met ctrl-F en laat zich printen.
+ *
+ * Let op bij het bijwerken: de contactpagina heeft ook een blokje met vier
+ * vragen. Wijkt een antwoord hier af, dan klopt er ergens iets niet.
+ */
+
+const inhoud = [
+	{ id: 'bestellen', label: 'Bestellen' },
+	{ id: 'bezorgen', label: 'Bezorgen' },
+	{ id: 'betalen', label: 'Betalen' },
+	{ id: 'retour', label: 'Retour en garantie' },
+	{ id: 'account', label: 'Je account' },
+];
+---
+
+<TekstPagina
+	eyebrow="Klantenservice"
+	titel="Veelgestelde vragen"
+	lead="De vragen die we het vaakst krijgen, met een kort antwoord. Staat jouw vraag er niet bij, stuur ons gerust een bericht."
+	beschrijving="Veelgestelde vragen over bestellen, bezorgen, betalen, retourneren en je account bij H&H Shops."
+	kruimels={[{ label: 'Klantenservice', href: '/klantenservice' }]}
+	inhoud={inhoud}
+	openPunten={openPunten(['levertijd', 'bedenktijdDagen', 'retourkosten'])}
+>
+	<h2 id="bestellen">Bestellen</h2>
+	<h3>Moet ik een account maken om te bestellen?</h3>
+	<p>
+		Nee. Je kunt gewoon als gast afrekenen. Met een account vind je je bestellingen later wel
+		makkelijker terug en hoef je je adres niet opnieuw in te vullen.
+	</p>
+	<h3>Ik heb geen bevestigingsmail gekregen</h3>
+	<p>
+		Kijk eerst in je ongewenste mail. Staat hij daar ook niet, mail ons dan op{' '}
+		<a href={`mailto:${site.email}`}>{site.email}</a> met de datum en het bedrag, dan zoeken we je
+		bestelling op.
+	</p>
+	<h3>Kan ik mijn bestelling nog aanpassen of annuleren?</h3>
+	<p>
+		Mail ons zo snel mogelijk. Zolang je pakket nog niet weg is, kunnen we het meestal nog
+		aanpassen. Is hij al onderweg, dan kun je hem terugsturen; zie{' '}
+		<a href="/klantenservice/retourneren">retourneren</a>.
+	</p>
+
+	<h2 id="bezorgen">Bezorgen</h2>
+	<h3>Wat kost verzenden?</h3>
+	<p>
+		{formatEuro(VERZENDKOSTEN_CENTS)}, en gratis vanaf {formatEuro(GRATIS_VERZENDING_VANAF_CENTS)}.
+		Je ziet het in je winkelmand voordat je afrekent.
+	</p>
+	<h3>Wanneer komt mijn bestelling?</h3>
+	<p>
+		{juridisch.levertijd ? (
+			juridisch.levertijd
+		) : (
+			<>
+				Zodra je pakket onderweg is, laten we het je weten. De precieze levertijd bevestigen we
+				binnenkort: <Invullen wat="de levertijd" />
+			</>
+		)}
+	</p>
+	<h3>Bezorgen jullie ook in België?</h3>
+	<p>
+		Op dit moment niet; we bezorgen alleen in Nederland. Woon je net over de grens, mail ons dan,
+		dan kijken we wat er kan.
+	</p>
+
+	<h2 id="betalen">Betalen</h2>
+	<h3>Hoe kan ik betalen?</h3>
+	<p>
+		Met iDEAL of met creditcard (Mastercard en Visa), via onze betaalpartner Mollie.{' '}
+		{ontbreekt('klarna') ? (
+			<>Of achteraf betalen met Klarna erbij komt, hoor je binnenkort.</>
+		) : juridisch.klarna ? (
+			<>Achteraf betalen met Klarna kan ook.</>
+		) : null}{' '}
+		Meer hierover bij <a href="/klantenservice/betalen">betalen</a>.
+	</p>
+	<h3>Zijn de prijzen inclusief btw?</h3>
+	<p>Ja, alle prijzen zijn inclusief btw. Verzendkosten staan er apart bij.</p>
+	<h3>Mijn betaling is mislukt, is er nu geld afgeschreven?</h3>
+	<p>
+		Nee. Lukt een betaling niet, dan komt de bestelling niet tot stand en wordt er niets
+		afgeschreven. Je winkelmand blijft staan, dus je kunt het opnieuw proberen.
+	</p>
+
+	<h2 id="retour">Retour en garantie</h2>
+	<h3>Hoeveel bedenktijd heb ik?</h3>
+	<p>
+		{juridisch.bedenktijdDagen} dagen, vanaf de dag dat je je bestelling ontvangt.{' '}
+		{ontbreekt('bedenktijdDagen') && <Invullen wat="de bedenktijd van dertig dagen" />}
+	</p>
+	<h3>Wat kost het om iets terug te sturen?</h3>
+	<p>
+		{juridisch.retourkosten === 'winkel' ? (
+			<>Niets, wij betalen de retourzending.</>
+		) : juridisch.retourkosten === 'klant' ? (
+			<>De verzendkosten van de retour betaal je zelf.</>
+		) : (
+			<Invullen wat="wie de retourzending betaalt" />
+		)}
+	</p>
+	<h3>Mijn product is kapot of ik heb het verkeerde gekregen</h3>
+	<p>
+		Mail ons met je bestelnummer en een foto. Dan sturen we een nieuwe of je krijgt je geld terug.
+		Dat valt onder <a href="/algemene-voorwaarden#garantie">garantie</a> en niet onder de
+		bedenktijd.
+	</p>
+
+	<h2 id="account">Je account</h2>
+	<h3>Ik ben mijn wachtwoord vergeten</h3>
+	<p>
+		Vraag een nieuwe aan via <a href="/account/wachtwoord-vergeten">wachtwoord vergeten</a>. Je
+		krijgt dan een link per mail.
+	</p>
+	<h3>Kan ik mijn account verwijderen?</h3>
+	<p>
+		Ja, dat doe je zelf bij <a href="/account/verwijderen">je account</a>. Je gegevens,
+		favorieten en winkelmand verdwijnen dan. Je eerdere bestellingen blijven in onze administratie
+		staan, want die moeten we wettelijk bewaren; zie de{' '}
+		<a href="/privacy">privacyverklaring</a>.
+	</p>
+</TekstPagina>

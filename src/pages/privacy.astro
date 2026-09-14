@@ -1,0 +1,203 @@
+---
+import TekstPagina from '../components/TekstPagina.astro';
+import { juridisch, ontbreekt, openPunten } from '../lib/juridisch.ts';
+import { site } from '../lib/site.ts';
+
+/*
+ * De privacyverklaring.
+ *
+ * Beschrijft wat de winkel echt doet, niet wat een sjabloon zegt. De bron is
+ * docs/bestellen.md ("Voor de privacyverklaring") en docs/klantaccounts.md:
+ * welke velden een bestelling vastlegt, wat er gebeurt als iemand zijn account
+ * verwijdert, welke verwerkers er zijn en welke cookies er staan. Verandert
+ * daar iets, dan hoort deze tekst mee te veranderen.
+ *
+ * LET OP: opzet, nog niet juridisch nagekeken. Zie ook de opmerking in
+ * algemene-voorwaarden.astro.
+ */
+
+const inhoud = [
+	{ id: 'wie', label: 'Wie je gegevens verwerkt' },
+	{ id: 'welke', label: 'Welke gegevens en waarvoor' },
+	{ id: 'waarom', label: 'Waarom we dat mogen' },
+	{ id: 'bewaren', label: 'Hoe lang we ze bewaren' },
+	{ id: 'delen', label: 'Met wie we ze delen' },
+	{ id: 'cookies', label: 'Cookies' },
+	{ id: 'rechten', label: 'Je rechten' },
+	{ id: 'beveiliging', label: 'Beveiliging' },
+	{ id: 'wijzigingen', label: 'Wijzigingen' },
+];
+---
+
+<TekstPagina
+	eyebrow="Juridisch"
+	titel="Privacyverklaring"
+	lead="Welke gegevens we van je bewaren, waarom we dat doen en wat je eraan kunt veranderen. We houden het bij wat nodig is om je bestelling uit te voeren."
+	beschrijving="De privacyverklaring van H&H Shops: welke gegevens we bewaren, waarom, hoe lang, met wie we ze delen en welke rechten je hebt."
+	inhoud={inhoud}
+	openPunten={openPunten(['nieuwsbrief'])}
+>
+	<h2 id="wie">Wie je gegevens verwerkt</h2>
+	<p>
+		H&H Shops is verantwoordelijk voor de gegevens die via deze winkel worden verwerkt. Je bereikt
+		ons op <a href={`mailto:${site.email}`}>{site.email}</a>, of per post op {site.address.street},{' '}
+		{site.address.postalCode} {site.address.city}. We staan ingeschreven bij de KVK onder nummer{' '}
+		{site.kvk}.
+	</p>
+	<p>
+		Vragen over je gegevens gaan naar hetzelfde adres. Daar zit een mens achter, geen formulier dat
+		in een la verdwijnt.
+	</p>
+
+	<h2 id="welke">Welke gegevens en waarvoor</h2>
+	<h3>Als je iets bestelt</h3>
+	<p>
+		We leggen je naam, e-mailadres en bezorgadres vast, plus je telefoonnummer en een opmerking als
+		je die geeft. Verder de artikelen die je bestelt met de bedragen, en van de betaling het
+		kenmerk en de methode die we van Mollie terugkrijgen. Dat hebben we nodig om je bestelling te
+		kunnen uitvoeren, je op de hoogte te houden en de boekhouding kloppend te maken.
+	</p>
+	<h3>Als je een account maakt</h3>
+	<p>
+		Dan bewaren we je naam, e-mailadres, een versleutelde versie van je wachtwoord en het
+		bezorgadres dat je opslaat. Je favorieten en je winkelmand horen daar ook bij, zodat ze er nog
+		zijn als je terugkomt. Zonder account staan die twee alleen in een cookie in je eigen browser.
+	</p>
+	<h3>Als je ons een bericht stuurt</h3>
+	<p>
+		Via het contactformulier krijgen we je naam, e-mailadres, het onderwerp, je bericht en je
+		bestelnummer als je dat invult. We gebruiken dat om je vraag te beantwoorden, meer niet.
+	</p>
+	<h3>Als je de site bezoekt</h3>
+	<p>
+		Onze hosting legt technische gegevens vast in logbestanden, zoals het IP-adres en het tijdstip
+		van een verzoek. Dat hoort bij het draaien van een website en helpt ons bij storingen en
+		misbruik. We gebruiken geen trackers en geen advertentiecookies, en we meten je gedrag niet.
+	</p>
+	{ontbreekt('nieuwsbrief') ? (
+		<h3>Nieuwsbrief</h3>
+		<p>
+			In de voet van de site staat een veld om je in te schrijven voor een nieuwsbrief. Dat
+			formulier werkt op dit moment nog niet en er worden dus geen adressen verzameld of
+			opgeslagen. Zodra dat verandert, staat hier wat we ermee doen en kun je je met één klik
+			weer uitschrijven.
+		</p>
+	) : juridisch.nieuwsbrief ? (
+		<h3>Nieuwsbrief</h3>
+		<p>
+			Schrijf je je in voor de nieuwsbrief, dan bewaren we je e-mailadres tot je je uitschrijft.
+			Dat doe je met de link onderaan elke nieuwsbrief of door ons te mailen.
+		</p>
+	) : null}
+
+	<h2 id="waarom">Waarom we dat mogen</h2>
+	<ul>
+		<li>
+			<strong>Om onze afspraak na te komen.</strong> Zonder adres geen pakket. Alles wat nodig is
+			om je bestelling uit te voeren valt hieronder, net als je account.
+		</li>
+		<li>
+			<strong>Omdat het moet van de wet.</strong> De belastingdienst verplicht ons de administratie
+			van een bestelling zeven jaar te bewaren.
+		</li>
+		<li>
+			<strong>Omdat we er een gerechtvaardigd belang bij hebben.</strong> Je vraag beantwoorden, de
+			winkel veilig houden en misbruik tegengaan.
+		</li>
+		<li>
+			<strong>Omdat je toestemming geeft.</strong> Dat speelt alleen bij dingen waar je zelf voor
+			kiest, zoals een nieuwsbrief. Die toestemming kun je altijd weer intrekken.
+		</li>
+	</ul>
+	<p>
+		We nemen geen besluiten over je op basis van een computer alleen, en we stellen geen profielen
+		op. Je gegevens zijn niet te koop.
+	</p>
+
+	<h2 id="bewaren">Hoe lang we ze bewaren</h2>
+	<ul>
+		<li>
+			<strong>Bestellingen:</strong> zeven jaar. Dat is de wettelijke bewaarplicht voor de
+			administratie en daar kunnen we niet onderuit.
+		</li>
+		<li>
+			<strong>Je account:</strong> zolang je het houdt. Verwijder je het, dan zijn je account, je
+			favorieten, je winkelmand en je opgeslagen adres direct weg. Je eerdere bestellingen blijven
+			bestaan voor de boekhouding, maar zijn dan niet meer aan een account gekoppeld.
+		</li>
+		<li>
+			<strong>Berichten aan de klantenservice:</strong> zolang als nodig is om je vraag af te
+			handelen en eventuele vervolgvragen te kunnen beantwoorden.
+		</li>
+		<li>
+			<strong>Logbestanden:</strong> kort, en alleen voor beheer en beveiliging.
+		</li>
+	</ul>
+
+	<h2 id="delen">Met wie we ze delen</h2>
+	<p>
+		Alleen met partijen die nodig zijn om de winkel te laten werken. Zij mogen je gegevens alleen
+		voor ons gebruiken en niet voor zichzelf.
+	</p>
+	<ul>
+		<li><strong>Mollie</strong> handelt de betaling af. Zij zien de naam, het bedrag en de omschrijving van je betaling.</li>
+		<li><strong>De vervoerder</strong> krijgt je naam en bezorgadres om het pakket te bezorgen.</li>
+		<li><strong>Vercel</strong> draait de website, met servers in Europa.</li>
+		<li><strong>Neon</strong> host de database, in Frankfurt.</li>
+		<li><strong>Resend</strong> verstuurt onze e-mail, zoals de bevestiging van je bestelling.</li>
+	</ul>
+	<p>
+		Verder geven we niets door, tenzij we daartoe wettelijk verplicht zijn. Je gegevens blijven
+		binnen de Europese Economische Ruimte.
+	</p>
+
+	<h2 id="cookies">Cookies</h2>
+	<p>
+		Alleen functionele cookies: kleine bestandjes die de winkel laten werken. We hebben geen
+		cookiebanner, omdat we niets plaatsen waarvoor we je toestemming zouden moeten vragen.
+	</p>
+	<ul>
+		<li>Je winkelmand en je favorieten, zolang je nog geen account hebt.</li>
+		<li>Je inlogsessie, als je een account hebt. Die vervalt na zeven dagen.</li>
+		<li>Een klein cookie dat een melding onthoudt, bijvoorbeeld "je bericht is verstuurd".</li>
+	</ul>
+	<p>
+		Je kunt cookies altijd weggooien via je browser. De winkel blijft werken; je winkelmand en
+		favorieten zijn dan wel leeg.
+	</p>
+
+	<h2 id="rechten">Je rechten</h2>
+	<p>Je mag ons altijd vragen:</p>
+	<ul>
+		<li>welke gegevens we van je hebben, en daar een kopie van krijgen;</li>
+		<li>iets te corrigeren dat niet klopt;</li>
+		<li>je gegevens te verwijderen, voor zover we ze niet wettelijk moeten bewaren;</li>
+		<li>het gebruik ervan te beperken, of er bezwaar tegen te maken;</li>
+		<li>je gegevens in een leesbaar bestand mee te geven;</li>
+		<li>eerder gegeven toestemming weer in te trekken.</li>
+	</ul>
+	<p>
+		Mail ons op <a href={`mailto:${site.email}`}>{site.email}</a>. Je hoort binnen een maand van
+		ons. Heb je een account, dan kun je je gegevens ook zelf aanpassen of je account in één keer
+		laten verwijderen via <a href="/account">je account</a>.
+	</p>
+	<p>
+		Vind je dat we niet goed met je gegevens omgaan, dan mag je een klacht indienen bij de
+		Autoriteit Persoonsgegevens. We horen het natuurlijk liever eerst zelf, dan kunnen we het
+		oplossen.
+	</p>
+
+	<h2 id="beveiliging">Beveiliging</h2>
+	<p>
+		De hele winkel gaat over een beveiligde verbinding. Wachtwoorden bewaren we versleuteld, dus we
+		kunnen ze zelf niet lezen. Het beheerdeel is afgeschermd en alleen bereikbaar voor mensen die
+		er moeten zijn. Vermoed je dat er iets mis is, laat het ons weten; dat wil je van ons en wij
+		van jou.
+	</p>
+
+	<h2 id="wijzigingen">Wijzigingen</h2>
+	<p>
+		Verandert er iets aan de winkel, dan passen we deze verklaring aan. Onderaan de pagina staat
+		wanneer dat voor het laatst gebeurd is.
+	</p>
+</TekstPagina>

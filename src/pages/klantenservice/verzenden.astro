@@ -1,0 +1,101 @@
+---
+import Invullen from '../../components/Invullen.astro';
+import TekstPagina from '../../components/TekstPagina.astro';
+import {
+	GRATIS_VERZENDING_VANAF_CENTS,
+	VERZENDKOSTEN_CENTS,
+} from '../../lib/bestellen/instellingen.ts';
+import { juridisch, openPunten } from '../../lib/juridisch.ts';
+import { formatEuro } from '../../lib/price.ts';
+
+/*
+ * Verzenden en bezorgen.
+ *
+ * De bedragen komen uit bestellen/instellingen.ts, dezelfde bron als de
+ * winkelmand. Zo kan deze pagina niet iets anders beloven dan de klant
+ * uiteindelijk betaalt.
+ */
+
+const inhoud = [
+	{ id: 'kosten', label: 'Wat verzenden kost' },
+	{ id: 'wanneer', label: 'Wanneer je bestelling komt' },
+	{ id: 'waar', label: 'Waar we bezorgen' },
+	{ id: 'volgen', label: 'Je pakket volgen' },
+	{ id: 'misgaat', label: 'Als er iets misgaat' },
+];
+---
+
+<TekstPagina
+	eyebrow="Klantenservice"
+	titel="Verzenden en bezorgen"
+	lead="Wat verzenden kost, wanneer je bestelling komt en wat je doet als er iets misgaat onderweg."
+	beschrijving="Verzendkosten, levertijd en bezorging bij H&H Shops. Gratis verzending vanaf € 50, bezorging door heel Nederland."
+	kruimels={[{ label: 'Klantenservice', href: '/klantenservice' }]}
+	inhoud={inhoud}
+	openPunten={openPunten(['levertijd'])}
+>
+	<h2 id="kosten">Wat verzenden kost</h2>
+	<p>
+		Verzenden kost {formatEuro(VERZENDKOSTEN_CENTS)}. Bestel je voor{' '}
+		{formatEuro(GRATIS_VERZENDING_VANAF_CENTS)} of meer, dan sturen we het gratis op.
+	</p>
+	<p>
+		Je ziet de verzendkosten in je winkelmand, voordat je afrekent. Er komt daarna niets meer bij:
+		het bedrag dat je bij het afrekenen ziet, is het bedrag dat je betaalt.
+	</p>
+
+	<h2 id="wanneer">Wanneer je bestelling komt</h2>
+	<p>
+		{juridisch.levertijd ? (
+			juridisch.levertijd
+		) : (
+			<>Hoe lang bezorgen duurt, bevestigen we binnenkort: <Invullen wat="de levertijd" /></>
+		)}
+	</p>
+	<p>
+		We pakken je bestelling in zodra de betaling binnen is. Duurt het onverhoopt langer dan
+		verwacht, dan hoor je dat van ons. Lukt het ons niet om binnen dertig dagen te leveren, dan mag
+		je de bestelling kosteloos annuleren en krijg je je geld terug.
+	</p>
+
+	<h2 id="waar">Waar we bezorgen</h2>
+	<p>
+		We bezorgen door heel Nederland, op het adres dat je bij het afrekenen invult. Een postbus kan
+		niet. Naar het buitenland versturen we op dit moment niet; woon je net over de grens, mail ons
+		dan even, dan kijken we wat er mogelijk is.
+	</p>
+
+	<h2 id="volgen">Je pakket volgen</h2>
+	<p>
+		Na je bestelling krijg je een bevestiging per e-mail met je bestelnummer erin. Zodra je pakket
+		onderweg is, laten we het je weten.
+	</p>
+	<p>
+		Heb je een account, dan vind je al je bestellingen terug bij{' '}
+		<a href="/account/bestellingen">je bestellingen</a>. Zonder account werkt de link in je
+		bevestigingsmail: daarmee kom je altijd bij je bestelling.
+	</p>
+
+	<h2 id="misgaat">Als er iets misgaat</h2>
+	<h3>Je bent niet thuis</h3>
+	<p>
+		De bezorger probeert het meestal een dag later nog eens, of laat het pakket bij de buren of op
+		een afhaalpunt. Op de kaart in je brievenbus of in de mail van de vervoerder staat wat er is
+		gebeurd.
+	</p>
+	<h3>Je pakket is beschadigd aangekomen</h3>
+	<p>
+		Maak een foto van de doos en van het product en mail die naar ons met je bestelnummer erbij.
+		Tot het moment dat jij het pakket in handen hebt, is het ons risico; we lossen het op.
+	</p>
+	<h3>Je pakket is niet aangekomen</h3>
+	<p>
+		Laat het ons weten. We zoeken het na bij de vervoerder en zorgen dat je alsnog je bestelling of
+		je geld krijgt.
+	</p>
+	<h3>Je hebt een verkeerd adres ingevuld</h3>
+	<p>
+		Mail ons zo snel mogelijk. Is het pakket nog niet weg, dan passen we het aan. Is het al
+		onderweg, dan kunnen we het meestal niet meer tegenhouden.
+	</p>
+</TekstPagina>
