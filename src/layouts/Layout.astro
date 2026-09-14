@@ -13,15 +13,44 @@ interface Props {
 	description?: string;
 	/** Aan op previews en op alles wat niet in Google hoort. */
 	noindex?: boolean;
+	/**
+	 * Het plaatje op het kaartje dat WhatsApp, Facebook of LinkedIn laat zien
+	 * als iemand deze pagina deelt. Een pad vanaf de site of een volledige URL;
+	 * zonder opgave het vaste kaartje met het logo.
+	 */
+	deelAfbeelding?: string;
+	/** Wat er op dat plaatje staat, voor wie het niet kan zien. */
+	deelAfbeeldingAlt?: string;
 }
 
 const {
 	title,
 	description = 'HH Shops verkoopt huishoudelijke artikelen, kinderartikelen, cosmetica, tassen en schoeisel. Voor 15:00 besteld, morgen in huis.',
 	noindex = false,
+	deelAfbeelding,
+	deelAfbeeldingAlt,
 } = Astro.props;
 
 const pageTitle = title ? `${title} | HH Shops` : 'HH Shops';
+
+/*
+ * De kaartjes voor sociale media (Open Graph en Twitter). Zonder deze regels
+ * is een gedeelde link een kale regel tekst: geen foto, geen titel, geen
+ * prijs. Voor een winkel waar mensen elkaar producten doorsturen scheelt dat.
+ *
+ * De URL's moeten volledig zijn, want een ander platform haalt ze op. Ze komen
+ * uit Astro.url en niet uit een vaste waarde, zodat een preview naar zichzelf
+ * wijst en de productie naar productie. Het domein staat nog niet in
+ * astro.config.mjs (dat komt bij de domeinomzetting); dit werkt zonder.
+ *
+ * De foto's uit de winkel zijn webp. WhatsApp en Facebook tonen dat, LinkedIn
+ * niet altijd; dan valt het kaartje terug op alleen tekst. Omzetten naar jpeg
+ * kan hier niet zomaar: de beeld-endpoint van Astro negeert een gevraagd
+ * formaat en levert altijd webp terug. Het vaste kaartje is daarom een png.
+ */
+const paginaUrl = new URL(Astro.url.pathname, Astro.url.origin).href;
+const kaartAfbeelding = new URL(deelAfbeelding ?? '/deelkaart.png', Astro.url.origin).href;
+const kaartAfbeeldingAlt = deelAfbeeldingAlt ?? 'Het logo van H&H Shops op een zandkleurige achtergrond';
 
 /*
  * De categorieen voor het menu en de footer komen uit de database, niet uit
@@ -40,6 +69,15 @@ const categorieen = await listCategories();
 		<title>{pageTitle}</title>
 		<meta name="description" content={description}>
 		{noindex && <meta name="robots" content="noindex, nofollow" />}
+		<meta property="og:type" content="website">
+		<meta property="og:site_name" content="H&H Shops">
+		<meta property="og:locale" content="nl_NL">
+		<meta property="og:title" content={title ?? 'H&H Shops'}>
+		<meta property="og:description" content={description}>
+		<meta property="og:url" content={paginaUrl}>
+		<meta property="og:image" content={kaartAfbeelding}>
+		<meta property="og:image:alt" content={kaartAfbeeldingAlt}>
+		<meta name="twitter:card" content="summary_large_image">
 		<meta name="theme-color" content="#fafaf9">
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 		<slot name="head" />

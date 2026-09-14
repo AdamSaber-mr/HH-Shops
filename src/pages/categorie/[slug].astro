@@ -82,7 +82,13 @@ const teller = gefilterdActief
 	: aantal(alle.length);
 ---
 
-<Layout title={category.name} description={tekst.kort} noindex={noindex}>
+<Layout
+	title={category.name}
+	description={tekst.kort}
+	noindex={noindex}
+	deelAfbeelding={bannerFoto(category)?.url}
+	deelAfbeeldingAlt={bannerFoto(category)?.alt}
+>
 	<div class="mx-auto max-w-[1400px] px-4 pt-5 sm:px-6">
 		<nav aria-label="Kruimelpad" class="text-sm text-text-muted">
 			<a href="/" class="rounded-control hover:text-text hover:underline">Home</a>
