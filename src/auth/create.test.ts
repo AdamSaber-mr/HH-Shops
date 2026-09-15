@@ -39,7 +39,7 @@ describe('vertrouwde adressen', () => {
 	});
 
 	it('valt niet terug op het winkeldomein zolang dat naar de oude site wijst', () => {
-		expect(TERUGVAL_ADRES).toBe('https://hh-shops.SUBDOMEIN-NOG-INVULLEN.workers.dev');
+		expect(TERUGVAL_ADRES).toBe('https://hh-shops.info-8a6.workers.dev');
 	});
 
 	it('vertrouwt geen enkele herkomst zonder https, behalve localhost', () => {

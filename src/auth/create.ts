@@ -69,12 +69,10 @@ export const VERTROUWDE_HERKOMSTEN: readonly string[] = [
  * workers.dev-adres en niet hh-shops.nl: zolang dat domein naar WordPress
  * wijst, is een link daarheen het slechtste antwoord dat we kunnen geven.
  *
- * NOG IN TE VULLEN. Het subdomein zie je pas bij de eerste `npm run deploy`,
- * die drukt de URL af. Zet hem hieronder en pas create.test.ts mee aan. Tot
- * dat moment wijzen herstel- en bevestigingslinks vanaf een onbekende host
- * naar een adres dat niet bestaat.
+ * Ingevuld op 15-09-2026, na de eerste uitrol naar Cloudflare. Bij de
+ * domeinomzetting wordt dit https://hh-shops.nl; zie docs/domeinomzetting.md.
  */
-export const TERUGVAL_ADRES = 'https://hh-shops.SUBDOMEIN-NOG-INVULLEN.workers.dev';
+export const TERUGVAL_ADRES = 'https://hh-shops.info-8a6.workers.dev';
 
 /** Hoe lang een herstellink werkt. Kort, want wie hem aanvraagt zit erop te wachten. */
 export const HERSTELLINK_MINUTEN = 60;

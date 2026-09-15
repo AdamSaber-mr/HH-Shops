@@ -23,6 +23,22 @@
 		"OMGEVING": "productie"
 	},
 
+	/*
+	 * Variabelen die in het Cloudflare-dashboard zijn gezet blijven staan bij
+	 * een uitrol.
+	 *
+	 * Zonder dit vervangt `wrangler deploy` het hele `vars`-blok hierboven door
+	 * wat er in dit bestand staat, en verdwijnt alles wat alleen in het
+	 * dashboard bestaat. Op 15-09-2026 stonden DATABASE_URL, BETTER_AUTH_SECRET
+	 * en R2_PUBLIC_URL daar; de eerstvolgende uitrol zou de winkel dus plat
+	 * hebben gelegd met een 500 op elke pagina.
+	 *
+	 * Dit is een vangnet, geen eindoplossing. Echte geheimen horen niet als
+	 * variabele maar als secret (`wrangler secret put`): die zijn versleuteld,
+	 * niet terug te lezen in het dashboard, en overleven een uitrol sowieso.
+	 */
+	"keep_vars": true,
+
 	// Product- en categoriefoto's. De binding heet MEDIA; src/lib/media-workers.ts
 	// zoekt hem onder die naam.
 	"r2_buckets": [

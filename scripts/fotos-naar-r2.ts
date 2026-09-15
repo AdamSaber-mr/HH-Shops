@@ -44,15 +44,15 @@ async function main(): Promise<void> {
 	const fotos = await db
 		.select({ id: productImages.id, url: productImages.url })
 		.from(productImages)
-		.where(sql`${productImages.url} like ${'%' + OUDE_HOST + '%'}`);
+		.where(sql`${productImages.url} like ${`%${OUDE_HOST}%`}`);
 	const kaarten = await db
 		.select({ id: categories.id, url: categories.imageUrl })
 		.from(categories)
-		.where(sql`${categories.imageUrl} like ${'%' + OUDE_HOST + '%'}`);
+		.where(sql`${categories.imageUrl} like ${`%${OUDE_HOST}%`}`);
 	const banners = await db
 		.select({ id: categories.id, url: categories.bannerUrl })
 		.from(categories)
-		.where(sql`${categories.bannerUrl} like ${'%' + OUDE_HOST + '%'}`);
+		.where(sql`${categories.bannerUrl} like ${`%${OUDE_HOST}%`}`);
 
 	const alles: Verwijzing[] = [
 		...fotos.map((r) => ({ tabel: 'product_images' as const, id: r.id, url: r.url })),
