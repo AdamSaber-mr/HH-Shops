@@ -3,11 +3,12 @@ import { z } from 'astro/zod';
 import { getDb } from '../db/client.ts';
 import * as fotos from '../lib/admin/fotos.ts';
 import { InvoerFout } from '../lib/admin/producten-schrijven.ts';
+import { media } from '../lib/media-workers.ts';
 import { altProblems, normaliseWhitespace } from '../lib/tekst.ts';
 import { naarActionError, tekst, vereisBeheerder } from './_helpers.ts';
 
 /*
- * Actions op foto's. Een bestand per upload: Vercel accepteert 4,5 MB per
+ * Actions op foto's. Een bestand per upload: Workers accepteert 100 MB per
  * aanvraag en Astro's actionBodySizeLimit staat op 4 MB. De alt-tekst is
  * verplicht en gaat door dezelfde regels als bij de import.
  */
@@ -76,9 +77,10 @@ export const fotosActions = {
 		handler: async ({ productId, bestand, alt, variantId }, context) => {
 			vereisBeheerder(context);
 			try {
-				const buffer = Buffer.from(await bestand.arrayBuffer());
+				const buffer = new Uint8Array(await bestand.arrayBuffer());
 				const result = await fotos.upload(
 					getDb(),
+					media,
 					productId,
 					{ buffer, naam: bestand.name },
 					{ alt, variantId },
@@ -120,8 +122,14 @@ export const fotosActions = {
 		handler: async ({ fotoId, bestand, alt }, context) => {
 			vereisBeheerder(context);
 			try {
-				const buffer = Buffer.from(await bestand.arrayBuffer());
-				const result = await fotos.vervang(getDb(), fotoId, { buffer, naam: bestand.name }, alt);
+				const buffer = new Uint8Array(await bestand.arrayBuffer());
+				const result = await fotos.vervang(
+					getDb(),
+					media,
+					fotoId,
+					{ buffer, naam: bestand.name },
+					alt,
+				);
 				return { bytes: result.bytesOut };
 			} catch (error) {
 				return gooi(error);
@@ -155,7 +163,7 @@ export const fotosActions = {
 		handler: async ({ fotoId }, context) => {
 			vereisBeheerder(context);
 			try {
-				await fotos.verwijder(getDb(), fotoId);
+				await fotos.verwijder(getDb(), media, fotoId);
 				return { ok: true };
 			} catch (error) {
 				return gooi(error);

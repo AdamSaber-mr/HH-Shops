@@ -1,5 +1,4 @@
 import { ActionError, defineAction } from 'astro:actions';
-import { del } from '@vercel/blob';
 import { z } from 'astro/zod';
 import { getDb } from '../db/client.ts';
 import { upload as fotoUpload, MAX_BESTAND, TOEGESTANE_TYPES } from '../lib/admin/fotos.ts';
@@ -12,6 +11,7 @@ import {
 	zetStatus,
 } from '../lib/admin/producten-schrijven.ts';
 import { parseEuro, parseGeheel } from '../lib/admin/validatie.ts';
+import { media } from '../lib/media-workers.ts';
 import {
 	altProblems,
 	cleanHtml,
@@ -229,9 +229,10 @@ export const productenActions = {
 			let fotoFout: string | null = null;
 			if (bestand) {
 				try {
-					const buffer = Buffer.from(await bestand.arrayBuffer());
+					const buffer = new Uint8Array(await bestand.arrayBuffer());
 					await fotoUpload(
 						getDb(),
+						media,
 						id,
 						{ buffer, naam: bestand.name },
 						{ alt: fotoAlt, variantId: null },
@@ -311,9 +312,9 @@ export const productenActions = {
 			// database is leidend en dat is onschuldig.
 			if (result.weesUrls.length > 0) {
 				try {
-					await del(result.weesUrls);
+					await media.verwijder(result.weesUrls);
 				} catch (error) {
-					console.error("[admin] foto's niet uit Blob verwijderd", error);
+					console.error("[admin] foto's niet uit R2 verwijderd", error);
 				}
 			}
 			return { verwijderd: true };

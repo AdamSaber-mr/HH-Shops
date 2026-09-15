@@ -481,7 +481,7 @@
 								'Ga in Resend naar Domains en voeg <code>hh-shops.nl</code> toe.',
 								'Zet de records die Resend geeft in de DNS. Resend gebruikt daarvoor het subdomein <code>send.hh-shops.nl</code>, dus aan de bestaande SPF voor Microsoft 365 hoef je niets te veranderen.',
 								'Wacht tot het domein op <em>Verified</em> staat.',
-								'Zet daarna <code>MAIL_FROM</code> in Vercel, zie Fase 3.',
+								'Zet daarna <code>MAIL_FROM</code> op Cloudflare, zie Fase 3.',
 							],
 							waarom:
 								'Ik heb de DNS nagekeken: er staat geen enkel Resend-record op hh-shops.nl. Zolang dat zo is, mag Resend alleen naar het eigen adres van de accounthouder sturen. Een klant krijgt dan geen bestelbevestiging en geen verzendmail, en dat laatste is precies wat ik deze week gebouwd heb.',
@@ -544,24 +544,24 @@
 				{
 					titel: 'Instellingen zetten',
 					tekst:
-						'Variabelen in Vercel en één wijziging op de productiedatabase. Dit kan pas als Fase 1 klaar is.',
+						'Geheimen op Cloudflare en één wijziging op de productiedatabase. Dit kan pas als Fase 1 klaar is.',
 					taken: [
 						{
 							id: 'cron-secret',
-							titel: 'CRON_SECRET in Vercel zetten',
+							titel: 'CRON_SECRET op Cloudflare zetten',
 							wie: 'jij',
 							stappen: [
-								'Vercel, het project, Settings, Environment Variables.',
+								'<code>npx wrangler secret put CRON_SECRET</code> in de projectmap.',
 								'Naam <code>CRON_SECRET</code>, aanvinken voor <strong>Production</strong> en <strong>Preview</strong>.',
 								'Gebruik deze waarde, die heb ik al voor je gemaakt:',
 							],
 							code: 'H515wkIRq87AjM91lRKydf8daPQtIF4poCxLnbzL0Dk',
 							waarom:
-								'Zonder deze variabele weigert de nachtelijke opschoontaak élk verzoek, ook dat van Vercel zelf. Bestellingen die op een betaling blijven hangen houden dan hun voorraad vast, en die artikelen kan niemand meer kopen.',
+								'De nachtelijke opschoontaak zelf komt binnen via <code>scheduled()</code> in <code>src/worker.ts</code> en heeft dit geheim niet nodig. Dit beveiligt alleen de handmatige ingang <code>/api/cron/bestellingen-opschonen</code>, die zonder geheim élk verzoek weigert. Bestellingen die op een betaling blijven hangen houden dan hun voorraad vast, en die artikelen kan niemand meer kopen.',
 						},
 						{
 							id: 'mollie-sleutel',
-							titel: 'De Mollie-livesleutel in Vercel zetten',
+							titel: 'De Mollie-livesleutel op Cloudflare zetten',
 							wie: 'jij',
 							stappen: [
 								'Zelfde scherm. Naam <code>MOLLIE_API_KEY</code>, waarde de sleutel die met <code>live_</code> begint.',
@@ -572,7 +572,7 @@
 						},
 						{
 							id: 'mail-from',
-							titel: 'MAIL_FROM in Vercel zetten',
+							titel: 'MAIL_FROM op Cloudflare zetten',
 							wie: 'jij',
 							stappen: [
 								'Naam <code>MAIL_FROM</code>, waarde <code>HH Shops &lt;noreply@hh-shops.nl&gt;</code>, voor Production en Preview.',
@@ -608,11 +608,11 @@
 					taken: [
 						{
 							id: 'domein',
-							titel: 'Het domein aan Vercel koppelen',
+							titel: 'Het domein aan de Worker koppelen',
 							wie: 'jij',
 							stappen: [
-								'Vercel, het project, Settings, Domains. Voeg <code>hh-shops.nl</code> en <code>www.hh-shops.nl</code> toe.',
-								'Zet de DNS om naar wat Vercel aangeeft. Het A-record wijst nu nog naar de oude WordPress-server, 162.55.38.56.',
+								'Cloudflare, Workers &amp; Pages, hh-shops, Settings, Domains &amp; Routes. Voeg <code>hh-shops.nl</code> en <code>www.hh-shops.nl</code> toe.',
+								'Zet de DNS om naar wat Cloudflare aangeeft. Het A-record wijst nu nog naar de oude WordPress-server, 162.55.38.56.',
 								'Raak de MX-records <strong>niet</strong> aan. Jullie mail loopt via Microsoft 365 en moet blijven werken.',
 							],
 							waarom:
@@ -644,7 +644,7 @@
 								'Staat er <code>Disallow: /</code>? Dan komt het verzoek niet op hh-shops.nl binnen en klopt er iets niet aan het domein. Meld het, ga er niet overheen.',
 							],
 							waarom:
-								'De shop weigert met opzet geïndexeerd te worden op elk ander adres dan hh-shops.nl, zodat het testadres van Vercel niet naast de echte winkel in Google komt.',
+								'De shop weigert met opzet geïndexeerd te worden op elk ander adres dan hh-shops.nl, zodat het <code>workers.dev</code>-adres niet naast de echte winkel in Google komt.',
 						},
 						{
 							id: 'sitemap',

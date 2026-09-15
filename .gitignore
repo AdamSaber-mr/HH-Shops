@@ -34,3 +34,8 @@ pnpm-debug.log*
 
 # gegenereerd door npm run import:contactsheet
 data/catalogus/contactsheet.html
+
+# cloudflare
+.wrangler/
+.dev.vars
+worker-configuration.d.ts

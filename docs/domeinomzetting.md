@@ -36,14 +36,15 @@ twee: daar zit doorlooptijd bij een ander.
    met de KvK, de bankrekening en `https://hh-shops.nl` als website, en laat
    het verifiëren. Zet daarna iDEAL en creditcard aan en **Klarna uit** (die
    staat nu aan, en de collega heeft bevestigd dat hij er niet komt). De
-   livesleutel (`live_...`) gaat als `MOLLIE_API_KEY` in Vercel, alleen voor
+   livesleutel (`live_...`) gaat als `MOLLIE_API_KEY` naar Cloudflare
+   (`npx wrangler secret put MOLLIE_API_KEY`), alleen voor
    Production. Zonder sleutel weigert de shop in productie af te rekenen; dat
    is met opzet, zodat een klant nooit op een testpagina belandt.
 
 2. **Resend.** Meld `hh-shops.nl` aan en zet de DNS-records die Resend geeft.
    Resend gebruikt daarvoor een subdomein (`send.hh-shops.nl`), dus aan de
    bestaande SPF voor Microsoft 365 hoeft niets te veranderen. Zet daarna
-   `MAIL_FROM="HH Shops <noreply@hh-shops.nl>"` in Vercel. Zolang dit niet
+   `MAIL_FROM="HH Shops <noreply@hh-shops.nl>"` op Cloudflare. Zolang dit niet
    staat, gaan alle mails van de shop, ook de bestelbevestiging en de
    verzendmail, alleen naar het eigen adres van de accounthouder.
 
@@ -58,9 +59,13 @@ twee: daar zit doorlooptijd bij een ander.
 
    Na een paar weken rapporten kan `p=none` naar `p=quarantine`.
 
-4. **`CRON_SECRET` in Vercel**, voor Production en Preview. Zonder deze
+4. **`CRON_SECRET` op Cloudflare.** Let op: de dagelijkse cron loopt hier niet
+   meer langs, die komt binnen via `scheduled()` in `src/worker.ts`. Dit geheim
+   beveiligt alleen nog het handmatig aanroepen van
+   `/api/cron/bestellingen-opschonen`. Zonder deze
    variabele weigert `/api/cron/bestellingen-opschonen` elk verzoek, ook dat
-   van Vercel zelf, en blijft er dus niets opgeschoond: bestellingen die op
+   van het platform zelf, en blijft er niets opgeschoond langs die weg:
+   bestellingen die op
    een betaling bleven hangen houden hun voorraad vast. Een nieuwe waarde
    maken:
 
@@ -101,7 +106,7 @@ twee: daar zit doorlooptijd bij een ander.
 
 ## De omzetting zelf
 
-8. `hh-shops.nl` en `www.hh-shops.nl` als domein aan het Vercel-project
+8. `hh-shops.nl` en `www.hh-shops.nl` als custom domain aan de Worker
    koppelen en de DNS omzetten. Inloggen werkt daarna meteen: beide adressen
    staan al in `TOEGESTANE_HOSTS` en `VERTROUWDE_HERKOMSTEN`
    (`src/auth/create.ts`), en `src/auth/create.test.ts` houdt in de gaten dat

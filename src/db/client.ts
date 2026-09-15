@@ -14,14 +14,14 @@ export type { Database };
  * transacties. Bij het afrekenen in fase 4 moeten de bestelling en de
  * voorraadmutatie in een ondeelbare handeling.
  *
- * De pool wordt hergebruikt over warme starts heen. Dat mag omdat de
- * Vercel-adapter van Astro op de Node.js-runtime draait en die de module-scope
- * tussen requests vasthoudt. Het mag NIET op de Edge-runtime: daar overleeft een
- * WebSocket geen enkel request en wordt dit een verbindingslek. Zet dus nooit
- * `runtime: 'edge'` op een route die de database aanraakt.
+ * De pool wordt hergebruikt over warme starts heen, ook op Workers. Dat mag
+ * sinds connection.ts `poolQueryViaFetch` aanzet: gewone queries gaan dan als
+ * losse fetch en er staat tussen twee requests door geen socket open. Zie de
+ * uitleg daar; verwijder die regel niet, dan wordt dit alsnog een
+ * verbindingslek.
  *
- * Geen `neonConfig.webSocketConstructor`: vanaf Node 22 gebruikt de driver de
- * ingebouwde globale WebSocket. Daarom dwingt package.json engines.node af.
+ * Geen `neonConfig.webSocketConstructor`: Node vanaf 22 en workerd hebben
+ * allebei een ingebouwde globale WebSocket, en de driver pakt die zelf.
  */
 const globalForDb = globalThis as typeof globalThis & {
 	__hhShopsPool?: Pool;

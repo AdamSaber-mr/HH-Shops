@@ -22,7 +22,7 @@ export function getAuth(): Auth {
 	const secret = getSecret('BETTER_AUTH_SECRET');
 	if (!secret || secret.length < 32) {
 		throw new Error(
-			'BETTER_AUTH_SECRET ontbreekt of is korter dan 32 tekens. Lokaal: zet hem in .env. Op Vercel: bij de omgevingsvariabelen.',
+			'BETTER_AUTH_SECRET ontbreekt of is korter dan 32 tekens. Lokaal: zet hem in .dev.vars. Op Cloudflare: met `wrangler secret put`. Bij de omgevingsvariabelen.',
 		);
 	}
 

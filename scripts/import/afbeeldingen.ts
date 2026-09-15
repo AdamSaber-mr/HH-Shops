@@ -1,23 +1,23 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { list, put } from '@vercel/blob';
-import { verwerkBuffer } from '../../src/lib/media.ts';
+import { media } from '../../src/lib/media-node.ts';
 import { IMAGES_DIR } from './lezen.ts';
 import type { VerwerkteAfbeelding } from './types.ts';
 
 export { blobPathFor, formatBytes } from '../../src/lib/media.ts';
 
 /*
- * Afbeeldingen van de snapshot verwerken en uploaden naar Vercel Blob.
+ * Afbeeldingen van de snapshot verwerken en uploaden naar R2.
  *
- * De pijplijn zelf staat in src/lib/media.ts en is dezelfde als die van het
- * beheerpaneel. Hier zit alleen wat eigen is aan de import: lezen van schijf,
- * en overslaan wat al in Blob staat, zodat een tweede run niets opnieuw doet.
+ * De pijplijn zelf staat in src/lib/media-node.ts: sharp, inclusief de
+ * achtergrondcorrectie die het beheerpaneel niet heeft (zie src/lib/media.ts).
+ * Hier zit alleen wat eigen is aan de import: lezen van schijf, en overslaan
+ * wat al in R2 staat, zodat een tweede run niets opnieuw doet.
  */
 
 export async function verwerk(file: string, pathname: string): Promise<VerwerkteAfbeelding> {
 	const input = readFileSync(join(IMAGES_DIR, file));
-	const beeld = await verwerkBuffer(input);
+	const beeld = await media.verwerk(input);
 	return {
 		file,
 		pathname,
@@ -29,18 +29,9 @@ export async function verwerk(file: string, pathname: string): Promise<Verwerkte
 	};
 }
 
-/** Alles wat er al in Blob staat onder onze prefixen: pad naar URL. */
+/** Alles wat er al in R2 staat onder onze prefixen: pad naar URL. */
 export async function bestaandeBlobs(prefixes: string[]): Promise<Map<string, string>> {
-	const result = new Map<string, string>();
-	for (const prefix of prefixes) {
-		let cursor: string | undefined;
-		do {
-			const page = await list({ prefix: `${prefix}/`, cursor, limit: 1000 });
-			for (const blob of page.blobs) result.set(blob.pathname, blob.url);
-			cursor = page.hasMore ? page.cursor : undefined;
-		} while (cursor);
-	}
-	return result;
+	return media.lijst(prefixes);
 }
 
 /** Uploadt als het pad nog niet bestaat. Geeft de URL terug en of er geupload is. */
@@ -50,12 +41,7 @@ export async function zorgGeupload(
 ): Promise<{ url: string; uploaded: boolean }> {
 	const existing = bestaand.get(image.pathname);
 	if (existing) return { url: existing, uploaded: false };
-	const result = await put(image.pathname, image.buffer, {
-		access: 'public',
-		addRandomSuffix: false,
-		contentType: 'image/webp',
-		cacheControlMaxAge: 60 * 60 * 24 * 365,
-	});
-	bestaand.set(image.pathname, result.url);
-	return { url: result.url, uploaded: true };
+	const url = await media.bewaar(image.pathname, image.buffer);
+	bestaand.set(image.pathname, url);
+	return { url, uploaded: true };
 }

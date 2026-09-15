@@ -30,7 +30,7 @@ export const ROL_ADMIN = 'admin';
 /*
  * De adressen waarvan we een inlogpoging vertrouwen.
  *
- * Geen vaste baseURL: Vercel-previews hebben per deploy een ander adres.
+ * Geen vaste baseURL: elke preview-deploy heeft een ander adres.
  * Better Auth leidt hem af uit de aanvraag zolang de host in TOEGESTANE_HOSTS
  * staat, en accepteert een formulier-POST alleen van een herkomst in
  * VERTROUWDE_HERKOMSTEN.
@@ -49,8 +49,7 @@ export const ROL_ADMIN = 'admin';
 export const TOEGESTANE_HOSTS: readonly string[] = [
 	'hh-shops.nl',
 	'www.hh-shops.nl',
-	'hh-shops.vercel.app',
-	'*.vercel.app',
+	'*.workers.dev',
 	'localhost:4321',
 	'localhost:4322',
 	'localhost:4323',
@@ -59,8 +58,7 @@ export const TOEGESTANE_HOSTS: readonly string[] = [
 export const VERTROUWDE_HERKOMSTEN: readonly string[] = [
 	'https://hh-shops.nl',
 	'https://www.hh-shops.nl',
-	'https://hh-shops.vercel.app',
-	'https://*.vercel.app',
+	'https://*.workers.dev',
 	'http://localhost:4321',
 	'http://localhost:4322',
 	'http://localhost:4323',
@@ -68,10 +66,15 @@ export const VERTROUWDE_HERKOMSTEN: readonly string[] = [
 
 /*
  * Geldt alleen voor een host die niet in de lijst hierboven staat. Bewust het
- * Vercel-adres en niet hh-shops.nl: zolang dat domein naar WordPress wijst, is
- * een link daarheen het slechtste antwoord dat we kunnen geven.
+ * workers.dev-adres en niet hh-shops.nl: zolang dat domein naar WordPress
+ * wijst, is een link daarheen het slechtste antwoord dat we kunnen geven.
+ *
+ * NOG IN TE VULLEN. Het subdomein zie je pas bij de eerste `npm run deploy`,
+ * die drukt de URL af. Zet hem hieronder en pas create.test.ts mee aan. Tot
+ * dat moment wijzen herstel- en bevestigingslinks vanaf een onbekende host
+ * naar een adres dat niet bestaat.
  */
-export const TERUGVAL_ADRES = 'https://hh-shops.vercel.app';
+export const TERUGVAL_ADRES = 'https://hh-shops.SUBDOMEIN-NOG-INVULLEN.workers.dev';
 
 /** Hoe lang een herstellink werkt. Kort, want wie hem aanvraagt zit erop te wachten. */
 export const HERSTELLINK_MINUTEN = 60;
@@ -81,7 +84,7 @@ export const BEVESTIGINGSLINK_UREN = 24;
 export type AuthOptions = {
 	db: Database;
 	secret: string;
-	/** Uit te zetten in tests. Op Vercel altijd aan, met opslag in de database. */
+	/** Uit te zetten in tests. Uitgerold altijd aan, met opslag in de database. */
 	rateLimit?: boolean;
 	/** Zonder mailer worden mails gelogd in plaats van verstuurd. */
 	mail?: Mailer;

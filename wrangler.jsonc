@@ -1,0 +1,50 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "hh-shops",
+
+	// Een eigen ingang in plaats van die van de adapter, want de dagelijkse cron
+	// van Cloudflare roept `scheduled()` aan en dat is geen HTTP-verzoek. Zie
+	// src/worker.ts; het gewone renderen gaat daar door naar `handle()`.
+	"main": "./src/worker.ts",
+
+	"compatibility_date": "2026-09-14",
+	// Buffer, node:crypto en wat pdf-lib en better-auth aan node:-modules raken.
+	"compatibility_flags": ["nodejs_compat"],
+
+	// De database staat in Neon eu-central-1. Smart Placement zet de Worker bij
+	// de database in plaats van bij de bezoeker; dat scheelt bij een pagina die
+	// meerdere queries achter elkaar doet, en dat doen ze hier allemaal.
+	"placement": { "mode": "smart" },
+
+	// Niet geheim, dus gewoon hier. src/lib/bestellen/server.ts leest hem om te
+	// bepalen of hij op de echte winkel draait; .dev.vars zet hem lokaal terug
+	// op "ontwikkel".
+	"vars": {
+		"OMGEVING": "productie"
+	},
+
+	// Product- en categoriefoto's. De binding heet MEDIA; src/lib/media-workers.ts
+	// zoekt hem onder die naam.
+	"r2_buckets": [
+		{
+			"binding": "MEDIA",
+			"bucket_name": "hh-shops-media"
+		}
+	],
+
+	// De beeldoptimalisatie van de storefront (via de adapter) en de verwerking
+	// bij het uploaden (src/lib/media-workers.ts) gebruiken allebei deze binding.
+	"images": {
+		"binding": "IMAGES"
+	},
+
+	// Elke nacht om 4:00 UTC: bestellingen opruimen die op een betaling blijven
+	// hangen. Stond eerder in vercel.json.
+	"triggers": {
+		"crons": ["0 4 * * *"]
+	},
+
+	"observability": {
+		"enabled": true
+	}
+}

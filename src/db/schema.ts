@@ -80,7 +80,7 @@ export const categories = pgTable(
 		name: text('name').notNull(),
 		description: text('description'),
 		// De kaartfoto (5:4) voor de startpagina en het categorieoverzicht,
-		// in Vercel Blob. Breedte en hoogte zijn nodig voor de beeldoptimalisatie
+		// in R2. Breedte en hoogte zijn nodig voor de beeldoptimalisatie
 		// van externe foto's en tegen verspringen tijdens het laden.
 		imageUrl: text('image_url'),
 		imageAlt: text('image_alt'),

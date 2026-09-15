@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { eq } from 'drizzle-orm';
 import { categories } from '../src/db/schema.ts';
 import { verwerkEnUpload } from '../src/lib/admin/categorieen.ts';
+import { media } from '../src/lib/media-node.ts';
 import { closeDb, openDb } from './db.ts';
 
 /*
@@ -118,7 +119,10 @@ try {
 			const buffer = await lees(`${oudeMap}/src/assets/categorieen/${c.slug}.png`);
 			const alt = KAART_ALT[c.slug];
 			if (buffer && alt) {
-				const foto = await verwerkEnUpload('kaart', c.slug, { buffer, naam: `${c.slug}.png` });
+				const foto = await verwerkEnUpload(media, 'kaart', c.slug, {
+					buffer,
+					naam: `${c.slug}.png`,
+				});
 				Object.assign(set, {
 					imageUrl: foto.url,
 					imageAlt: alt,
@@ -133,7 +137,10 @@ try {
 		if (!c.bannerUrl) {
 			const buffer = await lees(`${oudeMap}/src/assets/categorie-banners/${c.slug}.png`);
 			if (buffer && tekst) {
-				const foto = await verwerkEnUpload('banner', c.slug, { buffer, naam: `${c.slug}.png` });
+				const foto = await verwerkEnUpload(media, 'banner', c.slug, {
+					buffer,
+					naam: `${c.slug}.png`,
+				});
 				Object.assign(set, {
 					bannerUrl: foto.url,
 					bannerAlt: tekst.bannerAlt,

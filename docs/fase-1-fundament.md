@@ -3,6 +3,15 @@
 > Uitwerking van fase 1 uit [PLAN-VAN-AANPAK.md](../PLAN-VAN-AANPAK.md).
 > Dit document gaat wel gedetailleerd in op het hoe, omdat elke latere fase hierop landt.
 
+> **Achterhaald op één punt: de hosting.** Dit document beschrijft de situatie
+> op het moment van bouwen, en toen draaide alles op Vercel. Op 14-09-2026 is
+> het project overgezet naar Cloudflare Workers: `@astrojs/cloudflare` in plaats
+> van `@astrojs/vercel`, R2 in plaats van Vercel Blob, Cloudflare Images in
+> plaats van de beeldoptimalisatie van Vercel, en `.dev.vars` plus
+> `wrangler secret` in plaats van de omgevingsvariabelen van Vercel. Wat hier
+> over Vercel staat blijft als verslag kloppen, maar volg het niet op als
+> instructie. De actuele opzet staat in `wrangler.jsonc` en `.env.example`.
+
 ## Context
 
 Het project is nu nog de kale Astro-starter: drie voorbeeldbestanden, geen adapter, geen

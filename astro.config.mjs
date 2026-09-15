@@ -1,23 +1,28 @@
 // @ts-check
-import vercel from '@astrojs/vercel';
+import cloudflare from '@astrojs/cloudflare';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, envField } from 'astro/config';
 import icon from 'astro-icon';
 
 /*
- * De .env ook in process.env, voor `astro dev`. Vite zet niet-geprefixte
- * variabelen alleen in import.meta.env, maar de Blob-SDK leest process.env.
- * Op Vercel staan ze daar al; in CI is er geen .env en gebeurt er niets.
+ * Geheimen komen NIET meer uit .env. De Cloudflare-adapter draait `astro dev`
+ * en `astro preview` op workerd, en die leest `.dev.vars`. In productie zet
+ * `wrangler secret put` ze. De .env blijft alleen voor drizzle-kit en de losse
+ * scripts in scripts/, die buiten de Worker om draaien.
  */
-try {
-	process.loadEnvFile('.env');
-} catch {
-	// Geen .env, bijvoorbeeld in CI of op Vercel.
-}
 
-// Alleen bij `astro build`: in de dev-server laat Vite CommonJS-pakketten
-// beter extern, daar werkt require van ESM gewoon (Node 24).
-const isBuild = process.argv.includes('build');
+/*
+ * `astro dev` draait op workerd en gebruikt daar de RUNTIME-beeldservice. De
+ * Images-binding struikelt daar over een lokaal bestand: voor src/assets/logo.png
+ * maakt hij een /_image-URL zonder formaatparameter, die endpoint antwoordt met
+ * 400 "Unsupported format: null", en omdat Astro de HTML streamt breekt de
+ * respons dan af midden in de kop. Je krijgt een halve pagina, status 200, en
+ * niets in de logs.
+ *
+ * In de gebouwde Worker speelt dat niet (daar is de pagina compleet), dus dit
+ * geldt alleen voor de dev-server. Vandaar deze schakelaar.
+ */
+const isDev = process.argv.includes('dev');
 
 // https://astro.build/config
 export default defineConfig({
@@ -29,54 +34,58 @@ export default defineConfig({
 	// Pagina's die wel statisch mogen, zetten zelf `export const prerender = true`.
 	output: 'server',
 
-	adapter: vercel({
-		// Vercel doet de afbeeldingsoptimalisatie, niet onze eigen functie.
-		imageService: true,
-
-		// LET OP: zodra `imagesConfig` gezet is, negeert de adapter
-		// `image.domains` en `image.remotePatterns` uit de Astro-config.
-		// Die horen dus hierbinnen.
-		imagesConfig: {
-			// Elke gevraagde breedte wordt afgerond naar de dichtstbijzijnde
-			// waarde in deze lijst. De standaardlijst begint bij 640, waardoor
-			// een thumbnail van 240px een bestand van 640px zou krijgen. Op een
-			// project waarvan het hoofdprobleem 22 MB aan afbeeldingen is, is dat
-			// het verkeerde vertrekpunt.
-			sizes: [64, 128, 240, 320, 480, 640, 828, 1080, 1200, 1920],
-			formats: ['image/webp'],
-			minimumCacheTTL: 60 * 60 * 24 * 30,
-			domains: [],
-			// Product- en categoriefoto's staan in Vercel Blob. Zonder deze patronen
-			// weigert de beeldoptimalisatie ze, want ze komen van een ander domein.
-			remotePatterns: [
-				{
-					protocol: 'https',
-					hostname: '**.public.blob.vercel-storage.com',
-					pathname: '/producten/**',
-				},
-				{
-					protocol: 'https',
-					hostname: '**.public.blob.vercel-storage.com',
-					pathname: '/categorieen/**',
-				},
-			],
-		},
+	adapter: cloudflare({
+		// Cloudflare Images doet de optimalisatie, via de IMAGES-binding uit
+		// wrangler.jsonc. Dit is ook de standaard van de adapter, maar hij staat
+		// er expliciet omdat het de opvolger is van `imageService: true` van
+		// Vercel en je anders niet ziet waar de optimalisatie gebeurt.
+		//
+		// `build: 'compile'` laat het bouwen van de paar statische pagina's aan
+		// sharp over, op je eigen machine. Alleen wat op verzoek gerenderd wordt
+		// gaat langs de binding.
+		// In dev doet sharp het lokaal (zie isDev hierboven); daarbuiten verwerkt
+		// de Images-binding op verzoek, en bouwt sharp de paar statische pagina's.
+		imageService: isDev ? 'compile' : { build: 'compile', runtime: 'cloudflare-binding' },
 	}),
 
-	// LET OP: dit staat er NAAST de `imagesConfig` van de adapter, en dat is
-	// geen duplicatie. `imagesConfig` vertelt Vercel wat het mag optimaliseren;
-	// dit vertelt Astro zelf welke externe hosts het vertrouwt. Zonder dit blok
-	// antwoordt het beeld-endpoint met 403 en laadt er geen enkele productfoto.
+	// Welke externe hosts Astro zelf vertrouwt voor <Image />. Product- en
+	// categoriefoto's staan in R2 en komen dus van een ander domein; zonder deze
+	// patronen antwoordt het beeld-endpoint met 403 en laadt er geen enkele
+	// productfoto.
+	//
+	// De hosts hieronder staan voluit: een wildcard mag van Astro alleen vooraan,
+	// en `**.r2.dev` zou elke R2-bucket ter wereld vertrouwen.
+	//
+	// TWEE hosts, tijdelijk. De eerste is die van R2_PUBLIC_URL, waar nieuwe
+	// uploads heen gaan. De tweede is de oude Vercel Blob-store: de 252 foto's
+	// die nu in de database staan wijzen daar nog naartoe, want die rijen komen
+	// uit de tijd voor de overstap. Zonder die tweede host haalt Astro ze niet
+	// door de beeldoptimalisatie en blokkeert de CSP ze in productie: een winkel
+	// zonder foto's.
+	//
+	// Weg te halen zodra `npm run fotos:naar-r2` gedraaid heeft en geen enkele
+	// rij meer naar blob.vercel-storage.com wijst. Datzelfde geldt voor
+	// OUDE_FOTO_HOST in src/middleware.ts.
 	image: {
 		remotePatterns: [
 			{
 				protocol: 'https',
-				hostname: '**.public.blob.vercel-storage.com',
+				hostname: 'pub-2c35c155fd4b4b259aa441ad1c79c2e9.r2.dev',
 				pathname: '/producten/**',
 			},
 			{
 				protocol: 'https',
-				hostname: '**.public.blob.vercel-storage.com',
+				hostname: 'pub-2c35c155fd4b4b259aa441ad1c79c2e9.r2.dev',
+				pathname: '/categorieen/**',
+			},
+			{
+				protocol: 'https',
+				hostname: 'qjzaxiyu1pfuckle.public.blob.vercel-storage.com',
+				pathname: '/producten/**',
+			},
+			{
+				protocol: 'https',
+				hostname: 'qjzaxiyu1pfuckle.public.blob.vercel-storage.com',
 				pathname: '/categorieen/**',
 			},
 		],
@@ -140,8 +149,10 @@ export default defineConfig({
 	],
 
 	security: {
-		// Foto-uploads in het beheerpaneel gaan als een action-body. Standaard is 1 MB;
-		// Vercel accepteert 4,5 MB per aanvraag, dus 4 MB laat ruimte voor de rest.
+		// Foto-uploads in het beheerpaneel gaan als een action-body. Standaard is
+		// 1 MB. Workers accepteert er 100, dus de rem zit hier niet meer in het
+		// platform maar in wat redelijk is voor een productfoto; MAX_BESTAND in
+		// src/lib/admin/fotos.ts staat op dezelfde 4 MB.
 		actionBodySizeLimit: 4 * 1024 * 1024,
 		// De controle op de herkomst van formulieren (CSRF) doet src/middleware.ts
 		// zelf, met dezelfde regels als Astro, maar met een uitzondering voor de
@@ -162,36 +173,37 @@ export default defineConfig({
 		build: {
 			// Kleine scripts niet inline in de HTML zetten, om dezelfde reden.
 			assetsInlineLimit: 0,
+
+			rollupOptions: {
+				output: {
+					/*
+					 * drizzle-orm in EEN chunk houden.
+					 *
+					 * Binnen dat pakket zit een circulaire import: int.common.js doet
+					 * `class PgIntColumnBaseBuilder extends PgColumnBuilder`, en die
+					 * ouder komt uit common.js. Node loste dat vanzelf op, maar zodra
+					 * rollup de twee over aparte chunks verdeelt kan de verkeerde
+					 * eerst aan de beurt komen. Dan is de ouder `undefined` en start de
+					 * Worker niet meer op: "Class extends value undefined is not a
+					 * constructor or null". Dat merk je niet bij het bouwen, alleen bij
+					 * het draaien, en dan doet geen enkele pagina het nog.
+					 *
+					 * In een chunk staat de volgorde vast en is er niets te verdelen.
+					 */
+					manualChunks(id) {
+						if (id.includes('node_modules/drizzle-orm')) return 'drizzle-orm';
+					},
+				},
+			},
 		},
-		ssr: {
-			// sanitize-html is CommonJS en laadt htmlparser2, dat alleen nog als ESM
-			// bestaat. Node 24 kan dat lokaal (require van ESM), de Node-runtime van
-			// Vercel niet: daar gaf het een 500 op elke action. Meebundelen in de
-			// serverbundel haalt dat require tijdens het draaien weg.
-			// De hele boom, anders blijft er een require van een van de
-			// afhankelijkheden over die Vercel niet meeneemt in de functie.
-			noExternal: isBuild
-				? [
-						'dayjs',
-						'deepmerge',
-						'dom-serializer',
-						'domelementtype',
-						'domhandler',
-						'domutils',
-						'entities',
-						'escape-string-regexp',
-						'htmlparser2',
-						'is-plain-object',
-						'launder',
-						'nanoid',
-						'parse-srcset',
-						'picocolors',
-						'postcss',
-						'sanitize-html',
-						'source-map-js',
-					]
-				: [],
-		},
+		// GEEN `ssr.noExternal` hier. Voor Vercel stond er een handmatige lijst
+		// (sanitize-html en zijn hele boom, omdat de Node-runtime daar een require
+		// van ESM niet aankon). Op Workers is die reden weg, maar hem vervangen
+		// door `noExternal: true` is fout gebleken: dan bundelt Vite ook
+		// drizzle-orm zelf, raakt een circulaire import daarbinnen verkeerd
+		// geordend, en start de Worker niet meer op met
+		// "Class extends value undefined" in pg-core/columns/int.common.js.
+		// De Cloudflare-plugin bepaalt zelf wat de bundel in moet.
 	},
 
 	env: {
@@ -199,6 +211,13 @@ export default defineConfig({
 			// `access: 'secret'` garandeert dat deze waarde nooit in een
 			// browserbundel terechtkomt.
 			DATABASE_URL: envField.string({ context: 'server', access: 'secret' }),
+			// "productie" op de echte winkel, iets anders lokaal en op previews.
+			// wrangler.jsonc zet hem; .dev.vars overschrijft hem lokaal. Dit is de
+			// opvolger van VERCEL_ENV.
+			OMGEVING: envField.string({ context: 'server', access: 'secret', optional: true }),
+			// De publieke basis waaronder R2 de foto's serveert, zonder slotslash.
+			// Nu de r2.dev-URL van de bucket; bij de livegang een eigen domein.
+			R2_PUBLIC_URL: envField.string({ context: 'server', access: 'secret' }),
 			// Ondertekent de sessiecookies van het beheerpaneel. Zie .env.example.
 			BETTER_AUTH_SECRET: envField.string({ context: 'server', access: 'secret' }),
 			// Mail via Resend. Zonder sleutel worden mails gelogd in plaats van
@@ -211,22 +230,17 @@ export default defineConfig({
 			MOLLIE_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
 			MOLLIE_API_TEST_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
 			MOLLIE_MODUS: envField.string({ context: 'server', access: 'secret', optional: true }),
-			// Laat de webhook van Mollie een beveiligde preview bereiken.
-			VERCEL_AUTOMATION_BYPASS_SECRET: envField.string({
-				context: 'server',
-				access: 'secret',
-				optional: true,
-			}),
 			// Waar de eigenaar bericht krijgt van een bestelling; standaard info@hh-shops.nl.
 			BESTELLING_MAIL_NAAR: envField.string({
 				context: 'server',
 				access: 'secret',
 				optional: true,
 			}),
-			// De dagelijkse cron van Vercel (vercel.json) stuurt dit geheim mee als
-			// `Authorization: Bearer <geheim>`. Zonder geheim weigert
-			// /api/cron/bestellingen-opschonen elk verzoek, ook dat van Vercel zelf.
-			// Optioneel, zodat lokaal draaien en CI geen geheim nodig hebben.
+			// De dagelijkse cron. Cloudflare roept `scheduled()` in src/worker.ts
+			// aan, en die heeft geen geheim nodig: die aanroep komt niet van het
+			// open internet. Dit geheim beveiligt alleen nog het handmatig
+			// aanroepen van /api/cron/bestellingen-opschonen over HTTP. Zonder
+			// geheim weigert die route elk verzoek.
 			CRON_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
 		},
 		// `validateSecrets` blijft bewust op de standaard `false`. Geheimen

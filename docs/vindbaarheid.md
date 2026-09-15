@@ -71,8 +71,8 @@ was. Dat kost een gewone pagina niets, en het werkt ongeacht wie die 404 gaf:
 `?attribute_maten=38`: dat pad bestaat gewoon, dus daar komt nooit een 404 uit
 en wordt de querystring vooraf opgeschoond. Dat kost geen query.
 
-**Alleen `hh-shops.nl` mag in Google.** Elk ander adres, dus het testadres van
-Vercel en elke preview, krijgt een robots.txt die alles weigert, en daar
+**Alleen `hh-shops.nl` mag in Google.** Elk ander adres, dus het
+`workers.dev`-adres en elke preview, krijgt een robots.txt die alles weigert, en daar
 bestaat de sitemap niet. Zo staat de winkel nooit twee keer in de index en kan
 niemand op het testadres bestellen. Bij de domeinomzetting hoeft hier dus
 niets omgezet te worden: het adres bepaalt het.

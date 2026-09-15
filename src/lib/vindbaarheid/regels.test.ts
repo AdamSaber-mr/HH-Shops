@@ -9,8 +9,8 @@ describe('magGeindexeerd', () => {
 		expect(magGeindexeerd('hh-shops.nl:443')).toBe(true);
 	});
 	it('weigert het testadres, de previews en het oude domein met een voorvoegsel', () => {
-		expect(magGeindexeerd('hh-shops.vercel.app')).toBe(false);
-		expect(magGeindexeerd('hh-shops-git-backend.vercel.app')).toBe(false);
+		expect(magGeindexeerd('hh-shops.test.workers.dev')).toBe(false);
+		expect(magGeindexeerd('hh-shops-preview.test.workers.dev')).toBe(false);
 		expect(magGeindexeerd('localhost:4323')).toBe(false);
 		expect(magGeindexeerd('nep-hh-shops.nl')).toBe(false);
 	});
@@ -28,7 +28,7 @@ describe('robotsTekst', () => {
 		expect(robotsTekst('https://hh-shops.nl', true)).not.toContain('Disallow: /*?');
 	});
 	it('elders: alles dicht en geen sitemap', () => {
-		const tekst = robotsTekst('https://hh-shops.vercel.app', false);
+		const tekst = robotsTekst('https://hh-shops.test.workers.dev', false);
 		expect(tekst).toContain('Disallow: /');
 		expect(tekst).not.toContain('Allow: /');
 		expect(tekst).not.toContain('Sitemap:');

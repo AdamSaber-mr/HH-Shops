@@ -6,7 +6,7 @@ import { Image } from 'astro:assets';
  *
  * In fase 1 staan de testfoto's lokaal in public/. Astro kan die niet
  * optimaliseren: alleen geimporteerde en externe afbeeldingen gaan door de
- * beeldverwerking heen. Vanaf stap 7 staan ze in Vercel Blob en zijn ze extern,
+ * beeldverwerking heen. Vanaf stap 7 staan ze in R2 en zijn ze extern,
  * en dan wel.
  *
  * Dit component kiest zelf het juiste pad, zodat de aanroepende pagina er niets
@@ -36,7 +36,7 @@ const {
 	height,
 	widths,
 	sizes,
-	// Zonder expliciete kwaliteit zet de Vercel-adapter hem stil op 100, en dat
+	// Zonder expliciete kwaliteit gaat hij stil naar 100, en dat
 	// is bijna verliesloos. Op een project waarvan het hoofdprobleem 22 MB aan
 	// afbeeldingen is, is dat het verkeerde vertrekpunt.
 	quality = 72,

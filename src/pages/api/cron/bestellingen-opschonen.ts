@@ -5,10 +5,14 @@ import { schoonWachtendeBestellingenOp } from '../../../lib/bestellen/opschonen.
 import { getBetaalkoppeling } from '../../../lib/bestellen/server.ts';
 
 /*
- * De dagelijkse cron van Vercel (zie vercel.json). Vercel stuurt
- * `Authorization: Bearer <CRON_SECRET>` mee als die variabele in het
- * project staat; zonder geldig geheim doet deze route niets. Zo kan
- * niemand van buiten bestellingen laten annuleren.
+ * Het opschonen met de hand aftrappen, over HTTP.
+ *
+ * De dagelijkse cron loopt NIET meer hierlangs: Cloudflare roept `scheduled()`
+ * in src/worker.ts aan, en dat is geen HTTP-verzoek (zie wrangler.jsonc,
+ * triggers.crons). Deze route blijft bestaan om het handmatig te kunnen doen,
+ * en staat daarmee wel voor het hele internet open. Vandaar het geheim:
+ * `Authorization: Bearer <CRON_SECRET>`, en zonder geldig geheim doet hij
+ * niets. Zo kan niemand van buiten bestellingen laten annuleren.
  */
 export const prerender = false;
 

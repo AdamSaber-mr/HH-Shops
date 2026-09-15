@@ -1,4 +1,5 @@
 import { getActionContext } from 'astro:actions';
+import { getSecret } from 'astro:env/server';
 import { defineMiddleware } from 'astro:middleware';
 import type { APIContext, MiddlewareNext } from 'astro';
 import { getAuth } from './auth/server.ts';
@@ -118,27 +119,78 @@ function verbodenHerkomst(request: Request, url: URL): boolean {
  * het afrekenformulier eindigt met een doorverwijzing naar mollie.com en
  * Chrome controleert die tegen form-action.
  */
-const CSP = [
-	"default-src 'self'",
-	"script-src 'self'",
-	"style-src 'self' 'unsafe-inline'",
-	"img-src 'self' data: https://*.public.blob.vercel-storage.com",
-	"font-src 'self'",
-	"connect-src 'self'",
-	"form-action 'self' https://www.mollie.com https://*.mollie.com",
-	"frame-ancestors 'none'",
-	"base-uri 'self'",
-	"object-src 'none'",
-	'upgrade-insecure-requests',
-].join('; ');
+/*
+ * De host van de foto's komt uit R2_PUBLIC_URL en staat dus niet vast: nu de
+ * r2.dev-URL van de bucket, bij de livegang een eigen domein. Hem hier afleiden
+ * in plaats van overtypen voorkomt het stille geval waarin de CSP nog naar de
+ * oude host wijst en er geen enkele productfoto meer laadt.
+ */
+function fotoHost(): string {
+	const url = getSecret('R2_PUBLIC_URL');
+	if (!url) return '';
+	try {
+		return new URL(url).origin;
+	} catch {
+		return '';
+	}
+}
+
+/*
+ * De oude Vercel Blob-store. De 252 fotorijen die nu in de database staan
+ * wijzen daar nog naartoe; die zijn meegekomen met de dump uit de Vercel-tijd.
+ * Zonder deze host blokkeert de CSP elke productfoto in productie.
+ *
+ * Weg te halen zodra `npm run fotos:naar-r2` gedraaid heeft. Hetzelfde geldt
+ * voor de bijbehorende remotePatterns in astro.config.mjs.
+ */
+const OUDE_FOTO_HOST = 'https://qjzaxiyu1pfuckle.public.blob.vercel-storage.com';
+
+function bouwCsp(): string {
+	return [
+		"default-src 'self'",
+		"script-src 'self'",
+		"style-src 'self' 'unsafe-inline'",
+		`img-src 'self' data: ${fotoHost()} ${OUDE_FOTO_HOST}`.replace(/\s+/g, ' ').trim(),
+		"font-src 'self'",
+		"connect-src 'self'",
+		"form-action 'self' https://www.mollie.com https://*.mollie.com",
+		"frame-ancestors 'none'",
+		"base-uri 'self'",
+		"object-src 'none'",
+		'upgrade-insecure-requests',
+	].join('; ');
+}
+
+/**
+ * Een Response waarvan de headers aangepast mogen worden.
+ *
+ * Alles wat van de ASSETS-binding van Cloudflare komt (een statisch bestand,
+ * een geprerenderde foutpagina) heeft ONVERANDERLIJKE headers. Er iets op
+ * zetten gooit "Can't modify immutable headers", en dat wordt een 500 op een
+ * pagina die verder prima was. Op de Node-runtime van Vercel bestond dat
+ * onderscheid niet en kon je overal op schrijven.
+ *
+ * De kopie deelt de body, die wordt dus niet ingelezen of gebufferd; alleen de
+ * headers zijn nieuw. Bij een status die geen body mag hebben (204, 304) gaat
+ * er expliciet `null` in, anders weigert de constructor.
+ */
+function aanpasbaar(antwoord: Response): Response {
+	const zonderBody = antwoord.status === 204 || antwoord.status === 304;
+	return new Response(zonderBody ? null : antwoord.body, antwoord);
+}
 
 function zetBeveiligingsheaders(headers: Headers): void {
 	headers.set('X-Content-Type-Options', 'nosniff');
 	headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 	headers.set('X-Frame-Options', 'DENY');
 	headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
-	// Strict-Transport-Security zet Vercel zelf, met preload.
-	if (import.meta.env.PROD) headers.set('Content-Security-Policy', CSP);
+	// Vercel zette Strict-Transport-Security zelf; Cloudflare doet dat niet
+	// standaard, dus zetten we hem hier. Twee jaar, subdomeinen mee, en
+	// `preload` zodat hij aangemeld kan worden op hstspreload.org.
+	if (import.meta.env.PROD) {
+		headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+		headers.set('Content-Security-Policy', bouwCsp());
+	}
 }
 
 /*
@@ -184,6 +236,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	let antwoord = await afhandelen(context, next);
 	if (antwoord.status === 404) antwoord = (await oudeLink(context)) ?? antwoord;
+	antwoord = aanpasbaar(antwoord);
 	// Eigen Referrer-Policy van een pagina (de herstelpagina) blijft staan.
 	const eigenReferrer = antwoord.headers.get('Referrer-Policy');
 	zetBeveiligingsheaders(antwoord.headers);

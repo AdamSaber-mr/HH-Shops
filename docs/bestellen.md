@@ -111,18 +111,19 @@ omdat die geen uitzonderingen kent; `src/middleware.ts` doet dezelfde
 controle zelf, met `/api/mollie/` als enige uitzondering. De webhook
 bewijst zichzelf doordat hij de status bij Mollie navraagt.
 
-**Previews.** Vercel-previews staan achter Deployment Protection. De
-webhook-URL krijgt daar `?x-vercel-protection-bypass=<geheim>` mee
-(`VERCEL_AUTOMATION_BYPASS_SECRET`). Lokaal kan Mollie ons niet bereiken;
-dan geen webhook, en de statuspagina vraagt zelf na.
+**Previews.** Een preview op Workers staat gewoon open, dus Mollie komt er
+zonder meer bij. Op Vercel zat daar nog een bypass-geheim omheen, omdat een
+preview daar achter een inlogscherm stond; dat is bij de overstap vervallen.
+Lokaal kan Mollie ons niet bereiken; dan geen webhook, en de statuspagina
+vraagt zelf na.
 
 ## Instellen
 
 | Variabele | Waar | Waarvoor |
 |---|---|---|
-| `MOLLIE_API_KEY` | `.env`, Vercel preview en productie | `test_...` tot de livegang, daarna `live_...`. `MOLLIE_API_TEST_KEY` wordt ook gelezen |
+| `MOLLIE_API_KEY` | `.dev.vars`, en `wrangler secret put` op Cloudflare | `test_...` tot de livegang, daarna `live_...`. `MOLLIE_API_TEST_KEY` wordt ook gelezen |
 | `MOLLIE_MODUS=nep` | lokaal | de nagebootste Mollie afdwingen, ook met sleutel |
-| `VERCEL_AUTOMATION_BYPASS_SECRET` | `.env`, door Vercel gezet op previews | webhook op een preview |
+| `OMGEVING` | `wrangler.jsonc` zet `productie`; `.dev.vars` zet lokaal iets anders | bepaalt of de nagebootste Mollie mag draaien |
 | `BESTELLING_MAIL_NAAR` | optioneel | eigenaar-adres; standaard info@hh-shops.nl |
 | `RESEND_API_KEY` | zie docs/klantaccounts.md | de mails |
 
@@ -131,7 +132,7 @@ productie weigert de koppeling te starten zonder Mollie-sleutel.
 
 Voor de livegang: in het Mollie-dashboard de gegevens van de winkel
 (KvK, bankrekening, website) laten controleren, daar iDEAL en creditcard
-aanzetten en Klarna uit laten, de livesleutel in Vercel zetten, en een
+aanzetten en Klarna uit laten, de livesleutel met `wrangler secret put` zetten, en een
 bestelling van een paar euro echt doen en terugbetalen.
 
 ## Voor de privacyverklaring
@@ -147,7 +148,7 @@ het kan noemen:
 - Verwijdert een klant zijn account, dan verdwijnen account, favorieten,
   winkelmand en bezorgadres. De bestellingen blijven bewaard, losgekoppeld
   van het account (`user_id` wordt leeg), met de gegevens die erop staan.
-- Verwerkers: Vercel (hosting, Europa), Neon (database, Frankfurt), Mollie
+- Verwerkers: Cloudflare (hosting en foto-opslag, Europa), Neon (database, Frankfurt), Mollie
   (betaling; ziet naam, bedrag en omschrijving, nooit onze wachtwoorden),
   Resend (mail), en de vervoerder die het pakket bezorgt (naam en adres).
 - Cookies: alleen functioneel (sessie, winkelmand, favorieten, meldingen).

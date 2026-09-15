@@ -18,14 +18,14 @@ describe('escapeHtml', () => {
 describe('wachtwoordHerstellen', () => {
 	const mail = wachtwoordHerstellen({
 		naam: 'Piet <script>Jansen',
-		url: 'https://hh-shops.vercel.app/account/wachtwoord-herstellen?token=abc&x=1',
+		url: 'https://hh-shops.test.workers.dev/account/wachtwoord-herstellen?token=abc&x=1',
 		geldigMinuten: 60,
 	});
 
 	it('zet de link in de tekst en in de HTML', () => {
 		expect(mail.tekst).toContain('?token=abc&x=1');
 		expect(mail.html).toContain(
-			'href="https://hh-shops.vercel.app/account/wachtwoord-herstellen?token=abc&amp;x=1"',
+			'href="https://hh-shops.test.workers.dev/account/wachtwoord-herstellen?token=abc&amp;x=1"',
 		);
 	});
 

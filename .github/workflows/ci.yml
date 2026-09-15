@@ -25,7 +25,7 @@ jobs:
       - name: Node installeren
         uses: actions/setup-node@v7
         with:
-          # Gelijk aan de runtime die de Vercel-adapter kiest (nodejs24.x).
+          # Bouwen en testen gebeurt op Node; de Worker zelf draait op workerd.
           node-version: 24
           cache: npm
 

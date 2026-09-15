@@ -128,7 +128,7 @@ daarna worden de cookies gewist. Id's die niet bestaan worden overgeslagen.
 
 Dezelfde `DATABASE_URL` en `BETTER_AUTH_SECRET` als het beheerpaneel, plus
 voor de mail `RESEND_API_KEY` (alleen verzendrechten, uit het eigen
-Resend-account van HH Shops) in `.env` en in Vercel voor preview en
+Resend-account van HH Shops) in `.dev.vars` en op Cloudflare voor
 productie. Zonder sleutel, of met `MAIL_MODUS=log`, komen de mails in
 `astro dev logs` in plaats van in een postvak; zo zijn de stromen lokaal te
 testen. `MAIL_FROM` blijft leeg tot hh-shops.nl bij Resend geverifieerd is
@@ -139,7 +139,7 @@ Let op: Better Auth vangt een fout bij het versturen zelf af. Weigert
 Resend een mail (bijvoorbeeld omdat het domein nog niet geverifieerd is en
 het adres niet van de accounthouder is), dan ziet de bezoeker toch "we
 hebben een mail gestuurd" en staat de fout alleen in de logs (`astro dev
-logs`, op Vercel de runtime logs). Controleer na het omzetten van
+logs`, op Cloudflare `npx wrangler tail`). Controleer na het omzetten van
 `MAIL_FROM` dus een keer echt een wachtwoord-vergeten.
 
 Migratie 0004 draaien met `npm run db:migrate` op elke database waar de

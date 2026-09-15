@@ -15,7 +15,8 @@ import { pasBetaalstatusToe } from './status.ts';
  * Per bestelling eerst navragen bij Mollie: alsnog betaald wordt betaald
  * (de mails gaan bij de volgende controle in het paneel of de statuspagina),
  * nog open blijft staan, al het andere wordt geannuleerd met de voorraad
- * terug. Draait als Vercel-cron (src/pages/api/cron/) en als script.
+ * terug. Draait als Cloudflare-cron (scheduled() in src/worker.ts), als
+ * handmatige route (src/pages/api/cron/) en als script.
  */
 
 export type Opschoonregel = {

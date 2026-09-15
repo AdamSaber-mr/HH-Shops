@@ -5,6 +5,7 @@ import * as categorieen from '../lib/admin/categorieen.ts';
 import { MAX_BESTAND, TOEGESTANE_TYPES } from '../lib/admin/fotos.ts';
 import { InvoerFout } from '../lib/admin/producten-schrijven.ts';
 import { parseGeheel } from '../lib/admin/validatie.ts';
+import { media } from '../lib/media-workers.ts';
 import {
 	altProblems,
 	cleanName,
@@ -134,8 +135,15 @@ export const categorieenActions = {
 		handler: async ({ id, soort, bestand, alt }, context) => {
 			vereisBeheerder(context);
 			try {
-				const buffer = Buffer.from(await bestand.arrayBuffer());
-				await categorieen.fotoUploaden(getDb(), id, soort, { buffer, naam: bestand.name }, alt);
+				const buffer = new Uint8Array(await bestand.arrayBuffer());
+				await categorieen.fotoUploaden(
+					getDb(),
+					media,
+					id,
+					soort,
+					{ buffer, naam: bestand.name },
+					alt,
+				);
 				return { id };
 			} catch (error) {
 				return gooi(error);
@@ -149,7 +157,7 @@ export const categorieenActions = {
 		handler: async ({ id, soort }, context) => {
 			vereisBeheerder(context);
 			try {
-				await categorieen.fotoVerwijderen(getDb(), id, soort);
+				await categorieen.fotoVerwijderen(getDb(), media, id, soort);
 				return { id };
 			} catch (error) {
 				return gooi(error);
@@ -163,7 +171,7 @@ export const categorieenActions = {
 		handler: async ({ id }, context) => {
 			vereisBeheerder(context);
 			try {
-				await categorieen.verwijder(getDb(), id);
+				await categorieen.verwijder(getDb(), media, id);
 				return { verwijderd: true };
 			} catch (error) {
 				return gooi(error);

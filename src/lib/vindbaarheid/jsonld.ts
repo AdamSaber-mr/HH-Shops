@@ -34,7 +34,7 @@ export function bedrag(centen: number): string {
 }
 
 /**
- * Een volledig adres. Foto's staan in Vercel Blob en zijn al volledig; paden
+ * Een volledig adres. Foto's staan in R2 en zijn al volledig; paden
  * van onszelf krijgen de oorsprong ervoor. Google negeert een relatief adres.
  */
 export function volledigAdres(origin: string, url: string): string {

@@ -3,8 +3,8 @@
  * database en zonder Astro, zodat ze te testen zijn.
  *
  * De belangrijkste keuze staat in `magGeindexeerd`. Zolang het domein nog
- * naar de oude WordPress-site wijst, draait deze shop op een adres van
- * Vercel. Dat adres mag niet in Google komen: dan staat dezelfde winkel
+ * naar de oude WordPress-site wijst, draait deze shop op een workers.dev-
+ * adres. Dat adres mag niet in Google komen: dan staat dezelfde winkel
  * twee keer in de index, concurreert hij met zichzelf, en kan een klant op
  * het testadres bestellen. Daarom geeft elk ander adres dan hh-shops.nl een
  * robots.txt die alles weigert. Er hoeft bij de domeinomzetting dus niets

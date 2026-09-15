@@ -1,8 +1,7 @@
-import { del, put } from '@vercel/blob';
 import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import type { Database } from '../../db/connection.ts';
 import { categories, categorySlugHistory, productCategories } from '../../db/schema.ts';
-import { blobPathFor, verwerkBuffer } from '../media.ts';
+import { blobPathFor, type MediaBackend } from '../media.ts';
 import { InvoerFout } from './producten-schrijven.ts';
 
 /*
@@ -165,34 +164,30 @@ function kolommen(soort: FotoSoort) {
 
 /** Verwerkt en uploadt een categoriefoto; geeft URL en afmetingen terug. Gedeeld met het overzetscript. */
 export async function verwerkEnUpload(
+	media: MediaBackend,
 	soort: FotoSoort,
 	slug: string,
-	bestand: { buffer: Buffer; naam: string },
+	bestand: { buffer: Uint8Array; naam: string },
 ): Promise<{ url: string; width: number; height: number }> {
-	let beeld: Awaited<ReturnType<typeof verwerkBuffer>>;
+	let beeld: Awaited<ReturnType<MediaBackend['verwerk']>>;
 	try {
-		beeld = await verwerkBuffer(bestand.buffer, { ...VERWERKING[soort], achtergrond: false });
+		beeld = await media.verwerk(bestand.buffer, { ...VERWERKING[soort], achtergrond: false });
 	} catch {
 		throw new InvoerFout('bestand', 'Dit bestand is geen geldige afbeelding.');
 	}
-	const blob = await put(
+	const url = await media.bewaar(
 		blobPathFor('categorieen', bestand.naam, `${slug}-${soort}-${Date.now()}`),
 		beeld.data,
-		{
-			access: 'public',
-			addRandomSuffix: false,
-			contentType: 'image/webp',
-			cacheControlMaxAge: 60 * 60 * 24 * 365,
-		},
 	);
-	return { url: blob.url, width: beeld.width, height: beeld.height };
+	return { url, width: beeld.width, height: beeld.height };
 }
 
 export async function fotoUploaden(
 	db: Database,
+	media: MediaBackend,
 	id: number,
 	soort: FotoSoort,
-	bestand: { buffer: Buffer; naam: string },
+	bestand: { buffer: Uint8Array; naam: string },
 	alt: string,
 ): Promise<void> {
 	const k = kolommen(soort);
@@ -202,7 +197,7 @@ export async function fotoUploaden(
 		.where(eq(categories.id, id));
 	if (!huidig) throw new InvoerFout('', 'Deze categorie bestaat niet meer.');
 
-	const nieuw = await verwerkEnUpload(soort, huidig.slug, bestand);
+	const nieuw = await verwerkEnUpload(media, soort, huidig.slug, bestand);
 	try {
 		await db
 			.update(categories)
@@ -223,16 +218,21 @@ export async function fotoUploaden(
 			)
 			.where(eq(categories.id, id));
 	} catch (error) {
-		await del(nieuw.url).catch(() => undefined);
+		await media.verwijder(nieuw.url).catch(() => undefined);
 		throw error;
 	}
 	// De vorige foto is nu nergens meer aan gekoppeld.
 	if (huidig.url?.includes('/categorieen/')) {
-		await del(huidig.url).catch(() => undefined);
+		await media.verwijder(huidig.url).catch(() => undefined);
 	}
 }
 
-export async function fotoVerwijderen(db: Database, id: number, soort: FotoSoort): Promise<void> {
+export async function fotoVerwijderen(
+	db: Database,
+	media: MediaBackend,
+	id: number,
+	soort: FotoSoort,
+): Promise<void> {
 	const k = kolommen(soort);
 	const [huidig] = await db.select({ url: k.url }).from(categories).where(eq(categories.id, id));
 	if (!huidig) throw new InvoerFout('', 'Deze categorie bestaat niet meer.');
@@ -245,11 +245,11 @@ export async function fotoVerwijderen(db: Database, id: number, soort: FotoSoort
 		)
 		.where(eq(categories.id, id));
 	if (huidig.url?.includes('/categorieen/')) {
-		await del(huidig.url).catch(() => undefined);
+		await media.verwijder(huidig.url).catch(() => undefined);
 	}
 }
 
-export async function verwijder(db: Database, id: number): Promise<void> {
+export async function verwijder(db: Database, media: MediaBackend, id: number): Promise<void> {
 	const huidig = await haal(db, id);
 	if (!huidig) throw new InvoerFout('', 'Deze categorie bestaat niet meer.');
 	if (huidig.producten > 0) {
@@ -260,6 +260,6 @@ export async function verwijder(db: Database, id: number): Promise<void> {
 	}
 	await db.delete(categories).where(eq(categories.id, id));
 	for (const url of [huidig.imageUrl, huidig.bannerUrl]) {
-		if (url?.includes('/categorieen/')) await del(url).catch(() => undefined);
+		if (url?.includes('/categorieen/')) await media.verwijder(url).catch(() => undefined);
 	}
 }

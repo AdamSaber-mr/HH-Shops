@@ -5,6 +5,15 @@
 > enige moment is waarop oud en nieuw naast elkaar bestaan. Wat we hier niet
 > vastleggen, is straks weg.
 
+> **Achterhaald op één punt: de hosting.** Dit document beschrijft de situatie
+> op het moment van bouwen, en toen draaide alles op Vercel. Op 14-09-2026 is
+> het project overgezet naar Cloudflare Workers: `@astrojs/cloudflare` in plaats
+> van `@astrojs/vercel`, R2 in plaats van Vercel Blob, Cloudflare Images in
+> plaats van de beeldoptimalisatie van Vercel, en `.dev.vars` plus
+> `wrangler secret` in plaats van de omgevingsvariabelen van Vercel. Wat hier
+> over Vercel staat blijft als verslag kloppen, maar volg het niet op als
+> instructie. De actuele opzet staat in `wrangler.jsonc` en `.env.example`.
+
 ## Context
 
 Fase 1 is op 10 september 2026 in `main` gemerged. Daar staat alles waar deze

@@ -3,8 +3,8 @@ import { herstelLink, TERUGVAL_ADRES, TOEGESTANE_HOSTS, VERTROUWDE_HERKOMSTEN } 
 
 describe('herstelLink', () => {
 	it('stuurt een klant naar het account en een beheerder naar het paneel', () => {
-		expect(herstelLink('https://hh-shops.vercel.app', 'klant', 'abc')).toBe(
-			'https://hh-shops.vercel.app/account/wachtwoord-herstellen?token=abc',
+		expect(herstelLink('https://hh-shops.test.workers.dev', 'klant', 'abc')).toBe(
+			'https://hh-shops.test.workers.dev/account/wachtwoord-herstellen?token=abc',
 		);
 		expect(herstelLink('http://localhost:4323', 'admin', 'abc')).toBe(
 			'http://localhost:4323/admin/wachtwoord-herstellen?token=abc',
@@ -33,13 +33,13 @@ describe('vertrouwde adressen', () => {
 		}
 	});
 
-	it('kent het Vercel-adres en de previews, voor de tijd tot de omzetting', () => {
-		expect(TOEGESTANE_HOSTS).toContain('*.vercel.app');
-		expect(VERTROUWDE_HERKOMSTEN).toContain('https://*.vercel.app');
+	it('kent de workers.dev-adressen, voor de tijd tot de omzetting', () => {
+		expect(TOEGESTANE_HOSTS).toContain('*.workers.dev');
+		expect(VERTROUWDE_HERKOMSTEN).toContain('https://*.workers.dev');
 	});
 
 	it('valt niet terug op het winkeldomein zolang dat naar de oude site wijst', () => {
-		expect(TERUGVAL_ADRES).toBe('https://hh-shops.vercel.app');
+		expect(TERUGVAL_ADRES).toBe('https://hh-shops.SUBDOMEIN-NOG-INVULLEN.workers.dev');
 	});
 
 	it('vertrouwt geen enkele herkomst zonder https, behalve localhost', () => {

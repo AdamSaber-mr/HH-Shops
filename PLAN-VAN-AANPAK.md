@@ -65,7 +65,7 @@ naar een andere omgeving halverwege het bestelproces.
 **Eigen beheeromgeving.** De klant moet zelf producten, prijzen, voorraad en
 bestellingen kunnen beheren, zonder ons en zonder WordPress.
 
-**Gehost op Vercel.**
+**Gehost op Cloudflare Workers.**
 
 **De opzet van bol.com als voorbeeld, niet het uiterlijk.** We nemen over wat
 bol.com goed doet: snel kunnen scannen, filters bij de hand, veel bruikbare

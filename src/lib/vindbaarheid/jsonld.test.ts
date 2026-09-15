@@ -17,7 +17,7 @@ const enkel = {
 	beschrijving: 'Een filter dat op vrijwel elke kraan past.',
 	merk: null,
 	pad: '/product/waterfilter',
-	fotos: ['https://abc.public.blob.vercel-storage.com/producten/filter.webp'],
+	fotos: ['https://pub-abc.r2.dev/producten/filter.webp'],
 	varianten: [{ sku: 'HH-1001', prijsCenten: 995, voorraad: 53, pad: '/product/waterfilter' }],
 };
 
@@ -128,7 +128,7 @@ describe('productSchema', () => {
 			name: 'Waterfilter voor op de kraan',
 			url: 'https://hh-shops.nl/product/waterfilter',
 			sku: 'HH-1001',
-			image: ['https://abc.public.blob.vercel-storage.com/producten/filter.webp'],
+			image: ['https://pub-abc.r2.dev/producten/filter.webp'],
 		});
 	});
 

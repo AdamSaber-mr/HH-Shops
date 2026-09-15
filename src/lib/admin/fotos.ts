@@ -1,18 +1,20 @@
-import { del, put } from '@vercel/blob';
 import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import type { Database } from '../../db/connection.ts';
 import { productImages, products, productVariants } from '../../db/schema.ts';
-import { blobPathFor, verwerkBuffer } from '../media.ts';
+import { blobPathFor, type MediaBackend } from '../media.ts';
 import { InvoerFout } from './producten-schrijven.ts';
 
 /*
- * Foto's van producten: uploaden naar Vercel Blob, bijwerken, verwijderen,
- * herordenen. Dezelfde beeldpijplijn als de import (src/lib/media.ts).
+ * Foto's van producten: uploaden naar R2, bijwerken, verwijderen, herordenen.
  *
- * Volgorde bij uploaden: eerst verwerken, dan naar Blob, dan de rij. Mislukt
+ * De `media`-backend komt van buiten (zie src/lib/media.ts). In de Worker is
+ * dat Cloudflare Images plus de R2-binding, in een script sharp plus de
+ * S3-API. Deze module hoeft dus niet te weten waar hij draait.
+ *
+ * Volgorde bij uploaden: eerst verwerken, dan naar R2, dan de rij. Mislukt
  * de rij, dan gaat het bestand meteen weer weg. Bij verwijderen andersom:
  * eerst de rij, na de commit het bestand, en alleen als geen ander product
- * dezelfde URL gebruikt. De database is leidend; een weesbestand in Blob is
+ * dezelfde URL gebruikt. De database is leidend; een weesbestand in R2 is
  * onschuldig, een rij zonder bestand niet.
  */
 
@@ -35,8 +37,9 @@ async function variantVanProduct(
 
 export async function upload(
 	db: Database,
+	media: MediaBackend,
 	productId: number,
-	bestand: { buffer: Buffer; naam: string },
+	bestand: { buffer: Uint8Array; naam: string },
 	invoer: { alt: string; variantId: number | null },
 ): Promise<{ url: string; bytesOut: number }> {
 	const [product] = await db
@@ -46,20 +49,15 @@ export async function upload(
 	if (!product) throw new InvoerFout('', 'Dit product bestaat niet meer.');
 	const variantId = await variantVanProduct(db, productId, invoer.variantId);
 
-	let beeld: Awaited<ReturnType<typeof verwerkBuffer>>;
+	let beeld: Awaited<ReturnType<MediaBackend['verwerk']>>;
 	try {
-		beeld = await verwerkBuffer(bestand.buffer);
+		beeld = await media.verwerk(bestand.buffer);
 	} catch {
 		throw new InvoerFout('bestand', 'Dit bestand is geen geldige afbeelding.');
 	}
 
 	const pathname = blobPathFor('producten', bestand.naam, `${product.slug}-${Date.now()}`);
-	const blob = await put(pathname, beeld.data, {
-		access: 'public',
-		addRandomSuffix: false,
-		contentType: 'image/webp',
-		cacheControlMaxAge: 60 * 60 * 24 * 365,
-	});
+	const url = await media.bewaar(pathname, beeld.data);
 
 	try {
 		await db.transaction(async (tx) => {
@@ -70,7 +68,7 @@ export async function upload(
 			await tx.insert(productImages).values({
 				productId,
 				variantId,
-				url: blob.url,
+				url,
 				alt: invoer.alt,
 				width: beeld.width,
 				height: beeld.height,
@@ -78,10 +76,10 @@ export async function upload(
 			});
 		});
 	} catch (error) {
-		await del(blob.url).catch(() => undefined);
+		await media.verwijder(url).catch(() => undefined);
 		throw error;
 	}
-	return { url: blob.url, bytesOut: beeld.bytesOut };
+	return { url, bytesOut: beeld.bytesOut };
 }
 
 export async function werkBij(
@@ -104,12 +102,13 @@ export async function werkBij(
 /**
  * Een bestaande foto vervangen door een nieuw bestand. Positie, alt-tekst en
  * variant blijven staan; alleen het bestand en de afmetingen veranderen. Het
- * oude bestand gaat uit Blob als geen ander product het nog gebruikt.
+ * oude bestand gaat uit R2 als geen ander product het nog gebruikt.
  */
 export async function vervang(
 	db: Database,
+	media: MediaBackend,
 	fotoId: number,
-	bestand: { buffer: Buffer; naam: string },
+	bestand: { buffer: Uint8Array; naam: string },
 	alt: string | null,
 ): Promise<{ bytesOut: number }> {
 	const [foto] = await db
@@ -123,30 +122,24 @@ export async function vervang(
 		.where(eq(products.id, foto.productId));
 	if (!product) throw new InvoerFout('', 'Dit product bestaat niet meer.');
 
-	let beeld: Awaited<ReturnType<typeof verwerkBuffer>>;
+	let beeld: Awaited<ReturnType<MediaBackend['verwerk']>>;
 	try {
-		beeld = await verwerkBuffer(bestand.buffer);
+		beeld = await media.verwerk(bestand.buffer);
 	} catch {
 		throw new InvoerFout('bestand', 'Dit bestand is geen geldige afbeelding.');
 	}
 
-	const blob = await put(
+	const url = await media.bewaar(
 		blobPathFor('producten', bestand.naam, `${product.slug}-${Date.now()}`),
 		beeld.data,
-		{
-			access: 'public',
-			addRandomSuffix: false,
-			contentType: 'image/webp',
-			cacheControlMaxAge: 60 * 60 * 24 * 365,
-		},
 	);
 	try {
 		await db
 			.update(productImages)
-			.set({ url: blob.url, width: beeld.width, height: beeld.height, alt: alt ?? foto.alt })
+			.set({ url, width: beeld.width, height: beeld.height, alt: alt ?? foto.alt })
 			.where(eq(productImages.id, fotoId));
 	} catch (error) {
-		await del(blob.url).catch(() => undefined);
+		await media.verwijder(url).catch(() => undefined);
 		throw error;
 	}
 
@@ -155,13 +148,13 @@ export async function vervang(
 		.from(productImages)
 		.where(eq(productImages.url, foto.url));
 	if (n === 0)
-		await del(foto.url).catch((error) =>
-			console.error('[admin] oude foto niet uit Blob verwijderd', error),
-		);
+		await media
+			.verwijder(foto.url)
+			.catch((error) => console.error('[admin] oude foto niet uit R2 verwijderd', error));
 	return { bytesOut: beeld.bytesOut };
 }
 
-export async function verwijder(db: Database, fotoId: number): Promise<void> {
+export async function verwijder(db: Database, media: MediaBackend, fotoId: number): Promise<void> {
 	const url = await db.transaction(async (tx) => {
 		const [foto] = await tx
 			.delete(productImages)
@@ -176,9 +169,9 @@ export async function verwijder(db: Database, fotoId: number): Promise<void> {
 	});
 	if (url) {
 		try {
-			await del(url);
+			await media.verwijder(url);
 		} catch (error) {
-			console.error('[admin] foto niet uit Blob verwijderd', url, error);
+			console.error('[admin] foto niet uit R2 verwijderd', url, error);
 		}
 	}
 }

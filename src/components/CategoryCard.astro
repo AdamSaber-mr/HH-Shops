@@ -17,8 +17,8 @@ import type { CategorieFoto } from '../lib/catalog.ts';
  * Omdat de naam alleen in de pixels staat, krijgt de link een sr-only tekst
  * met de naam. Anders is het voor een schermlezer een link zonder naam.
  *
- * De foto komt uit de database (geupload in het beheerpaneel, in Vercel
- * Blob) en gaat via astro:assets door de beeldoptimalisatie van Vercel.
+ * De foto komt uit de database (geupload in het beheerpaneel, in R2) en gaat
+ * via astro:assets door Cloudflare Images.
  * Breedte en hoogte staan in de database, want voor een externe foto moet
  * Astro die weten.
  */
@@ -38,7 +38,7 @@ const sizes = featured
 	? '(min-width: 1400px) 665px, (min-width: 1024px) 48vw, calc(100vw - 32px)'
 	: '(min-width: 1400px) 320px, (min-width: 1024px) 23vw, 50vw';
 // Alleen breedtes uit `imagesConfig.sizes` in astro.config.mjs: wat daar niet
-// in staat maakt Vercel niet, en verdwijnt zonder melding uit de srcset.
+// in staat maakt Cloudflare Images niet, en verdwijnt zonder melding uit de srcset.
 const widths = featured ? [480, 640, 828, 1080, 1200] : [240, 320, 480, 640, 828];
 ---
 

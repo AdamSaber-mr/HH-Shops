@@ -177,7 +177,7 @@ export type Doelmodel = {
 export type VerwerkteAfbeelding = {
 	file: string;
 	pathname: string;
-	buffer: Buffer;
+	buffer: Uint8Array;
 	width: number;
 	height: number;
 	bytesIn: number;

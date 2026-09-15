@@ -22,8 +22,13 @@ export function mollieSleutel(): string | undefined {
 	return getSecret('MOLLIE_API_KEY') || getSecret('MOLLIE_API_TEST_KEY') || undefined;
 }
 
+/**
+ * Alleen waar op de echte, uitgerolde winkel. Op Vercel kwam dit uit
+ * VERCEL_ENV; Cloudflare kent zoiets niet, dus zet wrangler.jsonc de variabele
+ * OMGEVING op "productie" en overschrijft .dev.vars hem lokaal.
+ */
 export function isProductie(): boolean {
-	return process.env.VERCEL_ENV === 'production';
+	return getSecret('OMGEVING') === 'productie';
 }
 
 /** De status die de testpagina voor een nepbetaling heeft gekozen, uit het logboek. */
@@ -54,19 +59,17 @@ export function getBetaalkoppeling(origin: string): Betaalkoppeling {
 }
 
 /**
- * De webhook-URL voor Mollie. Op een Vercel-preview staat de site achter
- * de inlogbeveiliging; met het bypass-geheim als query-parameter komt
- * Mollie erdoor. Lokaal kan Mollie ons niet bereiken; dan geen webhook, en
- * bewijst de statuspagina (die zelf bij Mollie navraagt) dat het klopt.
+ * De webhook-URL voor Mollie. Lokaal kan Mollie ons niet bereiken; dan geen
+ * webhook, en bewijst de statuspagina (die zelf bij Mollie navraagt) dat het
+ * klopt.
+ *
+ * Op Vercel stond hier nog een bypass-geheim als query-parameter, omdat een
+ * preview daar achter een inlogscherm zat. Een preview op Workers staat gewoon
+ * open, dus dat is vervallen.
  */
 export function webhookUrl(origin: string): string | null {
 	if (origin.includes('localhost') || origin.includes('127.0.0.1')) return null;
-	const url = new URL('/api/mollie/webhook', origin);
-	const bypass = getSecret('VERCEL_AUTOMATION_BYPASS_SECRET');
-	if (bypass && process.env.VERCEL_ENV === 'preview') {
-		url.searchParams.set('x-vercel-protection-bypass', bypass);
-	}
-	return url.toString();
+	return new URL('/api/mollie/webhook', origin).toString();
 }
 
 /** Waar de eigenaar bericht krijgt van een nieuwe bestelling. */

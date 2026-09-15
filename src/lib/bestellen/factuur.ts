@@ -13,7 +13,7 @@ import { btwIn } from './bedragen.ts';
  * telt op tot precies het btw-bedrag dat in de bestelling staat.
  *
  * Geen sjabloon van een ander en geen headless browser: pdf-lib zet de tekst
- * rechtstreeks op de pagina. Dat draait in een functie op Vercel zonder extra
+ * rechtstreeks op de pagina. Dat draait in de Worker zonder extra
  * proces en zonder megabytes aan afhankelijkheden.
  *
  * Het btw-nummer staat er pas op zodra site.ts het heeft (zie

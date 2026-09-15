@@ -50,7 +50,7 @@ bestand bij.
 | Formulieren | Astro Actions in `src/actions/`, invoer opgeschoond met `src/lib/tekst.ts` (dezelfde regels als de import) |
 | Datalaag | `src/lib/admin/`, alles in transacties, fouten van de database worden veldfouten |
 | Pagina's | `src/pages/admin/`, layout `src/layouts/AdminLayout.astro`, componenten `src/components/admin/` |
-| Foto's | `src/lib/media.ts` (gedeeld met de import) en Vercel Blob |
+| Foto's | `src/lib/media.ts` (gedeeld), `media-workers.ts` (Cloudflare Images + R2) of `media-node.ts` (sharp + S3) |
 
 De regels van het datamodel gelden onverkort: geen naam met en-dash, geen
 foto zonder alt-tekst, geen negatieve voorraad. Het formulier meldt het
@@ -71,7 +71,7 @@ netjes; de database weigert het sowieso.
 
 ## Instellen
 
-1. `BETTER_AUTH_SECRET` (32+ tekens) in `.env` en in Vercel voor preview en
+1. `BETTER_AUTH_SECRET` (32+ tekens) in `.dev.vars` en op Cloudflare voor
    productie. Lokaal aanmaken met
    `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
 2. Migratie 0003 draaien: `npm run db:migrate`, op elke Neon-branch waar het
@@ -89,8 +89,9 @@ netjes; de database weigert het sowieso.
 
    Het script vraagt om het wachtwoord. Daarna gaan verdere beheerders via
    het paneel.
-5. Foto's uploaden heeft de Blob-sleutels nodig. Op Vercel staan die er
-   automatisch; lokaal via `vercel env pull` (zie `.env.example`).
+5. Foto's uploaden gaat naar R2 via de `MEDIA`-binding uit `wrangler.jsonc`;
+   daar is geen sleutel voor nodig. Alleen `R2_PUBLIC_URL` moet gezet zijn, en
+   de import-scripts hebben daarnaast S3-sleutels nodig (zie `.env.example`).
 6. Voor wachtwoord vergeten: `RESEND_API_KEY`, zie docs/klantaccounts.md.
 
 ## Wat er bewust niet in zit
