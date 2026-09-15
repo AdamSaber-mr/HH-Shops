@@ -1,0 +1,81 @@
+---
+import { Icon } from 'astro-icon/components';
+
+/*
+ * Het zoekveld in de kop, met suggesties tijdens het typen.
+ *
+ * Zonder JavaScript is dit een gewoon formulier: enter brengt je naar
+ * /producten?q=..., precies zoals eerst. Met JavaScript haalt
+ * src/scripts/zoeken.ts na elke toetsaanslag een lijstje op uit
+ * /zoeken/suggesties en zet het in het vak hieronder.
+ *
+ * De toegankelijkheid volgt het combobox-patroon van de WAI: het invoerveld
+ * meldt zich als combobox en wijst met aria-controls naar de lijst, en
+ * aria-activedescendant vertelt de schermlezer welke suggestie nu geselecteerd
+ * is terwijl de focus in het veld blijft. `aria-live` op het vak eronder leest
+ * het aantal resultaten voor. Zonder dat laatste hoort een schermlezer alleen
+ * stilte terwijl de lijst verandert.
+ *
+ * Het veld stond twee keer in SiteHeader (desktop en telefoon) met identieke
+ * opmaak. Nu een keer hier, want de ARIA-bedrading eronder is te makkelijk om
+ * op twee plekken uit elkaar te laten lopen.
+ */
+
+interface Props {
+	/** Uniek, want het koppelt label, lijst en invoerveld aan elkaar. */
+	id: string;
+	/** Klassen voor het <search>-element eromheen. */
+	class?: string;
+}
+
+const { id, class: extraClass = '' } = Astro.props;
+const lijstId = `${id}-suggesties`;
+---
+
+<search class={extraClass}>
+	<form action="/producten" method="get" data-zoekformulier>
+		<label for={id} class="sr-only">Zoek een product</label>
+		<div class="relative w-full">
+			<input
+				{id}
+				type="search"
+				name="q"
+				placeholder="Zoek een product"
+				autocomplete="off"
+				role="combobox"
+				aria-expanded="false"
+				aria-controls={lijstId}
+				aria-autocomplete="list"
+				data-zoekveld
+				class="min-h-11 w-full rounded-full border border-border-strong bg-surface pr-12 pl-4 text-sm text-text placeholder:text-text-muted focus:border-accent"
+			/>
+			<button
+				type="submit"
+				class="absolute top-1/2 right-1 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-text-muted hover:bg-accent-subtle hover:text-accent"
+			>
+				<Icon name="ph:magnifying-glass" class="size-5" aria-hidden="true" />
+				<span class="sr-only">Zoeken</span>
+			</button>
+
+			<!--
+				De suggesties. Leeg en verborgen tot het script iets vindt; `hidden`
+				gaat eraf zodra er inhoud is. Absoluut gepositioneerd zodat de lijst
+				over de pagina valt en de kop niet opduwt.
+
+				Een EIGEN breedte, en niet die van het invoerveld. Rond 1024px is de
+				kopbalk namelijk vol (logo, menu, account en winkelmand samen), en
+				houdt `flex-1` voor het zoekveld nog maar een centimeter over. Een
+				even smalle lijst zou onleesbaar zijn. Dit koppelt de lijst daarvan
+				los: 26rem waar het past, anders de schermbreedte min de marges. De
+				rechterkant blijft vast, zodat hij nooit buiten beeld valt.
+			-->
+			<div
+				id={lijstId}
+				data-zoeksuggesties
+				hidden
+				class="absolute top-full right-0 z-50 mt-2 w-[min(26rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border-strong bg-surface shadow-lg"
+			>
+			</div>
+		</div>
+	</form>
+</search>

@@ -30,12 +30,37 @@ function kanOpen(): boolean {
 
 function zetTeller(aantal: number): void {
 	for (const teller of document.querySelectorAll<HTMLElement>('[data-teller="winkelmand"]')) {
+		const veranderd = teller.textContent !== String(aantal);
 		teller.textContent = String(aantal);
+		// Even een tik geven, anders verandert het cijfer ongemerkt terwijl de
+		// aandacht bij de knop of het paneel ligt. De animatie zelf staat in de
+		// stylesheet en respecteert prefers-reduced-motion.
+		if (veranderd) {
+			teller.classList.remove('teller-tik');
+			// Opnieuw laten beginnen: zonder deze regel pakt de browser de
+			// animatie niet op als hij al liep.
+			void teller.offsetWidth;
+			teller.classList.add('teller-tik');
+		}
 	}
 	// De tekst voor schermlezers naast het icoon in de header.
 	for (const tekst of document.querySelectorAll<HTMLElement>('[data-teller-tekst="winkelmand"]')) {
 		tekst.textContent = `, ${aantal} ${aantal === 1 ? 'artikel' : 'artikelen'}`;
 	}
+}
+
+/*
+ * Een grijze schets van drie regels, zodat het paneel niet leeg opent en
+ * daarna opeens vol springt. Alleen bij een leeg paneel: is er al inhoud (het
+ * paneel stond al open), dan blijft die staan tot de verse binnen is. Dat
+ * scheelt een flikkering bij plus en min.
+ */
+function zetSkelet(): void {
+	if (!inhoud || inhoud.childElementCount > 0) return;
+	inhoud.innerHTML = `
+		<div class="space-y-4 py-2" aria-hidden="true">
+			${'<div class="flex gap-3"><div class="size-16 shrink-0 rounded-lg bg-surface-subtle"></div><div class="flex-1 space-y-2 py-1"><div class="h-3 w-3/4 rounded bg-surface-subtle"></div><div class="h-3 w-1/3 rounded bg-surface-subtle"></div></div></div>'.repeat(3)}
+		</div>`;
 }
 
 async function laad(): Promise<void> {
@@ -70,7 +95,10 @@ function open(): void {
 	for (const ander of document.querySelectorAll<HTMLDialogElement>('dialog[open]')) {
 		if (ander !== paneel) ander.close();
 	}
-	if (!paneel.open) paneel.showModal();
+	if (!paneel.open) {
+		zetSkelet();
+		paneel.showModal();
+	}
 	void laad();
 }
 
@@ -120,14 +148,43 @@ document.addEventListener('submit', async (event) => {
 		knop.disabled = true;
 		knop.setAttribute('aria-busy', 'true');
 	}
+
+	/*
+	 * Het paneel gaat OPEN VOORDAT de action antwoord geeft.
+	 *
+	 * Eerst wachtte dit op twee rondes achter elkaar: de action, en daarna het
+	 * ophalen van de paneelinhoud. Pas na allebei gebeurde er iets op het
+	 * scherm, en tot die tijd leek de knop niets te doen. Nu staat het paneel er
+	 * meteen met een skelet, en vult het zich zodra de gegevens er zijn. Het
+	 * duurt even lang, maar het voelt niet meer alsof je op niets drukt.
+	 *
+	 * Alleen bij toevoegen: bij plus, min en verwijderen staat het paneel al open.
+	 */
+	const toevoegen = form.hasAttribute('data-winkelmand-toevoegen');
+	if (toevoegen) open();
+
 	try {
 		const { error } = await actie(new FormData(form));
 		if (error) {
 			// De gewone weg werkt altijd: de middleware toont de melding op /winkelmand.
+			paneel?.close();
 			form.submit();
 			return;
 		}
-		open();
+		/*
+		 * De teller komt uit de paneelinhoud en niet uit het antwoord van de
+		 * action, ook al gaat dat laatste sneller. `toevoegen` geeft namelijk het
+		 * aantal van die ene regel terug, terwijl de teller in de kop het totaal
+		 * over alle regels toont (aantalArtikelen). Dat totaal wordt bovendien pas
+		 * bepaald nadat regels zijn opgeschoond die inmiddels uitverkocht zijn.
+		 * Zelf rekenen zou dus een getal opleveren dat even niet klopt en daarna
+		 * stilletjes verspringt. Een fractie later goed is beter.
+		 */
+		if (toevoegen) {
+			await laad();
+		} else {
+			open();
+		}
 	} finally {
 		if (knop) {
 			knop.disabled = false;

@@ -1,0 +1,130 @@
+---
+import Price from '../../components/Price.astro';
+import ProductImage from '../../components/ProductImage.astro';
+import { listActiveProducts } from '../../lib/catalog.ts';
+import { defaultVariant, filterOpZoekterm, zoekwoorden } from '../../lib/categorie-filters.ts';
+
+/*
+ * De suggesties onder het zoekveld, als los stuk HTML voor
+ * src/scripts/zoeken.ts. Geen layout, geen head: alleen de lijst. Dezelfde
+ * opzet als /winkelmand/paneel en /favorieten/paneel.
+ *
+ * Het zoeken zelf gebeurt met filterOpZoekterm, precies zoals op /producten.
+ * Dat is met opzet: wat je tijdens het typen ziet, moet hetzelfde zijn als wat
+ * je krijgt na een druk op enter. Twee verschillende manieren van zoeken zou
+ * betekenen dat een suggestie kan verdwijnen zodra je hem aanklikt.
+ *
+ * De lijst is een div met role="listbox" en geen ul: een lijst is van zichzelf
+ * niet interactief en hoort die rol dus niet te dragen. De suggesties zitten er
+ * rechtstreeks in, elk als een link met role="option".
+ *
+ * Dit haalt per toetsaanslag de hele catalogus op. Bij 83 producten is dat
+ * goedkoper dan het klinkt en het is dezelfde afweging als op /producten (zie
+ * de toelichting bij filterOpZoekterm). Groeit de catalogus, dan gaat dit als
+ * eerste om naar een echte query met de trigram-index op products.name; het
+ * script eromheen hoeft daar niets van te merken.
+ */
+
+export const partial = true;
+
+/**
+ * Meer dan dit past niet fatsoenlijk op een telefoonscherm. De max-hoogte van
+ * de lijst (26rem) is hierop afgestemd: zes rijen van 64px passen er precies
+ * in, zodat er op een gewoon scherm geen halve rij onderaan blijft hangen. Op
+ * een laag scherm wint de 60vh en scrollt de lijst alsnog.
+ */
+const MAX = 6;
+/** Onder de twee tekens levert zoeken vooral ruis op. */
+const MIN_TEKENS = 2;
+
+const q = (Astro.url.searchParams.get('q') ?? '').trim();
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const woorden = zoekwoorden(q);
+const treffers =
+	q.length < MIN_TEKENS || woorden.length === 0
+		? []
+		: filterOpZoekterm(await listActiveProducts(), q);
+
+const getoond = treffers.slice(0, MAX);
+const rest = treffers.length - getoond.length;
+const allesUrl = `/producten?q=${encodeURIComponent(q)}`;
+---
+
+{
+	/*
+	 * data-aantal leest het script uit voor de melding aan schermlezers, zodat
+	 * het die tekst niet zelf hoeft samen te stellen.
+	 */
+}
+<div data-zoekresultaat data-aantal={treffers.length} data-term={q}>
+	{
+		getoond.length === 0 ? (
+			<p class="px-4 py-6 text-center text-sm text-text-muted">
+				Niets gevonden voor <span class="font-medium text-text">{q}</span>.
+			</p>
+		) : (
+			<div
+				role="listbox"
+				aria-label="Zoeksuggesties"
+				class="max-h-[min(26rem,60vh)] overflow-y-auto py-1"
+			>
+				{getoond.map((product, i) => {
+					const variant = defaultVariant(product.variants);
+					const foto = product.images[0];
+					return (
+						<a
+							id={`zoeksuggestie-${i}`}
+							role="option"
+							aria-selected="false"
+							href={`/product/${product.slug}`}
+							data-zoeksuggestie
+							class="flex items-center gap-3 px-3 py-2 text-left aria-selected:bg-accent-subtle hover:bg-accent-subtle"
+						>
+								{foto ? (
+									<ProductImage
+										src={foto.url}
+										alt=""
+										width={foto.width}
+										height={foto.height}
+										widths={[64, 128]}
+										sizes="48px"
+										class="size-12 shrink-0 rounded-lg object-contain"
+									/>
+								) : (
+									<span class="size-12 shrink-0 rounded-lg bg-surface-subtle" />
+								)}
+								<span class="min-w-0 flex-1">
+									<span class="block truncate text-sm font-medium text-text">{product.name}</span>
+									{product.brand && (
+										<span class="block truncate text-xs text-text-muted">{product.brand}</span>
+									)}
+								</span>
+								{variant && (
+									<Price
+										cents={variant.priceCents}
+										compareAtCents={variant.compareAtPriceCents}
+										class="shrink-0"
+									/>
+								)}
+						</a>
+					);
+				})}
+			</div>
+		)
+	}
+
+	{
+		treffers.length > 0 && (
+			<a
+				href={allesUrl}
+				data-zoeksuggestie-alles
+				class="block border-t border-border-strong px-4 py-3 text-center text-sm font-medium text-accent hover:bg-accent-subtle"
+			>
+				{rest > 0
+					? `Bekijk alle ${treffers.length} resultaten`
+					: 'Bekijk de resultaten met filters'}
+			</a>
+		)
+	}
+</div>

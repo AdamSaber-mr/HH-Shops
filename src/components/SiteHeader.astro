@@ -8,6 +8,7 @@ import { categoryHref, mainNavigation } from '../lib/navigation.ts';
 import FavorietenPaneel from './klant/FavorietenPaneel.astro';
 import Teller from './klant/Teller.astro';
 import WinkelmandPaneel from './klant/WinkelmandPaneel.astro';
+import Zoekveld from './Zoekveld.astro';
 
 /*
  * De kop van elke pagina: een smalle servicebalk, daaronder de navigatie.
@@ -155,28 +156,7 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 			</nav>
 
 			<!-- Zoeken. Op telefoon staat dit veld als eigen rij onder de balk. -->
-			<search class="ml-auto hidden min-w-0 flex-1 md:block lg:max-w-md">
-			<form action="/producten" method="get">
-				<label for="zoeken-desktop" class="sr-only">Zoek een product</label>
-				<div class="relative w-full">
-					<input
-						id="zoeken-desktop"
-						type="search"
-						name="q"
-						placeholder="Zoek een product"
-						autocomplete="off"
-						class="min-h-11 w-full rounded-full border border-border-strong bg-surface pr-12 pl-4 text-sm text-text placeholder:text-text-muted focus:border-accent"
-					/>
-					<button
-						type="submit"
-						class="absolute top-1/2 right-1 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-text-muted hover:bg-accent-subtle hover:text-accent"
-					>
-						<Icon name="ph:magnifying-glass" class="size-5" aria-hidden="true" />
-						<span class="sr-only">Zoeken</span>
-					</button>
-				</div>
-			</form>
-			</search>
+			<Zoekveld id="zoeken-desktop" class="ml-auto hidden min-w-0 flex-1 md:block lg:max-w-md" />
 
 			<!-- Account en winkelmand -->
 			<div class="ml-auto flex shrink-0 items-center gap-0 sm:gap-1 md:ml-0">
@@ -214,28 +194,7 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 		</div>
 
 		<!-- Zoekveld op telefoon -->
-		<search class="px-4 pb-3 md:hidden">
-		<form action="/producten" method="get">
-			<label for="zoeken-mobiel" class="sr-only">Zoek een product</label>
-			<div class="relative">
-				<input
-					id="zoeken-mobiel"
-					type="search"
-					name="q"
-					placeholder="Zoek een product"
-					autocomplete="off"
-					class="min-h-11 w-full rounded-full border border-border-strong bg-surface pr-12 pl-4 text-sm text-text placeholder:text-text-muted focus:border-accent"
-				/>
-				<button
-					type="submit"
-					class="absolute top-1/2 right-1 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-text-muted hover:bg-accent-subtle hover:text-accent"
-				>
-					<Icon name="ph:magnifying-glass" class="size-5" aria-hidden="true" />
-					<span class="sr-only">Zoeken</span>
-				</button>
-			</div>
-		</form>
-		</search>
+		<Zoekveld id="zoeken-mobiel" class="block px-4 pb-3 md:hidden" />
 
 		<!-- Mobiel menu -->
 		<nav
@@ -282,6 +241,8 @@ const voornaam = Astro.locals.user?.name.split(' ')[0];
 <WinkelmandPaneel />
 
 <script>
+	import '../scripts/zoeken.ts';
+
 	/*
 	 * Twee uitklapdelen: het categoriemenu op desktop en het mobiele menu.
 	 * Alles werkt op aria-expanded, zodat de toestand voor schermlezers klopt

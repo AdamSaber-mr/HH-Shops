@@ -126,6 +126,26 @@
 			transform: translateX(-50%);
 		}
 	}
+
+	/*
+	  Het tellertje in de kop na een wijziging in de winkelmand. Klein en kort:
+	  het moet je blik trekken, niet je aandacht opeisen terwijl het paneel
+	  openschuift. src/scripts/winkelmand.ts zet de klasse erop.
+
+	  Geen eigen prefers-reduced-motion hier; de regel onderaan @layer base zet
+	  elke animatie al stil voor wie daarom vraagt.
+	*/
+	@keyframes teller-tik {
+		0% {
+			transform: scale(1);
+		}
+		40% {
+			transform: scale(1.35);
+		}
+		100% {
+			transform: scale(1);
+		}
+	}
 }
 
 @layer base {
@@ -330,4 +350,9 @@
 			line-height: 2.25rem;
 		}
 	}
+}
+
+/* Zie @keyframes teller-tik hierboven. */
+@utility teller-tik {
+	animation: teller-tik 320ms ease-out;
 }
